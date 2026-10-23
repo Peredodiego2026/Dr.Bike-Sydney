@@ -3795,25 +3795,122 @@ export async function handleAdminInventoryMove(req, res, reason) {
     reason === 'restock' ? Math.abs(parseInt(req.body?.qty, 10)) : parseInt(req.body?.delta, 10);
   if (!id || !Number.isFinite(delta) || delta === 0)
     return res.status(400).json({ error: 'id and a non-zero amount required' });
+  if (Math.abs(delta) > 10000) return res.status(400).json({ error: 'amount is too large' });
+  // Why it moved (damaged, lost, miscounted, which supplier) - kept with the
+  // movement for the repurchase study. Optional here; the Adjust dialog asks
+  // for it, the quick +/- buttons do not.
+  const note =
+    typeof req.body?.note === 'string' ? req.body.note.trim().slice(0, 200) || null : null;
   const sbHdr = {
     apikey: SERVICE_KEY,
     Authorization: `Bearer ${SERVICE_KEY}`,
     'Content-Type': 'application/json',
   };
-  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
-    method: 'POST',
-    headers: sbHdr,
-    body: JSON.stringify({
-      p_part_id: id,
-      p_delta: delta,
-      p_reason: reason,
-      p_created_by: String(auth.user?.email || 'admin'),
-    }),
-  });
+  const call = (withNote) =>
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
+      method: 'POST',
+      headers: sbHdr,
+      body: JSON.stringify({
+        p_part_id: id,
+        p_delta: delta,
+        p_reason: reason,
+        p_created_by: String(auth.user?.email || 'admin'),
+        ...(withNote ? { p_note: note } : {}),
+      }),
+    });
+  let r = await call(!!note);
+  // Before scripts/add-stock-movement-notes.sql runs, the function has no
+  // p_note and PostgREST answers 404 (PGRST202). The stock change matters more
+  // than the note: do it without, and say the note was not kept.
+  let noteKept = !!note;
+  if (note && r.status === 404) {
+    r = await call(false);
+    noteKept = false;
+  }
   if (!r.ok) return res.status(500).json({ error: 'Failed to update stock' });
   const row = (await r.json())?.[0];
   if (!row) return res.status(404).json({ error: 'Part not found' });
-  return res.status(200).json({ ok: true, new_stock: row.new_stock, applied: row.applied });
+  return res
+    .status(200)
+    .json({ ok: true, new_stock: row.new_stock, applied: row.applied, note_kept: noteKept });
+}
+
+// One part's whole stock history, newest first, with the job each use belongs
+// to - the raw material of the repurchase study.
+export async function handleAdminInventoryHistory(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const id = req.body?.id;
+  if (!id) return res.status(400).json({ error: 'id required' });
+  const hdr = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
+  // select=* so the note shows once its column exists, and nothing breaks before.
+  const mv = await fetch(
+    `${SUPABASE_URL}/rest/v1/stock_movements?select=*&part_id=eq.${encodeURIComponent(id)}&order=created_at.desc&limit=200`,
+    { headers: hdr }
+  );
+  if (!mv.ok) return res.status(500).json({ error: 'Failed to load the history' });
+  const rows = (await mv.json()) || [];
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const jobIds = [...new Set(rows.map((r) => r.job_id).filter((j) => UUID.test(j || '')))];
+  const jobs = new Map();
+  if (jobIds.length) {
+    const bk = await fetch(
+      `${SUPABASE_URL}/rest/v1/bookings?select=id,client_name,service_name,scheduled_date&id=in.(${jobIds.map((j) => `"${j}"`).join(',')})`,
+      { headers: hdr }
+    );
+    if (bk.ok) for (const b of (await bk.json()) || []) jobs.set(b.id, b);
+    else console.warn('[inventory-history] booking lookup failed:', bk.status);
+  }
+  return res.status(200).json({
+    movements: rows.map((r) => ({
+      at: r.created_at,
+      delta: r.delta,
+      reason: r.reason,
+      by: r.created_by || null,
+      note: r.note ?? null,
+      job: r.job_id
+        ? {
+            id: r.job_id,
+            client_name: jobs.get(r.job_id)?.client_name || null,
+            service_name: jobs.get(r.job_id)?.service_name || null,
+            date: jobs.get(r.job_id)?.scheduled_date || null,
+          }
+        : null,
+    })),
+  });
+}
+
+// What went into jobs this month (Sydney's month, not the server's UTC one):
+// units from the ledger (used minus returned), cost from the per-job snapshot
+// bookings.parts_cost_actual - the same number Finance reads.
+export async function handleAdminInventorySummary(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const hdr = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
+  const monthStart = `${sydneyToday().slice(0, 8)}01`;
+  const since = sydneyLocalToUtc(monthStart, '00:00').toISOString();
+  const [mv, bk] = await Promise.all([
+    fetch(
+      `${SUPABASE_URL}/rest/v1/stock_movements?select=delta&reason=in.(job_used,job_reverted)&created_at=gte.${encodeURIComponent(since)}`,
+      { headers: hdr }
+    ),
+    fetch(
+      `${SUPABASE_URL}/rest/v1/bookings?select=parts_cost_actual&status=eq.completed&completed_at=gte.${encodeURIComponent(since)}`,
+      { headers: hdr }
+    ),
+  ]);
+  if (!mv.ok || !bk.ok) return res.status(500).json({ error: 'Failed to load this month' });
+  const units = -((await mv.json()) || []).reduce((s, r) => s + Number(r.delta || 0), 0);
+  const jobs = ((await bk.json()) || []).filter((b) => b.parts_cost_actual !== null);
+  const cost = jobs.reduce((s, b) => s + Number(b.parts_cost_actual || 0), 0);
+  return res.status(200).json({
+    month_start: monthStart,
+    units_used: Math.max(0, units),
+    cost_used: Math.round(cost * 100) / 100,
+    jobs_with_parts: jobs.filter((b) => Number(b.parts_cost_actual) > 0).length,
+  });
 }
 
 // Deactivate / reactivate a part. Parts are never deleted - Diego, 23-oct-2026:
@@ -6611,6 +6708,8 @@ async function handler(req, res) {
   if (role === 'admin-inventory-restock') return handleAdminInventoryMove(req, res, 'restock');
   if (role === 'admin-inventory-adjust') return handleAdminInventoryMove(req, res, 'adjustment');
   if (role === 'admin-inventory-active') return handleAdminInventoryActive(req, res);
+  if (role === 'admin-inventory-history') return handleAdminInventoryHistory(req, res);
+  if (role === 'admin-inventory-summary') return handleAdminInventorySummary(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
   if (role === 'admin-analytics') return handleAdminAnalytics(req, res);

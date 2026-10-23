@@ -28,6 +28,17 @@ consulta responde una sola pregunta - si falta correr un script - y nada mas.
 
 ---
 
+## NUEVO (24-oct-2026): nota en cada movimiento de stock
+
+**Hay que correr `scripts/add-stock-movement-notes.sql` una vez** (despues del
+de "repuestos se desactivan"). Idempotente. Agrega la columna `note` al
+historial de stock (el motivo de un ajuste: rota, perdida, conteo mal hecho; o
+el proveedor de una reposicion) y le suma ese parametro a `adjust_part_stock`.
+Antes de correrlo la app funciona igual; las notas simplemente no se guardan.
+Verificacion al pie del script: tiene que dar `true | 1 | 6`.
+
+---
+
 ## NUEVO (23-oct-2026): repuestos se desactivan, nunca se borran
 
 **Hay que correr `scripts/add-parts-active-keep-history.sql` una vez en el SQL
@@ -445,6 +456,13 @@ with
     (exists (select 1 from col where t='parts_inventory' and c='active')
      and exists (select 1 from pg_constraint where conname = 'stock_movements_part_id_fkey'
                    and confdeltype = 'r'))
+  -- 55 entro el 2026-10-24: la nota en cada movimiento, y adjust_part_stock con
+  -- p_note. UNA sola version de la funcion: si quedaran la de 5 y la de 6
+  -- argumentos, cada llamada sin nota seria ambigua y PostgREST la rechazaria.
+  union all select 55, 'add-stock-movement-notes.sql', 'stock_movements.note, y adjust_part_stock con nota (una sola version, 6 argumentos)',
+    (exists (select 1 from col where t='stock_movements' and c='note')
+     and (select count(*) = 1 from pg_proc where proname = 'adjust_part_stock')
+     and exists (select 1 from pg_proc where proname = 'adjust_part_stock' and pronargs = 6))
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
