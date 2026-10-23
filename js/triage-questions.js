@@ -308,7 +308,10 @@ function pick(...ids) {
   });
 }
 
-// For tests and for the server (Task 3 only keeps keys on this list).
+// Every valid question id. The server keeps only answers keyed by these, but it
+// does NOT import this file (api/ imports nothing from js/): it holds a copy in
+// api/_triage-ids.js. Adding a question here means adding its id there too -
+// tests/unit/triage-ids-sync.test.js fails and names the id if you forget.
 export const ALL_QUESTION_IDS = QUESTIONS.map((q) => q.id);
 
 // What a category no set knows about gets: the bike, and a free line.

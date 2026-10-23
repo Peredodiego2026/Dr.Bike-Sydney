@@ -37,7 +37,7 @@ import { trackingScope, applyTrackingScope } from './_tracking-scope.js';
 import { reviewCredential, reviewGate } from './_review-auth.js';
 import { shortClientName } from './_privacy.js';
 import { auditOrphanPayments } from './_orphan-audit.js';
-import { ALL_QUESTION_IDS } from '../js/triage-questions.js';
+import { TRIAGE_QUESTION_IDS } from './_triage-ids.js';
 import {
   JOB_PHOTO_BUCKET,
   JOB_PHOTO_TYPES,
@@ -1088,10 +1088,12 @@ async function handleRemoveCard(req, res) {
 // whether he has the right part before he drives out (js/triage-questions.js).
 // The client sends them as { question_id: "answer" }.
 //
-// Everything in that body is the client's word, so this keeps only what the
-// catalogue defines (ALL_QUESTION_IDS) and only text, clamped on both axes: 200
-// characters per answer, 4 KB for the whole object. Nothing here is trusted
-// for pricing, access or anything else - it is a note for a person to read.
+// Everything in that body is the client's word, so this keeps only the ids in
+// TRIAGE_QUESTION_IDS (api/_triage-ids.js: a copy of the catalogue, kept equal
+// by tests/unit/triage-ids-sync.test.js, because api/ imports nothing from js/)
+// and only text, clamped on both axes: 200 characters per answer, 4 KB for the
+// whole object. Nothing here is trusted for pricing, access or anything else -
+// it is a note for a person to read.
 //
 // Returns null, not {}, when nothing survives: "no answers" must not look like
 // an answer.
@@ -1101,21 +1103,32 @@ async function handleRemoveCard(req, res) {
 //     triage UPDATE and lose every answer over one emoji cut in half, so
 //     control characters become a space and the string is made well-formed
 //     BEFORE it is clamped, and the clamp counts code points, not UTF-16 units.
+//     Well-formed is done with a regex, not String.prototype.toWellFormed: that
+//     needs Node 20, neither package.json nor vercel.json pins a runtime, and on
+//     an older one it would throw and cost EVERY booking its triage.
 //   - the 4 KB limit is bytes: a Chinese character is 3 of them, and
 //     `zh` is one of the three languages this app speaks.
 const TRIAGE_MAX_ANSWER_CHARS = 200;
 const TRIAGE_MAX_BYTES = 4096;
+// A high surrogate with no low one after it, or a low one with no high one
+// before it. Each becomes U+FFFD, which is what toWellFormed() does.
+const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
 
 export function sanitizeTriage(raw) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const out = {};
-  // Walks the catalogue, not the client's keys: an unknown key (or a
+  // Walks the known ids, not the client's keys: an unknown key (or a
   // `__proto__`) is never even looked at.
-  for (const id of ALL_QUESTION_IDS) {
+  for (const id of TRIAGE_QUESTION_IDS) {
     if (!Object.prototype.hasOwnProperty.call(raw, id)) continue;
     const value = raw[id];
     if (typeof value !== 'string') continue;
-    const answer = Array.from(value.toWellFormed().replace(/\p{Cc}/gu, ' ').trim())
+    const answer = Array.from(
+      value
+        .replace(LONE_SURROGATE, '\uFFFD')
+        .replace(/\p{Cc}/gu, ' ')
+        .trim()
+    )
       .slice(0, TRIAGE_MAX_ANSWER_CHARS)
       .join('')
       .trim();

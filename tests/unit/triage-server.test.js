@@ -135,10 +135,15 @@ vi.mock('@supabase/supabase-js', () => ({
 }));
 
 // Sin red: ni OSRM ni Nominatim.
-globalThis.fetch = async () => ({ ok: false, status: 503, json: async () => ({}), text: async () => '' });
+globalThis.fetch = async () => ({
+  ok: false,
+  status: 503,
+  json: async () => ({}),
+  text: async () => '',
+});
 
 const { handleCreateBooking, sanitizeTriage } = await import('../../api/auth.js');
-const { ALL_QUESTION_IDS } = await import('../../js/triage-questions.js');
+const { TRIAGE_QUESTION_IDS } = await import('../../api/_triage-ids.js');
 
 const makeRes = () => {
   const res = { statusCode: null, body: null };
@@ -166,6 +171,17 @@ const PAID = { payment_intent_id: 'pi_test_123' };
 const call = (over) => {
   const res = makeRes();
   return handleCreateBooking({ body: { ...GUEST, ...over } }, res).then(() => res);
+};
+
+// encodeURIComponent tira URIError ante un surrogate suelto: lo mismo que
+// rechaza jsonb, y sin necesitar isWellFormed (Node 20+) en el propio test.
+const wellFormed = (str) => {
+  try {
+    encodeURIComponent(str);
+    return true;
+  } catch {
+    return false;
+  }
 };
 
 const triageWrites = () =>
@@ -213,7 +229,7 @@ describe('sanitizeTriage', () => {
   });
 
   it('acepta cada id del catalogo', () => {
-    for (const id of ALL_QUESTION_IDS) {
+    for (const id of TRIAGE_QUESTION_IDS) {
       expect(sanitizeTriage({ [id]: 'ok' }), id).toEqual({ [id]: 'ok' });
     }
   });
@@ -228,7 +244,7 @@ describe('sanitizeTriage', () => {
   });
 
   it('el total no pasa de 4 KB aunque todas las preguntas lleguen llenas', () => {
-    const full = Object.fromEntries(ALL_QUESTION_IDS.map((id) => [id, 'x'.repeat(500)]));
+    const full = Object.fromEntries(TRIAGE_QUESTION_IDS.map((id) => [id, 'x'.repeat(500)]));
     const out = sanitizeTriage(full);
     expect(Buffer.byteLength(JSON.stringify(out))).toBeLessThanOrEqual(4096);
     // Recorta quitando respuestas enteras: lo que queda es JSON valido y completo.
@@ -236,7 +252,7 @@ describe('sanitizeTriage', () => {
   });
 
   it('4 KB son bytes, no caracteres: el chino pesa tres veces', () => {
-    const full = Object.fromEntries(ALL_QUESTION_IDS.map((id) => [id, '轮'.repeat(200)]));
+    const full = Object.fromEntries(TRIAGE_QUESTION_IDS.map((id) => [id, '轮'.repeat(200)]));
     const out = sanitizeTriage(full);
     expect(Buffer.byteLength(JSON.stringify(out))).toBeLessThanOrEqual(4096);
   });
@@ -245,14 +261,36 @@ describe('sanitizeTriage', () => {
     // Un surrogate suelto lo rechaza el jsonb de Postgres: el UPDATE fallaria
     // y se perderia el triage entero por una carita.
     const out = sanitizeTriage({ notes: 'a'.repeat(199) + '\u{1F6B2}\u{1F6B2}' });
-    expect(out.notes.isWellFormed()).toBe(true);
+    expect(wellFormed(out.notes)).toBe(true);
     expect(Array.from(out.notes)).toHaveLength(200);
     expect(out.notes.endsWith('\u{1F6B2}')).toBe(true);
   });
 
   it('un surrogate suelto que manda el cliente no llega a la base', () => {
-    const out = sanitizeTriage({ notes: 'ok\uD83D' });
-    expect(out.notes.isWellFormed()).toBe(true);
+    // Alto sin bajo (al final y en el medio), y bajo sin alto (al principio y
+    // despues de un par completo): las formas de quedar suelto.
+    for (const hostile of ['ok\uD83D', 'a\uD83Db', '\uDC00ok', '\u{1F6B2}\uDC00']) {
+      const out = sanitizeTriage({ notes: hostile });
+      expect(wellFormed(out.notes), JSON.stringify(hostile)).toBe(true);
+    }
+    // Un par completo no se toca.
+    expect(sanitizeTriage({ notes: 'ok \u{1F6B2}' }).notes).toBe('ok \u{1F6B2}');
+  });
+
+  it('no depende de String.prototype.toWellFormed (Node < 20)', () => {
+    // Ni package.json ni vercel.json fijan la version de Node. En una que no
+    // tenga el metodo, llamarlo tiraria dentro del try del paso 5c y TODA
+    // reserva perderia su triage, con un log.
+    const original = String.prototype.toWellFormed;
+    delete String.prototype.toWellFormed;
+    try {
+      expect('toWellFormed' in String.prototype).toBe(false);
+      const out = sanitizeTriage({ brand: 'Shimano', notes: 'ok\uD83D' });
+      expect(out.brand).toBe('Shimano');
+      expect(wellFormed(out.notes)).toBe(true);
+    } finally {
+      String.prototype.toWellFormed = original;
+    }
   });
 
   it('un NUL o un salto de linea no llegan a la base', () => {
@@ -335,7 +373,11 @@ describe('el triage nunca rompe una reserva', () => {
 
 describe('el triage cruza la reserva en dos pasos (hold y pago)', () => {
   it('queda en la unica fila, y el UPDATE del hold tampoco lo lleva', async () => {
-    const hold = await call({ hold_only: true, hold_booking_id: null, triage: { brand: 'Shimano' } });
+    const hold = await call({
+      hold_only: true,
+      hold_booking_id: null,
+      triage: { brand: 'Shimano' },
+    });
     expect(hold.statusCode, JSON.stringify(hold.body)).toBe(200);
     const booking = await call({
       hold_only: false,
@@ -357,7 +399,11 @@ describe('el triage cruza la reserva en dos pasos (hold y pago)', () => {
 
   it('antes de la migracion, el pago despues del hold tambien se completa', async () => {
     world.columnExists = false;
-    const hold = await call({ hold_only: true, hold_booking_id: null, triage: { brand: 'Shimano' } });
+    const hold = await call({
+      hold_only: true,
+      hold_booking_id: null,
+      triage: { brand: 'Shimano' },
+    });
     expect(hold.statusCode, JSON.stringify(hold.body)).toBe(200);
     const booking = await call({
       hold_only: false,
@@ -371,8 +417,16 @@ describe('el triage cruza la reserva en dos pasos (hold y pago)', () => {
   });
 
   it('la segunda llamada sin triage no borra el de la primera', async () => {
-    const hold = await call({ hold_only: true, hold_booking_id: null, triage: { brand: 'Shimano' } });
-    await call({ hold_only: false, hold_booking_id: hold.body.id, payment_intent_id: 'pi_test_123' });
+    const hold = await call({
+      hold_only: true,
+      hold_booking_id: null,
+      triage: { brand: 'Shimano' },
+    });
+    await call({
+      hold_only: false,
+      hold_booking_id: hold.body.id,
+      payment_intent_id: 'pi_test_123',
+    });
     expect(db.bookings[0].triage).toEqual({ brand: 'Shimano' });
   });
 });
