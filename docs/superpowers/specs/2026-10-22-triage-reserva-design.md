@@ -126,11 +126,26 @@ son lo que lo hace útil.
 
 Dos entradas, un solo destino.
 
-**Entrada B — eligió un servicio.** Hoy tocar una tarjeta de servicio la
-**selecciona** (`.selected` + habilita `#s1-continue`); no avanza. Por eso el
-triage se despliega dentro de la tarjeta seleccionada, sin pantalla nueva. Es el
-patrón que Diego describió: el QR de un restaurante donde los modificadores
-aparecen debajo del plato elegido.
+**Entrada B — eligió un servicio.** El triage se despliega dentro de la tarjeta
+seleccionada, sin pantalla nueva. Es el patrón que Diego describió: el QR de un
+restaurante donde los modificadores aparecen debajo del plato elegido.
+
+> **Corregido el 24-oct, y hay que decirlo entero.** Este párrafo decía que
+> tocar una tarjeta "selecciona, no avanza". **Era falso**: desde el commit
+> `f0b35985` del 20-jun, un toque salta directo al calendario. Lo verifiqué mal
+> al escribir el spec — leí las primeras líneas del manejador y no llegué al
+> `renderStep2()` del final.
+>
+> Diego aprobó el diseño sobre esa descripción equivocada, así que el costo real
+> no es el que le presenté. Es **un toque más** para todo cliente que reserve un
+> servicio con preguntas: antes tocaba el servicio y caía en el calendario;
+> ahora toca el servicio, se abren las preguntas, y toca Continuar. Los
+> servicios sin preguntas siguen saltando directo.
+>
+> Se lo plantee con las dos salidas el 24-oct y eligió dejarlo así. El argumento
+> que pesó: el que salta directo al calendario sin ver las preguntas tampoco las
+> contesta nunca, y el mecánico vuelve a salir a ciegas — que es el problema que
+> este proyecto vino a resolver.
 
 **Entrada C — "No sé qué tiene mi bici".** Reemplaza el `#diag-block` actual,
 que ya hace el 80% del trabajo. Lo que se agrega: **guardar** el resultado y
