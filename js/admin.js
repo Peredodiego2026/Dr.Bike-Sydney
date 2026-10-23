@@ -361,8 +361,11 @@ document.addEventListener('click', function (e) {
     case 'open-part-modal':
       openPartModal(d.id);
       break;
-    case 'delete-part':
-      deletePart(d.id);
+    case 'deactivate-part':
+      setPartActive(d.id, false);
+      break;
+    case 'reactivate-part':
+      setPartActive(d.id, true);
       break;
     case 'close-part-modal':
       document.getElementById('part-modal')?.remove();
@@ -8457,8 +8460,13 @@ function renderInventory() {
   const firstOfMonth = new Date();
   firstOfMonth.setDate(1);
 
-  const totalParts = inventoryData.length;
-  const lowStock = inventoryData.filter((p) => p.stock <= p.min_stock).length;
+  // Parts are deactivated, never deleted (their usage history feeds the
+  // repurchase study). `active` is undefined until the column exists - active.
+  const isActive = (p) => p.active !== false;
+  const activeParts = inventoryData.filter(isActive);
+  const totalParts = activeParts.length;
+  const lowStock = activeParts.filter((p) => p.stock <= p.min_stock).length;
+  // Value counts every unit on the shelf, inactive parts included.
   const stockValue = inventoryData.reduce((s, p) => s + p.stock * (p.cost_price || 0), 0);
 
   document.getElementById('inv-total-parts').textContent = totalParts;
@@ -8486,10 +8494,11 @@ function renderInventory() {
   }
 
   const byCat = {};
-  filtered.forEach((p) => {
+  filtered.filter(isActive).forEach((p) => {
     const cat = PART_CATEGORIES.includes(p.category) ? p.category : 'General';
     (byCat[cat] = byCat[cat] || []).push(p);
   });
+  const inactive = filtered.filter((p) => !isActive(p));
 
   function partRow(p) {
     const isLow = p.stock <= p.min_stock;
@@ -8509,19 +8518,38 @@ function renderInventory() {
           <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="-1" style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:15px;cursor:pointer;font-weight:700">−</button>
           <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="1"  style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:15px;cursor:pointer;font-weight:700">+</button>
           <button data-action="open-part-modal" data-id="${p.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">Edit</button>
-          <button data-action="delete-part" data-id="${p.id}" style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red-text);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
+          <button data-action="deactivate-part" data-id="${p.id}" title="Deactivate - hides it from the mechanics, keeps its history" aria-label="Deactivate ${escapeHtml(p.name)}" style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red-text);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
         </div>
       </td>
     </tr>`;
   }
 
-  tbody.innerHTML = PART_CATEGORIES.filter((cat) => byCat[cat]?.length)
-    .map(
-      (cat) =>
-        `<tr><td colspan="7" style="background:var(--off);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--mgray);padding:8px 12px">${cat}</td></tr>` +
-        byCat[cat].map(partRow).join('')
-    )
-    .join('');
+  function inactiveRow(p) {
+    return `<tr style="opacity:.6">
+      <td data-label="Part" style="font-weight:600;color:var(--gray)">${escapeHtml(p.name)}</td>
+      <td data-label="Stock" style="font-weight:700;font-size:15px;color:var(--gray)">${p.stock}</td>
+      <td data-label="Min" style="color:var(--mgray)">${p.min_stock}</td>
+      <td data-label="Cost">$${parseFloat(p.cost_price || 0).toFixed(2)}</td>
+      <td data-label="Client price" style="color:var(--gray)">${p.sell_price !== null && p.sell_price !== undefined ? '$' + parseFloat(p.sell_price).toFixed(2) : '—'}</td>
+      <td data-label="Status"><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--surface);color:var(--gray);border:1px solid var(--border)">Inactive</span></td>
+      <td data-label="Actions">
+        <button data-action="reactivate-part" data-id="${p.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:13px;font-weight:600;cursor:pointer">Reactivate</button>
+      </td>
+    </tr>`;
+  }
+
+  tbody.innerHTML =
+    PART_CATEGORIES.filter((cat) => byCat[cat]?.length)
+      .map(
+        (cat) =>
+          `<tr><td colspan="7" style="background:var(--off);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--mgray);padding:8px 12px">${cat}</td></tr>` +
+          byCat[cat].map(partRow).join('')
+      )
+      .join('') +
+    (inactive.length
+      ? `<tr><td colspan="7" style="background:var(--off);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--mgray);padding:8px 12px">Inactive · hidden from mechanics, history kept</td></tr>` +
+        inactive.map(inactiveRow).join('')
+      : '');
 }
 
 async function adjustStock(id, _current, delta) {
@@ -8605,15 +8633,24 @@ async function savePart(id) {
   loadInventory();
 }
 
-async function deletePart(id) {
-  if (!confirm('Delete this part from inventory?')) return;
+// Parts are never deleted: their usage history is what a repurchase study is
+// built on (Diego, 23-oct-2026). Deactivating hides a part from the mechanics
+// and keeps its stock and every movement; reactivating brings it back.
+async function setPartActive(id, active) {
+  if (
+    !active &&
+    !confirm(
+      "Deactivate this part?\n\nIt disappears from the mechanics' lists. Its stock and its whole usage history are kept, and you can reactivate it any time."
+    )
+  )
+    return;
   try {
-    await photosApi('admin-inventory-delete', { id });
+    await photosApi('admin-inventory-active', { id, active });
   } catch (e) {
-    showToast('Delete failed: ' + e.message);
+    showToast((active ? 'Could not reactivate: ' : 'Could not deactivate: ') + e.message);
     return;
   }
-  showToast('Part removed');
+  showToast(active ? 'Part reactivated' : 'Part deactivated · history kept');
   loadInventory();
 }
 

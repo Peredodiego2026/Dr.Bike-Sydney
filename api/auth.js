@@ -3816,60 +3816,108 @@ export async function handleAdminInventoryMove(req, res, reason) {
   return res.status(200).json({ ok: true, new_stock: row.new_stock, applied: row.applied });
 }
 
-export async function handleAdminInventoryDelete(req, res) {
+// Deactivate / reactivate a part. Parts are never deleted - Diego, 23-oct-2026:
+// the usage history is what a repurchase study is built on. A deactivated part
+// leaves every mechanic list and keeps its stock and all its movements. The
+// database refuses to delete a part with history anyway
+// (scripts/add-parts-active-keep-history.sql, FK on delete restrict).
+export async function handleAdminInventoryActive(req, res) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
   const id = req.body?.id;
-  if (!id) return res.status(400).json({ error: 'id required' });
-  // Its stock_movements go with it (FK on delete cascade).
+  const active = req.body?.active;
+  if (!id || typeof active !== 'boolean')
+    return res.status(400).json({ error: 'id and active (true or false) required' });
   const r = await fetch(`${SUPABASE_URL}/rest/v1/parts_inventory?id=eq.${encodeURIComponent(id)}`, {
-    method: 'DELETE',
+    method: 'PATCH',
     headers: {
       apikey: SERVICE_KEY,
       Authorization: `Bearer ${SERVICE_KEY}`,
-      Prefer: 'return=minimal',
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
     },
+    body: JSON.stringify({ active }),
   });
-  if (!r.ok) return res.status(500).json({ error: 'Failed to delete part' });
-  return res.status(200).json({ ok: true });
+  if (!r.ok) {
+    const detail = await r.text().catch(() => '');
+    // Merged before the SQL was run: say so instead of a bare 500.
+    if (/active/i.test(detail) && /column|exist|schema/i.test(detail))
+      return res.status(503).json({
+        error: 'Run scripts/add-parts-active-keep-history.sql in Supabase first',
+      });
+    return res.status(500).json({ error: 'Failed to update the part' });
+  }
+  const rows = await r.json().catch(() => []);
+  if (!Array.isArray(rows) || !rows.length)
+    return res.status(404).json({ error: 'Part not found' });
+  return res.status(200).json({ ok: true, active: rows[0].active });
 }
 
-async function handleMechanicParts(req, res) {
+export async function handleMechanicParts(req, res) {
   const auth = await authMechanic(req);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
-  const resp = await fetch(
-    `${SUPABASE_URL}/rest/v1/parts_inventory?select=*&order=category.asc,name.asc`,
-    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
-  );
+  const hdr = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
+  const base = `${SUPABASE_URL}/rest/v1/parts_inventory?select=*&order=category.asc,name.asc`;
+  // Deactivated parts stay out of every mechanic list (the job's parts picker,
+  // the stock screen, the price catalog). Until the `active` column exists the
+  // filter is a 400 - and then nothing can be inactive, so the full list is
+  // the right answer.
+  let resp = await fetch(`${base}&active=is.true`, { headers: hdr });
+  if (resp.status === 400) resp = await fetch(base, { headers: hdr });
   if (!resp.ok) return res.status(500).json({ error: 'Failed to load inventory' });
   return res.status(200).json(await resp.json());
 }
 
-async function handleMechanicPartsUpdate(req, res) {
+// The mechanic's stock screen (+ / -). It used to PATCH stock to whatever
+// number the phone was showing: no trace in the history, and a stale screen
+// (another mechanic used one meanwhile) overwrote the real count. Now the phone
+// sends the change it made; older cached copies of the app still send the
+// absolute number, which becomes a change against what the database holds now.
+// Either way it goes through adjust_part_stock, so it lands in the history.
+export async function handleMechanicPartsUpdate(req, res) {
   const auth = await authMechanic(req);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
-  const { id, stock } = req.body;
+  const { id } = req.body;
   if (!id) return res.status(400).json({ error: 'id required' });
-  const qty = parseInt(stock, 10);
-  if (!Number.isFinite(qty) || qty < 0) return res.status(400).json({ error: 'Invalid stock' });
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
-  const resp = await fetch(
-    `${SUPABASE_URL}/rest/v1/parts_inventory?id=eq.${encodeURIComponent(id)}`,
-    {
-      method: 'PATCH',
-      headers: {
-        apikey: SERVICE_KEY,
-        Authorization: `Bearer ${SERVICE_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify({ stock: qty }),
-    }
-  );
-  if (!resp.ok) return res.status(500).json({ error: 'Failed to update stock' });
-  return res.status(200).json({ ok: true });
+  const hdr = {
+    apikey: SERVICE_KEY,
+    Authorization: `Bearer ${SERVICE_KEY}`,
+    'Content-Type': 'application/json',
+  };
+  let delta;
+  if (req.body.delta !== undefined) {
+    delta = parseInt(req.body.delta, 10);
+    if (!Number.isFinite(delta) || Math.abs(delta) > 1000)
+      return res.status(400).json({ error: 'Invalid change' });
+  } else {
+    const qty = parseInt(req.body.stock, 10);
+    if (!Number.isFinite(qty) || qty < 0) return res.status(400).json({ error: 'Invalid stock' });
+    const cur = await fetch(
+      `${SUPABASE_URL}/rest/v1/parts_inventory?select=stock&id=eq.${encodeURIComponent(id)}&limit=1`,
+      { headers: hdr }
+    );
+    const row = cur.ok ? (await cur.json())?.[0] : null;
+    if (!row) return res.status(404).json({ error: 'Part not found' });
+    delta = qty - Number(row.stock);
+  }
+  // A zero change writes nothing and still answers with the current count.
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
+    method: 'POST',
+    headers: hdr,
+    body: JSON.stringify({
+      p_part_id: id,
+      p_delta: delta,
+      p_reason: 'adjustment',
+      p_created_by: String(auth.mechanic?.name || auth.mechanic?.id || 'mechanic'),
+    }),
+  });
+  if (!r.ok) return res.status(500).json({ error: 'Failed to update stock' });
+  const out = (await r.json())?.[0];
+  if (!out) return res.status(404).json({ error: 'Part not found' });
+  return res.status(200).json({ ok: true, stock: out.new_stock });
 }
 
 async function handleMechanicMessages(req, res) {
@@ -6562,7 +6610,7 @@ async function handler(req, res) {
   if (role === 'admin-inventory-upsert') return handleAdminInventoryUpsert(req, res);
   if (role === 'admin-inventory-restock') return handleAdminInventoryMove(req, res, 'restock');
   if (role === 'admin-inventory-adjust') return handleAdminInventoryMove(req, res, 'adjustment');
-  if (role === 'admin-inventory-delete') return handleAdminInventoryDelete(req, res);
+  if (role === 'admin-inventory-active') return handleAdminInventoryActive(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
   if (role === 'admin-analytics') return handleAdminAnalytics(req, res);

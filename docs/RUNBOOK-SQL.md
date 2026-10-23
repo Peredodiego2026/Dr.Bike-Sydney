@@ -28,6 +28,23 @@ consulta responde una sola pregunta - si falta correr un script - y nada mas.
 
 ---
 
+## NUEVO (23-oct-2026): repuestos se desactivan, nunca se borran
+
+**Hay que correr `scripts/add-parts-active-keep-history.sql` una vez en el SQL
+editor de Supabase**, idealmente ANTES de mergear el PR que lo trae (si no, la
+app funciona igual, pero el boton de desactivar no hace nada hasta que se corra).
+Es idempotente. Hace dos cosas:
+
+- agrega la columna `active` a `parts_inventory` (todos los repuestos quedan
+  activos): desactivar oculta un repuesto del celular del mecanico sin perderlo;
+- hace que la base **rechace borrar un repuesto que tenga historial** - antes,
+  borrarlo se llevaba todos sus movimientos. Un repuesto que nunca se movio se
+  puede seguir borrando.
+
+Al pie del script hay una consulta de verificacion: tiene que dar `true | r`.
+
+---
+
 ## NUEVO (22-oct-2026): inventario - ledger de movimientos + camaras Duro
 
 **Hay que correr `scripts/add-stock-movements-and-tube-seed.sql` una vez en el
@@ -420,6 +437,14 @@ with
      and exists (select 1 from fn where f = 'adjust_part_stock')
      and (select count(*) = 4 from col where t='parts_inventory'
             and c in ('wheel_size','valve_type','valve_length_mm','width_range')))
+  -- 54 entro el 2026-10-23: los repuestos se desactivan, nunca se borran.
+  -- parts_inventory.active y la FK del historial en RESTRICT (antes CASCADE:
+  -- borrar un repuesto borraba todos sus movimientos, y Diego necesita el
+  -- historial completo para estudiar la recompra).
+  union all select 54, 'add-parts-active-keep-history.sql', 'parts_inventory.active, y el historial no se puede borrar con el repuesto (FK restrict)',
+    (exists (select 1 from col where t='parts_inventory' and c='active')
+     and exists (select 1 from pg_constraint where conname = 'stock_movements_part_id_fkey'
+                   and confdeltype = 'r'))
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado

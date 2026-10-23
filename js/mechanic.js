@@ -2709,10 +2709,12 @@ async function updateQty(id, delta, btn) {
   const el = document.getElementById('qty-' + id);
   if (!el) return;
   const current = parseInt(el.textContent);
-  const newQty = Math.max(0, current + delta);
-  el.textContent = newQty;
+  el.textContent = Math.max(0, current + delta);
   try {
     const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
+    // Sends the change, not the number on screen: the screen may be stale
+    // (another mechanic used one meanwhile), and the server records the change
+    // in the stock history. It answers with the real count, which is shown.
     const r = await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2720,11 +2722,14 @@ async function updateQty(id, delta, btn) {
         role: 'mechanic-parts-update',
         token: stored.token || '',
         id,
-        stock: newQty,
+        delta,
       }),
     });
     if (!r.ok) throw new Error('update failed');
+    const d = await r.json().catch(() => ({}));
+    if (Number.isFinite(d.stock)) el.textContent = d.stock;
   } catch (e) {
+    console.warn('[stock] update failed:', e.message);
     el.textContent = current;
   }
 }
