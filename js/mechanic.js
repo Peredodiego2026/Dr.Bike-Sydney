@@ -100,6 +100,15 @@ document.addEventListener('click', (e) => {
     case 'parts-step':
       partsStep(id, parseInt(el.dataset.delta));
       break;
+    case 'pp-size':
+      setPPFilter('size', el.dataset.value);
+      break;
+    case 'pp-valve':
+      setPPFilter('valve', el.dataset.value);
+      break;
+    case 'pp-clear':
+      clearPPFilters();
+      break;
     case 'close-history-modal':
       document.getElementById('history-modal')?.remove();
       break;
@@ -1837,6 +1846,9 @@ const CATEGORY_META = {
   suspension: { label: 'Suspension', icon: '🏔️', color: 'var(--cyan)' },
   lubrication: { label: 'Lubrication', icon: '🧴', color: 'var(--green)' },
   general: { label: 'General', icon: '🔨', color: 'var(--gray)' },
+  // 🚲, not 🛞: the wheel emoji is Unicode 14 (2021) and older Android phones
+  // draw it as an empty box.
+  tubes: { label: 'Tubes', icon: '🚲', color: 'var(--green)' },
 };
 function catMeta(cat) {
   const key = String(cat || '')
@@ -1862,6 +1874,10 @@ async function openPartsPicker() {
         <div style="font-size:13px;color:var(--gray)"><span id="pp-count">0</span> selected · stock deducts on complete</div>
       </div>
     </div>
+    <div id="pp-filters" style="flex-shrink:0;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--white);display:none;flex-direction:column;gap:8px">
+      <input id="pp-search" type="search" autocomplete="off" placeholder="Search parts" aria-label="Search parts" style="width:100%;min-height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;font-family:var(--sans);color:var(--navy);background:var(--white)">
+      <div id="pp-chips" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
     <div id="pp-list" style="flex:1;overflow-y:auto;padding:14px 16px;background:var(--off)">
       <div style="text-align:center;color:var(--gray);font-size:13px;padding:30px">Loading parts...</div>
     </div>
@@ -1870,6 +1886,11 @@ async function openPartsPicker() {
       <button data-action="confirm-parts" data-value="false" style="width:100%;padding:11px;background:none;border:1.5px solid var(--border);color:var(--navy);border-radius:10px;font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer">No parts used in this service</button>
     </div>`;
   document.body.appendChild(panel);
+  _ppFilter = { size: null, valve: null, q: '' };
+  panel.querySelector('#pp-search').addEventListener('input', (e) => {
+    _ppFilter.q = e.target.value;
+    renderPPList();
+  });
 
   const stored = JSON.parse(localStorage.getItem('drbike-mech') || '{}');
   let parts = [];
@@ -1888,6 +1909,23 @@ async function openPartsPicker() {
   renderPartsPicker(parts);
 }
 
+// Search and tube filters. 18 Duro tube variants differ only by size, valve and
+// width - picked from one long list, the wrong one is one tap away. The chips
+// narrow the list to the tubes that fit.
+let _ppFilter = { size: null, valve: null, q: '' };
+
+// '28"/29"' -> ['28', '29']: a 28/29 tube shows under the 29" chip too, it fits.
+function ppSizesOf(v) {
+  return String(v || '')
+    .replace(/"/g, '')
+    .split('/')
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+function ppSizeLabel(s) {
+  return /^\d+(\.\d+)?$/.test(s) ? `${s}"` : s;
+}
+
 function renderPartsPicker(parts) {
   const list = document.getElementById('pp-list');
   if (!list) return;
@@ -1898,13 +1936,111 @@ function renderPartsPicker(parts) {
   }
   // Stash for stepper lookups
   window._ppParts = {};
+  parts.forEach((p) => (window._ppParts[p.id] = p));
+  window._ppAll = parts;
+  const filters = document.getElementById('pp-filters');
+  if (filters) filters.style.display = 'flex';
+  renderPPChips();
+  renderPPList();
+}
+
+function renderPPChips() {
+  const box = document.getElementById('pp-chips');
+  if (!box) return;
+  const tubes = (window._ppAll || []).filter((p) => p.wheel_size || p.valve_type);
+  if (!tubes.length) {
+    box.innerHTML = '';
+    return;
+  }
+  const sizes = [...new Set(tubes.flatMap((p) => ppSizesOf(p.wheel_size)))].sort(
+    (a, b) => parseFloat(a) - parseFloat(b)
+  );
+  const valves = [
+    ...new Set(tubes.map((p) => String(p.valve_type || '').toLowerCase()).filter(Boolean)),
+  ].sort();
+  const chip = (action, value, label, on) =>
+    `<button data-action="${action}" data-value="${esc(value)}" aria-pressed="${on}" style="flex-shrink:0;min-height:44px;padding:0 14px;border-radius:22px;border:1.5px solid ${on ? 'var(--blue)' : 'var(--border)'};background:${on ? 'var(--blue-lt)' : 'var(--white)'};color:${on ? 'var(--blue-text)' : 'var(--navy)'};font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer;white-space:nowrap">${esc(label)}</button>`;
+  // The label stays put; only the chips scroll sideways.
+  const row = (title, chips) =>
+    `<div style="display:flex;align-items:center;gap:6px" role="group" aria-label="${esc(title)}">
+      <span style="flex-shrink:0;font-size:11px;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;min-width:44px">${esc(title)}</span>
+      <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;min-width:0">${chips.join('')}</div>
+    </div>`;
+  box.innerHTML =
+    (sizes.length
+      ? row('Size', [
+          chip('pp-size', '', 'All', !_ppFilter.size),
+          ...sizes.map((s) => chip('pp-size', s, ppSizeLabel(s), _ppFilter.size === s)),
+        ])
+      : '') +
+    (valves.length
+      ? row('Valve', [
+          chip('pp-valve', '', 'All', !_ppFilter.valve),
+          ...valves.map((v) =>
+            chip('pp-valve', v, v.charAt(0).toUpperCase() + v.slice(1), _ppFilter.valve === v)
+          ),
+        ])
+      : '');
+}
+
+function setPPFilter(key, value) {
+  _ppFilter[key] = value || null;
+  renderPPChips();
+  // Redrawing the row scrolls it back to the start; keep the picked chip in
+  // view (29" or 700C sit past the right edge of a phone).
+  document
+    .querySelector(`[data-action="pp-${key}"][aria-pressed="true"]`)
+    ?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  renderPPList();
+}
+
+function clearPPFilters() {
+  _ppFilter = { size: null, valve: null, q: '' };
+  const s = document.getElementById('pp-search');
+  if (s) s.value = '';
+  renderPPChips();
+  renderPPList();
+}
+
+function renderPPList() {
+  const list = document.getElementById('pp-list');
+  if (!list) return;
+  const q = _ppFilter.q.trim().toLowerCase();
+  const tubeFilter = _ppFilter.size || _ppFilter.valve;
+  const shown = (window._ppAll || []).filter((p) => {
+    if (
+      q &&
+      !String(p.name || '')
+        .toLowerCase()
+        .includes(q)
+    )
+      return false;
+    // A size/valve filter is a tube search: parts with no size or valve go.
+    if (_ppFilter.size && !ppSizesOf(p.wheel_size).includes(_ppFilter.size)) return false;
+    if (_ppFilter.valve && String(p.valve_type || '').toLowerCase() !== _ppFilter.valve)
+      return false;
+    return true;
+  });
+  if (!shown.length) {
+    list.innerHTML = `<div style="text-align:center;padding:40px 20px;color:var(--gray)">
+      <div style="font-size:15px;font-weight:600;color:var(--navy)">No parts match</div>
+      <div style="font-size:13px;margin-top:4px">Try another size or valve, or clear the filters.</div>
+      <button data-action="pp-clear" style="margin-top:14px;min-height:44px;padding:0 18px;background:var(--white);border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-weight:600;color:var(--navy);font-family:var(--sans);cursor:pointer">Clear filters</button>
+    </div>`;
+    return;
+  }
   const byCat = {};
-  parts.forEach((p) => {
-    window._ppParts[p.id] = p;
+  shown.forEach((p) => {
     const k = String(p.category || 'Other');
     (byCat[k] = byCat[k] || []).push(p);
   });
-  let html = '';
+  let html =
+    tubeFilter || q
+      ? `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;font-size:13px;color:var(--gray)">
+          <span>${shown.length} part${shown.length === 1 ? '' : 's'} match</span>
+          <button data-action="pp-clear" style="min-height:44px;padding:0 4px;background:none;border:none;color:var(--blue-text);font-size:13px;font-weight:600;font-family:var(--sans);cursor:pointer">Show all parts</button>
+        </div>`
+      : '';
   Object.keys(byCat)
     .sort()
     .forEach((cat) => {
@@ -1917,15 +2053,17 @@ function renderPartsPicker(parts) {
       byCat[cat].forEach((p) => {
         const qty = _partsUsed[p.id]?.qty || 0;
         const low = (p.stock || 0) <= (p.min_stock || 0);
-        html += `<div id="pp-row-${p.id}" style="display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid ${qty > 0 ? m.color : 'var(--border)'};border-left:3px solid ${m.color};border-radius:10px;padding:11px 12px;margin-bottom:7px">
+        const hasPrice = p.sell_price !== null && p.sell_price !== undefined;
+        const price = hasPrice ? `$${Number(p.sell_price).toFixed(2)}` : 'No price';
+        html += `<div id="pp-row-${p.id}" style="display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid ${qty > 0 ? m.color : 'var(--border)'};border-left:3px solid ${m.color};border-radius:10px;padding:10px 12px;margin-bottom:7px">
         <div style="flex:1;min-width:0">
           <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(p.name)}</div>
-          <div style="font-size:11px;color:${low ? 'var(--red)' : 'var(--gray)'};margin-top:2px">${low ? 'Low stock — ' : ''}${p.stock || 0} in stock</div>
+          <div style="font-size:12px;margin-top:2px;color:var(--gray)"><strong style="color:var(--navy)">${price}</strong> · <span style="color:${low ? 'var(--red)' : 'var(--gray)'}">${low ? 'Low stock — ' : ''}${p.stock || 0} in stock</span></div>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          <button data-action="parts-step" data-id="${p.id}" data-delta="-1" style="background:var(--off);border:1px solid var(--border);border-radius:7px;width:32px;height:32px;font-size:18px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <button data-action="parts-step" data-id="${p.id}" data-delta="-1" aria-label="One less ${esc(p.name)}" style="background:var(--off);border:1px solid var(--border);border-radius:8px;width:44px;height:44px;font-size:18px;cursor:pointer;font-weight:700;color:var(--navy)">−</button>
           <span id="pp-qty-${p.id}" style="font-size:15px;font-weight:700;min-width:22px;text-align:center;color:${qty > 0 ? m.color : 'var(--navy)'}">${qty}</span>
-          <button data-action="parts-step" data-id="${p.id}" data-delta="1" style="background:var(--off);border:1px solid var(--border);border-radius:7px;width:32px;height:32px;font-size:18px;cursor:pointer;font-weight:700;color:var(--navy)">+</button>
+          <button data-action="parts-step" data-id="${p.id}" data-delta="1" aria-label="One more ${esc(p.name)}" style="background:var(--off);border:1px solid var(--border);border-radius:8px;width:44px;height:44px;font-size:18px;cursor:pointer;font-weight:700;color:var(--navy)">+</button>
         </div>
       </div>`;
       });
