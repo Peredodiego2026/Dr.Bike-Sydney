@@ -392,11 +392,11 @@ with
     (exists (select 1 from col where t='shop_products' and c='ship_surcharge')
      and exists (select 1 from pg_constraint where conname = 'shop_products_ship_surcharge_check'))
   -- 53 entro el 2026-10-23 con el triage de la reserva: las respuestas que el
-  -- cliente da en el paso 1. A diferencia de casi todas las de arriba, esta NO
-  -- es inofensiva si falta: el servidor escribe `triage` en cada reserva nueva,
-  -- y si la columna no existe crear una reserva devuelve 500 y nadie puede
-  -- reservar (seccion 13). Se mira `triage` y tambien las dos de referencias
-  -- porque la migracion es una sola y una a medias no sirve.
+  -- cliente da en el paso 1. Si falta, las reservas siguen funcionando: el
+  -- servidor escribe `triage` en un UPDATE aparte, despues de crearlas, y solo
+  -- llegan sin triage. Cuesta las respuestas, no la reserva (seccion 13). Se
+  -- mira `triage` y tambien las dos de referencias porque la migracion es una
+  -- sola y una a medias no sirve.
   union all select 53, 'add-triage-columns.sql', 'bookings.triage (jsonb) + triage_photo_ref + triage_video_ref',
     (select count(*) = 3 from col where t='bookings' and c in ('triage','triage_photo_ref','triage_video_ref'))
 )
@@ -958,10 +958,11 @@ ficha que ve el cliente: foto, bio, rating). Esta en Settings.
 
 ---
 
-## 13. `add-triage-columns.sql` (23-oct-2026) - ANTES de mergear el PR del triage
+## 13. `add-triage-columns.sql` (23-oct-2026) - correrlo antes de mergear; olvidarlo no rompe reservas
 
-**Se corre ANTES de mergear el PR que guarda el triage, no despues.** Si el
-codigo llega primero, nadie puede reservar hasta que se corra. El codigo que ya
+**Conviene correrla ANTES de mergear el PR que guarda el triage, y hace falta
+correrla para que el triage se guarde.** Pero si se olvida, nadie deja de poder
+reservar: las reservas siguen entrando, solo que sin triage. El codigo que ya
 esta en produccion no la necesita: correrla antes no cambia nada de lo que se ve.
 
 Agrega tres columnas a `bookings`, todas vacias para las reservas que ya
@@ -973,23 +974,32 @@ existen:
 | `triage_photo_ref` | `text`  | Referencia a su foto, en el bucket privado. No una URL           |
 | `triage_video_ref` | `text`  | Lo mismo para un video corto de un ruido                         |
 
-**Que pasa si el PR se mergea primero.** `handleCreateBooking` (`api/auth.js`)
-arma una fila y la escribe entera; el PR del triage le suma `triage` (con
-`NULL` si el cliente no contesto: la columna se nombra igual). PostgREST
-rechaza una escritura que nombra una columna que no existe - es el mismo error
-que dejo a Reset PIN en 500 para todos (seccion 12).
+**Que pasa si el PR se mergea primero.** Nada que un cliente note.
+`handleCreateBooking` (`api/auth.js`) crea la reserva con los campos de siempre y
+despues, en un `UPDATE` aparte (paso 5c), intenta guardar el triage. Sin la
+columna, PostgREST rechaza ese `UPDATE` ("Could not find the 'triage' column"),
+el servidor lo anota en el log (`[create-booking] could not store triage`) y la
+reserva sigue: se cobra, se confirma, aparece en la agenda. Cuesta una sola
+cosa: **el triage de esa reserva**. Esas respuestas no se guardan en ningun otro
+lado, asi que las reservas que entren hasta que se corra el script quedan sin
+triage para siempre, y el mecanico sale sin saber que pieza llevar. Por eso
+conviene correrlo antes, o el mismo dia.
 
-La reserva empieza ahi: `hold-slot` inserta la fila antes de tocar la tarjeta.
-Resultado: `500 Could not create booking` en cada intento y **nadie puede
-reservar** hasta que se corra el script. No se le cobra a nadie, pero es la web
-sin reservas. Por el camino sin hold (el servidor todavia lo acepta) el insert
-va DESPUES del cobro, y un 500 ahi no reembolsa: solo reembolsan el turno
-ocupado (`23505`) y el hold vencido.
+**Por que esta escrito asi.** El triage va en un `UPDATE` aparte y no dentro de
+la fila que se inserta, igual que las coordenadas (`address_lat` / `address_lng`).
+Si viajara en la misma fila, una columna ausente haria fallar el `INSERT`
+entero - y el `UPDATE` con el que se convierte un hold en reserva, que es la
+misma fila - y nadie podria reservar: el mismo error que dejo a Reset PIN en 500
+para todos (seccion 12). Las migraciones de aca se corren a mano, asi que el
+codigo puede llegar antes que la columna; escribirlo aparte es lo que hace que
+eso salga barato. No lo "simplifiques" metiendolo en la fila:
+`tests/unit/triage-server.test.js` corre el handler contra una base sin la
+columna y falla si la reserva deja de hacerse.
 
-El codigo de las coordenadas (`address_lat`) esquiva esto a proposito
-escribiendo la columna en un UPDATE aparte, para que su ausencia cueste el ETA
-y nada mas. Aca no se hace: `triage` viaja en la misma fila. Correr el script
-antes es lo que lo hace seguro.
+**Como saber si alguna reserva se quedo sin triage.** Buscar
+`could not store triage` en los logs de runtime de Vercel (`/api/auth`). Si sigue
+apareciendo despues de correr el script, es otro error: leer el mensaje que
+acompana.
 
 **Como se corre:** seccion 2, con el contenido de `scripts/add-triage-columns.sql`.
 Es idempotente (`ADD COLUMN IF NOT EXISTS`) y no toca datos: correrlo dos veces

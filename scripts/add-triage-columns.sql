@@ -5,11 +5,15 @@
 -- Correr en Supabase > SQL Editor. Es idempotente: si la columna ya existe, no
 -- hace nada, asi que correrlo dos veces es inofensivo. No toca ni borra datos.
 --
--- CORRER ESTO ANTES de mergear el PR que hace que el servidor guarde el triage.
--- Ese codigo escribe la columna `triage` en CADA reserva nueva (con NULL si el
--- cliente no contesto, pero la nombra igual), y PostgREST rechaza una escritura
--- que nombra una columna que no existe: sin este script, crear una reserva
--- devuelve 500 y nadie puede reservar.
+-- Conviene correrlo ANTES de mergear el PR que hace que el servidor guarde el
+-- triage, y hace falta correrlo para que el triage se guarde. Pero olvidarlo NO
+-- rompe las reservas: el servidor escribe el triage en un UPDATE aparte, despues
+-- de crear la reserva (paso 5c de handleCreateBooking en api/auth.js), igual que
+-- address_lat/address_lng. Si la columna `triage` no existe todavia, ese UPDATE
+-- falla, queda "could not store triage" en el log y la reserva sigue su camino
+-- sin triage. Se pierde el triage de esa reserva y nada mas. Lo unico que cuesta
+-- no correrlo: las respuestas de las reservas que entren mientras tanto no se
+-- guardan en ningun otro lado, y despues no se pueden recuperar.
 --
 -- QUE GUARDA CADA COLUMNA (todas en public.bookings, todas NULL si el cliente no
 -- contesto nada, que es lo normal para las reservas viejas):
