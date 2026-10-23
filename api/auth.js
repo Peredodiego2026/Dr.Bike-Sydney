@@ -3645,6 +3645,196 @@ async function handleMechanicUpdateStatus(req, res) {
   return res.status(200).json({ ok: true });
 }
 
+// ── Admin inventory, server-side ───────────────────────────────────────────
+// The panel used to read and write parts_inventory straight from the browser
+// with the anon key (relying on RLS). These move it behind the service key -
+// the project rule for elevated writes - and route every stock change through
+// the adjust_part_stock ledger, so the history covers admin moves too, not just
+// what mechanics use.
+export async function handleAdminInventoryList(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const resp = await fetch(
+    `${SUPABASE_URL}/rest/v1/parts_inventory?select=*&order=category.asc,name.asc`,
+    { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+  );
+  if (!resp.ok) return res.status(500).json({ error: 'Failed to load inventory' });
+  return res.status(200).json(await resp.json());
+}
+
+// A non-negative number, or NaN when it is not one. '' and null are "no value",
+// which only nullable fields accept.
+function invNumber(v, { int = false, nullable = false } = {}) {
+  if (v === null || v === '') return nullable ? null : NaN;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0 || (int && !Number.isInteger(n))) return NaN;
+  return n;
+}
+function invText(v, max) {
+  if (v === null || v === undefined) return null;
+  return String(v).trim().slice(0, max) || null;
+}
+
+export async function handleAdminInventoryUpsert(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const b = req.body || {};
+  const name = typeof b.name === 'string' ? b.name.trim() : '';
+  if (!name) return res.status(400).json({ error: 'name required' });
+  if (name.length > 120) return res.status(400).json({ error: 'name is too long (120 max)' });
+  const who = String(auth.user?.email || 'admin');
+  const sbHdr = {
+    apikey: SERVICE_KEY,
+    Authorization: `Bearer ${SERVICE_KEY}`,
+    'Content-Type': 'application/json',
+  };
+
+  // Validated here, not trusted from the page: these numbers become the price a
+  // client is charged and the stock-value totals in Finance.
+  const meta = { name };
+  if (b.category !== undefined) meta.category = invText(b.category, 40) || 'General';
+  for (const [f, max] of [
+    ['wheel_size', 20],
+    ['valve_type', 20],
+    ['width_range', 20],
+  ])
+    if (b[f] !== undefined) meta[f] = invText(b[f], max);
+  for (const [f, opts] of [
+    ['min_stock', { int: true }],
+    ['cost_price', {}],
+    ['sell_price', { nullable: true }],
+    ['valve_length_mm', { int: true, nullable: true }],
+  ]) {
+    if (b[f] === undefined) continue;
+    const n = invNumber(b[f], opts);
+    if (Number.isNaN(n))
+      return res.status(400).json({ error: `${f} must be a number of 0 or more` });
+    meta[f] = n;
+  }
+  let stock = null;
+  if (b.stock !== undefined && b.stock !== null && b.stock !== '') {
+    stock = invNumber(b.stock, { int: true });
+    if (Number.isNaN(stock))
+      return res.status(400).json({ error: 'stock must be a whole number of 0 or more' });
+  }
+
+  if (b.id) {
+    // Existing part: metadata is a plain PATCH; a stock change is an auditable
+    // 'adjustment' through the RPC, never a blind overwrite.
+    const up = await fetch(
+      `${SUPABASE_URL}/rest/v1/parts_inventory?id=eq.${encodeURIComponent(b.id)}`,
+      {
+        method: 'PATCH',
+        headers: { ...sbHdr, Prefer: 'return=representation' },
+        body: JSON.stringify(meta),
+      }
+    );
+    if (!up.ok) return res.status(500).json({ error: 'Failed to save part' });
+    const saved = await up.json().catch(() => []);
+    if (!Array.isArray(saved) || !saved.length)
+      return res.status(404).json({ error: 'Part not found - it may have been deleted' });
+    // "Set the stock to N" becomes the difference from what is there now. Read
+    // and adjust are two steps, so a mechanic using the same part in between
+    // makes the final count off by that one use - the ledger still records
+    // every real change, and the admin sees the true number after the reload.
+    if (stock !== null) {
+      // The PATCH above already returned the row, current stock included.
+      const delta = stock - Number(saved[0].stock);
+      if (delta !== 0) {
+        const adj = await fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
+          method: 'POST',
+          headers: sbHdr,
+          body: JSON.stringify({
+            p_part_id: b.id,
+            p_delta: delta,
+            p_reason: 'adjustment',
+            p_created_by: who,
+          }),
+        });
+        if (!adj.ok)
+          return res.status(500).json({ error: 'Part saved, but the stock change failed' });
+      }
+    }
+    return res.status(200).json({ ok: true, id: b.id });
+  }
+
+  // New part: insert with its starting stock, then record the 'initial' movement
+  // (the stock is already set, so log it rather than adjust from zero).
+  const startStock = stock ?? 0;
+  const ins = await fetch(`${SUPABASE_URL}/rest/v1/parts_inventory`, {
+    method: 'POST',
+    headers: { ...sbHdr, Prefer: 'return=representation' },
+    body: JSON.stringify({ ...meta, stock: startStock }),
+  });
+  if (!ins.ok) return res.status(500).json({ error: 'Failed to create part' });
+  const created = (await ins.json())?.[0];
+  if (created?.id && startStock > 0) {
+    await fetch(`${SUPABASE_URL}/rest/v1/stock_movements`, {
+      method: 'POST',
+      headers: { ...sbHdr, Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        part_id: created.id,
+        delta: startStock,
+        reason: 'initial',
+        created_by: who,
+      }),
+    });
+  }
+  return res.status(200).json({ ok: true, id: created?.id || null });
+}
+
+export async function handleAdminInventoryMove(req, res, reason) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const id = req.body?.id;
+  // restock is always positive; adjustment may be either way.
+  const delta =
+    reason === 'restock' ? Math.abs(parseInt(req.body?.qty, 10)) : parseInt(req.body?.delta, 10);
+  if (!id || !Number.isFinite(delta) || delta === 0)
+    return res.status(400).json({ error: 'id and a non-zero amount required' });
+  const sbHdr = {
+    apikey: SERVICE_KEY,
+    Authorization: `Bearer ${SERVICE_KEY}`,
+    'Content-Type': 'application/json',
+  };
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
+    method: 'POST',
+    headers: sbHdr,
+    body: JSON.stringify({
+      p_part_id: id,
+      p_delta: delta,
+      p_reason: reason,
+      p_created_by: String(auth.user?.email || 'admin'),
+    }),
+  });
+  if (!r.ok) return res.status(500).json({ error: 'Failed to update stock' });
+  const row = (await r.json())?.[0];
+  if (!row) return res.status(404).json({ error: 'Part not found' });
+  return res.status(200).json({ ok: true, new_stock: row.new_stock, applied: row.applied });
+}
+
+export async function handleAdminInventoryDelete(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const id = req.body?.id;
+  if (!id) return res.status(400).json({ error: 'id required' });
+  // Its stock_movements go with it (FK on delete cascade).
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/parts_inventory?id=eq.${encodeURIComponent(id)}`, {
+    method: 'DELETE',
+    headers: {
+      apikey: SERVICE_KEY,
+      Authorization: `Bearer ${SERVICE_KEY}`,
+      Prefer: 'return=minimal',
+    },
+  });
+  if (!r.ok) return res.status(500).json({ error: 'Failed to delete part' });
+  return res.status(200).json({ ok: true });
+}
+
 async function handleMechanicParts(req, res) {
   const auth = await authMechanic(req);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
@@ -6285,6 +6475,8 @@ async function handler(req, res) {
           role === 'photo-sign' ||
           // Admin > Photos re-reads the list after every select-and-act.
           role.startsWith('admin-photos-') ||
+          // Admin > Spare Parts: +/- stock and reloads after each change.
+          role.startsWith('admin-inventory-') ||
           // Admin > Shop Orders re-reads the list after every step it moves.
           role === 'admin-shop' ||
           role.startsWith('client-')
@@ -6366,6 +6558,11 @@ async function handler(req, res) {
   if (role === 'admin-photos-feature') return handleAdminPhotosFeature(req, res);
   if (role === 'admin-photos-unfeature') return handleAdminPhotosUnfeature(req, res);
   if (role === 'admin-photos-order') return handleAdminPhotosOrder(req, res);
+  if (role === 'admin-inventory-list') return handleAdminInventoryList(req, res);
+  if (role === 'admin-inventory-upsert') return handleAdminInventoryUpsert(req, res);
+  if (role === 'admin-inventory-restock') return handleAdminInventoryMove(req, res, 'restock');
+  if (role === 'admin-inventory-adjust') return handleAdminInventoryMove(req, res, 'adjustment');
+  if (role === 'admin-inventory-delete') return handleAdminInventoryDelete(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
   if (role === 'admin-analytics') return handleAdminAnalytics(req, res);
