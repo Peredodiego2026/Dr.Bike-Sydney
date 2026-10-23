@@ -160,6 +160,17 @@ export function createSummaryRow(label, value) {
 </div>`;
 }
 
+// Database text (service names are typed in Admin > Services) goes into HTML
+// escaped, like js/app.js escapeHtml.
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ── Booking Card ─────────────────────────────────────────────────────────────
 export function createBookingCard(booking) {
   const {
@@ -206,7 +217,7 @@ export function createBookingCard(booking) {
 <div class="booking-card" data-booking-id="${id}" style="border-left:4px solid ${s.border}">
   <div class="booking-card__date" style="font-size:18px;font-weight:800;color:var(--navy);text-align:center;line-height:1.1;flex-shrink:0;width:44px">${dateLabel}</div>
   <div class="booking-card__info">
-    <div class="booking-card__service">${service_name || 'Service'}</div>
+    <div class="booking-card__service">${escapeHtml(service_name || 'Service')}</div>
     <div style="font-size:12px;color:var(--gray);margin-top:2px">${toDisplayTime(scheduled_time)}</div>
     ${rating ? `<div class="booking-card__rating" style="margin-top:4px">${createStarRating(rating, false)}</div>` : ''}
   </div>
