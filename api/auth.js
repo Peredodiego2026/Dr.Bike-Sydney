@@ -37,6 +37,7 @@ import { trackingScope, applyTrackingScope } from './_tracking-scope.js';
 import { reviewCredential, reviewGate } from './_review-auth.js';
 import { shortClientName } from './_privacy.js';
 import { auditOrphanPayments } from './_orphan-audit.js';
+import { ALL_QUESTION_IDS } from '../js/triage-questions.js';
 import {
   JOB_PHOTO_BUCKET,
   JOB_PHOTO_TYPES,
@@ -1082,6 +1083,53 @@ async function handleRemoveCard(req, res) {
   return res.status(200).json({ ok: true });
 }
 
+// ── Booking triage ───────────────────────────────────────────────────────────
+// The short questions a client answers while booking, so the mechanic knows
+// whether he has the right part before he drives out (js/triage-questions.js).
+// The client sends them as { question_id: "answer" }.
+//
+// Everything in that body is the client's word, so this keeps only what the
+// catalogue defines (ALL_QUESTION_IDS) and only text, clamped on both axes: 200
+// characters per answer, 4 KB for the whole object. Nothing here is trusted
+// for pricing, access or anything else - it is a note for a person to read.
+//
+// Returns null, not {}, when nothing survives: "no answers" must not look like
+// an answer.
+//
+// Two details that exist because Postgres is stricter than JSON.stringify:
+//   - jsonb refuses a lone surrogate and U+0000. Either one would fail the
+//     triage UPDATE and lose every answer over one emoji cut in half, so
+//     control characters become a space and the string is made well-formed
+//     BEFORE it is clamped, and the clamp counts code points, not UTF-16 units.
+//   - the 4 KB limit is bytes: a Chinese character is 3 of them, and
+//     `zh` is one of the three languages this app speaks.
+const TRIAGE_MAX_ANSWER_CHARS = 200;
+const TRIAGE_MAX_BYTES = 4096;
+
+export function sanitizeTriage(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const out = {};
+  // Walks the catalogue, not the client's keys: an unknown key (or a
+  // `__proto__`) is never even looked at.
+  for (const id of ALL_QUESTION_IDS) {
+    if (!Object.prototype.hasOwnProperty.call(raw, id)) continue;
+    const value = raw[id];
+    if (typeof value !== 'string') continue;
+    const answer = Array.from(value.toWellFormed().replace(/\p{Cc}/gu, ' ').trim())
+      .slice(0, TRIAGE_MAX_ANSWER_CHARS)
+      .join('')
+      .trim();
+    if (!answer) continue;
+    out[id] = answer;
+    if (Buffer.byteLength(JSON.stringify(out)) > TRIAGE_MAX_BYTES) {
+      // Whole answers go, never half of one: what is left is complete.
+      delete out[id];
+      break;
+    }
+  }
+  return Object.keys(out).length ? out : null;
+}
+
 // ── Server-authoritative booking creation ────────────────────────────────────
 // Price comes from the DB (never the client). Payment is verified with Stripe
 // before a non-admin booking is created. The admin test account bypasses payment.
@@ -1109,6 +1157,9 @@ export async function handleCreateBooking(req, res) {
     // instead of inserting a new one. See api/_slot-hold.js for why.
     hold_only,
     hold_booking_id,
+    // The booking triage: { question_id: answer }. Untrusted - see
+    // sanitizeTriage. Stored by step 5c, NOT in `row`.
+    triage,
   } = req.body;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   if (!scheduled_date || !scheduled_time)
@@ -1631,6 +1682,33 @@ export async function handleCreateBooking(req, res) {
     }
   } catch (e) {
     console.error('[create-booking] geocode step failed:', e.message);
+  }
+
+  // 5c. Store the triage answers. The same reasoning as 5b, and stricter,
+  // because here the cost of getting it wrong is that nobody can book.
+  //
+  // scripts/add-triage-columns.sql is run by hand in the Supabase dashboard,
+  // so this code can reach production before the `triage` column exists. As a
+  // field of `row` that makes PostgREST reject the whole INSERT (and the hold's
+  // UPDATE, which is the same `row`): not one customer could book. As this
+  // separate UPDATE it costs the triage of that booking and nothing else. The
+  // triage must never be able to break a booking - the same rule goes for
+  // anything later that hangs off it.
+  //
+  // Awaited, not fire-and-forget: a serverless function is frozen once it
+  // responds. Written only when something survived sanitising, so a second call
+  // that carries no answers (the payment after a hold) cannot erase the first.
+  try {
+    const answers = sanitizeTriage(triage);
+    if (answers) {
+      const { error: triageErr } = await sb
+        .from('bookings')
+        .update({ triage: answers })
+        .eq('id', booking.id);
+      if (triageErr) console.error('[create-booking] could not store triage:', triageErr.message);
+    }
+  } catch (e) {
+    console.error('[create-booking] triage step failed:', e.message);
   }
 
   // 6. Discount/gift code (server-authoritative): atomic consume via RPC -
