@@ -47,12 +47,8 @@ globalThis.fetch = async (url, init = {}) => {
   return { ok: false, status: 404, json: async () => ({}), text: async () => '' };
 };
 
-const {
-  handleAdminInventoryList,
-  handleAdminInventoryUpsert,
-  handleAdminInventoryMove,
-  handleAdminInventoryDelete,
-} = await import('../../api/auth.js');
+const { handleAdminInventoryList, handleAdminInventoryUpsert, handleAdminInventoryMove } =
+  await import('../../api/auth.js');
 
 const run = async (handler, body, extra) => {
   const res = { statusCode: null, body: null };
@@ -158,13 +154,7 @@ describe('upsert', () => {
   });
 });
 
-describe('delete', () => {
-  it('admin only, deletes the part', async () => {
-    const r = await run(handleAdminInventoryDelete, { access_token: 'admin', id: P1 });
-    expect(r.statusCode).toBe(200);
-    expect(calls.some((c) => c.u.includes('/parts_inventory') && c.method === 'DELETE')).toBe(true);
-  });
-});
+// Delete is gone - parts are deactivated: tests/unit/inventory-deactivate.test.js.
 
 describe('upsert validates what becomes a client price', () => {
   const up = (extra) =>
