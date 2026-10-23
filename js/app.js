@@ -859,6 +859,9 @@ function renderTriage(service, answers = {}) {
 // One listener pair on the panel, not one per chip: the panel is rebuilt every
 // time a service is picked. The chips are updated in place rather than
 // re-rendered, so a field the client is typing in keeps its focus.
+// Every answer saves the draft as step 'service', which is what the card tap
+// records: the triage is part of step 1, not a step of its own, so there is no
+// 'triage' step to invent.
 function bindTriage(panel) {
   panel.addEventListener('click', (e) => {
     const chip = e.target.closest('.triage__chip');
@@ -875,13 +878,13 @@ function bindTriage(panel) {
         c.classList.toggle('is-on', on);
         c.setAttribute('aria-pressed', String(on));
       });
-    saveBookingDraft('triage');
+    saveBookingDraft('service');
   });
   panel.addEventListener('input', (e) => {
     const field = e.target.closest('.triage__input');
     if (!field) return;
     setTriageAnswer(window.appState, field.dataset.q, field.value);
-    saveBookingDraft('triage');
+    saveBookingDraft('service');
   });
 }
 
@@ -6760,20 +6763,18 @@ function showDiagResult(screen, data) {
       const card = screen.querySelector(
         `.service-card[data-service-id="${data.recommended_service_id}"]`
       );
-      if (card) {
-        card.click();
-        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
+      // The click does the scrolling: the card's handler brings the questions it
+      // unfolds to the top of the screen. A second scroll from here ('nearest')
+      // would win over it and leave them behind the Continue bar.
+      card?.click();
     });
   }
 }
 
 function autoSelectService(screen, serviceId) {
   const card = screen.querySelector(`.service-card[data-service-id="${serviceId}"]`);
-  if (card) {
-    card.click();
-    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
+  // The click does the scrolling (see showDiagResult above).
+  card?.click();
 }
 
 // Auto-apply pending referral code after login; prompt for a new password

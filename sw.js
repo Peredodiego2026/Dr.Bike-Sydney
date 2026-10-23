@@ -244,7 +244,9 @@
 // v148: el triage del paso 1. js/i18n-es.js y js/i18n-zh.js cambiaron dos veces
 // (las preguntas, y el encabezado del panel) y js/triage-questions.js es nuevo:
 // los tres se importan sin ?v=, asi que este numero es lo unico que los entrega.
-const CACHE_STATIC = 'drbike-static-v148';
+// v149: js/app.js cambio (el triage guarda el paso 'service' y no uno inventado, y los dos
+// toques programaticos de tarjeta dejaron de desplazar). Nuevo ?v= en las paginas.
+const CACHE_STATIC = 'drbike-static-v149';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
