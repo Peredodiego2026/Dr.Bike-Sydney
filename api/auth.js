@@ -304,12 +304,12 @@ export function applySurcharge(amount, dateStr) {
 }
 
 // Membership plans (confirmed with Diego, revised version): each plan gets
-// 3 separate monthly quotas - "minor" (any service under $60), "wash" (the
+// 3 separate monthly quotas - "minor" (any service under $70), "wash" (the
 // Bike Wash service), and "tuneup" (the Tune-Up service) - matched against
 // the real services table by price/name, not a hardcoded list. Basic's
 // included visits still incur the callout fee ("solo por ir" - Diego's
 // words); Standard/VIP's waive it entirely. A booking that doesn't fall into
-// any of the 3 categories (e.g. a Standard Service or a repair >= $60), or
+// any of the 3 categories (e.g. a Standard Service or a repair >= $70), or
 // one that does but has used up that category's quota, is full price with
 // the plan's ongoing discount applied to both price and fee (same
 // both-components convention the Sunday surcharge already uses). VIP's
@@ -333,7 +333,8 @@ export const MEMBERSHIP_PLANS = {
   },
 };
 
-const MINOR_SERVICE_MAX_PRICE = 60;
+// 70 since the +$10 of 24-oct-2026 (was 60): the same services stay "minor".
+const MINOR_SERVICE_MAX_PRICE = 70;
 
 // Which free-quota bucket (if any) a service falls into, matched against the
 // base (pre-surcharge) price/name so a Sunday surcharge never pushes a

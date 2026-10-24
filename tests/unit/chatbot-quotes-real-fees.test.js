@@ -55,18 +55,24 @@ describe('the chatbot quotes fees the booking can actually charge', () => {
     }
   });
 
-  // The specific ghost. $35 as a TIME band is what sent Chatswood the wrong
-  // number; $35 as the peninsula cap is correct and must stay.
-  it('does not resurrect $35 as a middle time band', () => {
+  // The specific ghost. The peninsula cap ($35 until the +$10 of 24-oct-2026,
+  // $45 now) as a TIME band is what sent Chatswood the wrong number; as the
+  // peninsula cap it is correct and must stay.
+  it('does not resurrect the peninsula fee as a middle time band', () => {
     const timeBands = FEE_BANDS.map((b) => b.fee);
-    expect(timeBands).not.toContain(35);
-    expect(formatFeeBands()).not.toMatch(/\$35\b(?![^\n]*(?:Palm Beach|flat))/);
+    expect(timeBands).not.toContain(PENINSULA_FAR_FEE);
+    expect(formatFeeBands()).not.toMatch(
+      new RegExp(`\\$${PENINSULA_FAR_FEE}\\b(?![^\\n]*(?:Palm Beach|flat))`)
+    );
   });
 
   // Derived, not retyped: no fee or perimeter written by hand in the prompt.
   it('the prompt interpolates the constants instead of hardcoding them', () => {
     expect(chatSrc).toContain('${formatFeeBands()}');
     expect(chatSrc).toContain('${PERIMETER_MAX_MINUTES} MINUTES');
+    // "from $25" was typed into the prompt and outlived the +$10 (24-oct-2026).
+    expect(chatSrc).toContain('from $${FEE_BANDS[0].fee}');
+    expect(chatSrc).not.toMatch(/from \$\d/);
     // The old ladder, gone for good.
     expect(chatSrc).not.toContain('20 to 32 minutes');
     expect(chatSrc).not.toContain('32 to 45 minutes');

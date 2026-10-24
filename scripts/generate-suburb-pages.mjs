@@ -131,7 +131,7 @@ const BLOG_POSTS = {
 // Prices are display defaults only - js/live-prices.js overwrites them from the
 // Supabase `services` table on load, matching on data-service.
 const SERVICE_KEYS = ['Tune-Up', 'Standard Service', 'Standard+ Service', 'Ultimate Overhaul'];
-const SERVICE_PRICES = ['$109', '$149', '$199', '$369'];
+const SERVICE_PRICES = ['$119', '$159', '$209', '$379'];
 
 // The visible prices get overwritten in the browser by js/live-prices.js from the
 // Supabase `services` table, but the Service schema is static HTML - so when the
@@ -226,7 +226,7 @@ const COPY = {
       ],
       [
         'How much does a bike service cost in {name}?',
-        'Our Tune-Up starts at $109 and includes the visit & diagnosis fee. Full pricing is listed above. No hidden charges.',
+        'Our Tune-Up starts at $119 and includes the visit & diagnosis fee. Full pricing is listed above. No hidden charges.',
       ],
     ],
     ctaH2: 'Ready to book in {name}?',
@@ -300,7 +300,7 @@ const COPY = {
       ],
       [
         '¿Cuánto cuesta un servicio de bicicleta en {name}?',
-        'El Ajuste arranca en $109 e incluye la tarifa de visita a domicilio. Los precios completos están más arriba. Sin cargos ocultos.',
+        'El Ajuste arranca en $119 e incluye la tarifa de visita a domicilio. Los precios completos están más arriba. Sin cargos ocultos.',
       ],
     ],
     ctaH2: '¿Listo para reservar en {name}?',
@@ -368,7 +368,7 @@ const COPY = {
       ],
       [
         '在 {name} 做一次保养要多少钱？',
-        '基础保养 $109 起，已包含上门服务费。完整价格见上方，没有隐藏费用。',
+        '基础保养 $119 起，已包含上门服务费。完整价格见上方，没有隐藏费用。',
       ],
     ],
     ctaH2: '准备在 {name} 预订了吗？',
@@ -482,7 +482,7 @@ function page(sub, lang) {
     },
     telephone: '+61433963250',
     url,
-    priceRange: '$109-$369',
+    priceRange: '$119-$379',
     openingHours: 'Mo-Su 08:00-17:00',
     areaServed: { '@type': 'City', name: `${sub.name}, Sydney` },
   });

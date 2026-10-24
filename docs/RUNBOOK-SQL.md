@@ -28,6 +28,16 @@ consulta responde una sola pregunta - si falta correr un script - y nada mas.
 
 ---
 
+## NUEVO (25-oct-2026): +$10 a todos los servicios y a la visita
+
+**Hay que correr `scripts/raise-prices-10.sql` una vez, y mergear su PR justo
+despues** (primero el SQL, despues el merge). Sube $10 cada servicio con precio
+(el de $0 no) y cada zona de `callout_zones`. Seguro de correr dos veces: cada
+tabla se sube solo si sigue en el precio viejo. Verificacion al pie del script:
+tiene que dar `119 | 27 | 379 | 35 / 45 / 55 / 65 / 75`.
+
+---
+
 ## NUEVO (24-oct-2026): nota en cada movimiento de stock
 
 **Hay que correr `scripts/add-stock-movement-notes.sql` una vez** (despues del
@@ -463,6 +473,10 @@ with
     (exists (select 1 from col where t='stock_movements' and c='note')
      and (select count(*) = 1 from pg_proc where proname = 'adjust_part_stock')
      and exists (select 1 from pg_proc where proname = 'adjust_part_stock' and pronargs = 6))
+  -- 56 entro el 2026-10-25: +$10 a todos los servicios y a la visita. Es dato,
+  -- no esquema; la unica senal de que se corrio es el precio del Tune-Up.
+  union all select 56, 'raise-prices-10.sql', '+$10 a todos los servicios y a cada zona de callout_zones',
+    ((select price from public.services where name = 'Tune-Up') >= 119)
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado

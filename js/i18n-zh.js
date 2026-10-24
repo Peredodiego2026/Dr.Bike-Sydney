@@ -395,8 +395,8 @@ export default {
   'Sent from your website - this address is outside the same-day zone.':
     '通过您的网站发送 — 此地址不在当日服务范围内。',
   'Continue anyway': '仍然继续',
-  "The visit & diagnosis fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.":
-    '上门检查费（从$25起，视郊区而定）包含技工的车费。悉尼大部分地区均可提供服务。',
+  "The visit & diagnosis fee (from $35, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.":
+    '上门检查费（从$35起，视郊区而定）包含技工的车费。悉尼大部分地区均可提供服务。',
   'Continue to Summary': '继续查看摘要',
   // Service Summary / Quote
   'Sunday & public holiday rate': '周日及公共假期费率',
@@ -494,8 +494,8 @@ export default {
   'Standard Service': '标准服务',
   'Standard+ Service': '标准+服务',
   Repairs: '维修',
-  'From $17': '起价 $17',
-  'From $80': '起价 $80',
+  'From $27': '起价 $27',
+  'From $90': '起价 $90',
   From: '起价',
   'E-Bike Service': '电动车服务',
   'Bike Assembly': '自行车组装',
@@ -594,8 +594,8 @@ export default {
   "A Tune-Up typically takes 45-60 minutes. A Standard Service takes 60-90 minutes. A Standard+ Service can take 2-3 hours. We'll give you an estimated time when you book.":
     '基础调校通常需要45-60分钟。标准服务需要60-90分钟。标准+服务可能需要2-3小时。预订时我们会告知预计时长。',
   'What payment methods do you accept?': '你们接受哪些支付方式？',
-  'We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $25, depending on your suburb) is charged at booking; the remainder is charged on completion.':
-    '我们接受所有主流信用卡和借记卡、Apple Pay和Google Pay。预订时收取上门检查费押金（从$25起，视郊区而定），其余金额在服务完成后收取。',
+  'We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $35, depending on your suburb) is charged at booking; the remainder is charged on completion.':
+    '我们接受所有主流信用卡和借记卡、Apple Pay和Google Pay。预订时收取上门检查费押金（从$35起，视郊区而定），其余金额在服务完成后收取。',
   "Still have questions? We're here to help!": '还有疑问？我们随时为您解答！',
   'Contact Us': '联系我们',
   'Ready to Experience': '准备好体验',
@@ -695,8 +695,8 @@ export default {
   // Services intro + "All Services" modal
   'Book a Service →': '预约服务 →',
   'All Services': '所有服务',
-  'All prices include a visit & diagnosis fee (from $25, depending on your suburb). We come to you.':
-    '所有价格均含上门检查费（从$25起，视郊区而定），我们会上门为您服务。',
+  'All prices include a visit & diagnosis fee (from $35, depending on your suburb). We come to you.':
+    '所有价格均含上门检查费（从$35起，视郊区而定），我们会上门为您服务。',
   Essentials: '基础服务',
   'Tyres & Wheels': '轮胎与车轮',
   'Cables & Accessories': '线缆与配件',
@@ -738,8 +738,8 @@ export default {
   'Clean, adjust, regrease': '清洁、调整、重新润滑',
   'Custom Quote': '定制报价',
   'E-bikes, carbon, vintage, insurance claims': '电动自行车、碳纤维车架、老式车、保险理赔',
-  'All prices include a visit & diagnosis fee (from $25, depending on your suburb). Parts charged separately unless stated.':
-    '所有价格均含上门检查费（从$25起，视郊区而定）。除另有说明外，零件费用另计。',
+  'All prices include a visit & diagnosis fee (from $35, depending on your suburb). Parts charged separately unless stated.':
+    '所有价格均含上门检查费（从$35起，视郊区而定）。除另有说明外，零件费用另计。',
   'Sunday & NSW public holiday bookings +20%. Saturday is normal price.':
     '周日及新南威尔士州公共假日预订加收20%。周六按正常价格计算。',
 
@@ -986,45 +986,45 @@ export default {
   'Get Started -': '立即开始 -',
 
   // ── Membership redesign 2026-07-22 (3 free-quota categories) ─────────
-  '1 free minor repair (under $60) + 1 free bike wash per month':
-    '每月1次免费小额维修（低于$60）+ 1次免费洗车',
+  '1 free minor repair (under $70) + 1 free bike wash per month':
+    '每月1次免费小额维修（低于$70）+ 1次免费洗车',
   '5% off extra services': '额外服务享95折',
   '10% off extra services': '额外服务享9折',
-  'Visit & diagnosis applies (from $25, depending on your suburb)':
-    '需支付上门检查费（从$25起，视郊区而定）',
+  'Visit & diagnosis applies (from $35, depending on your suburb)':
+    '需支付上门检查费（从$35起，视郊区而定）',
   'Priority scheduling (72hs)': '优先预约（72小时）',
-  '2 free minor repairs (under $60) + 1 free bike wash + 1 free Tune-Up per month':
-    '每月2次免费小额维修（低于$60）+ 1次免费洗车 + 1次免费基础调校',
+  '2 free minor repairs (under $70) + 1 free bike wash + 1 free Tune-Up per month':
+    '每月2次免费小额维修（低于$70）+ 1次免费洗车 + 1次免费基础调校',
   'Visit & diagnosis included': '含上门检查费',
   '1 emergency callout per month (visit & diagnosis fee applies)':
     '每月1次紧急上门（需付上门检查费）',
-  '3 free minor repairs (under $60) + 2 free bike washes + 1 free Tune-Up per month':
-    '每月3次免费小额维修（低于$60）+ 2次免费洗车 + 1次免费基础调校',
+  '3 free minor repairs (under $70) + 2 free bike washes + 1 free Tune-Up per month':
+    '每月3次免费小额维修（低于$70）+ 2次免费洗车 + 1次免费基础调校',
   '15% off extra services, plus 5% more': '额外服务享85折，再多减5%',
   '1 emergency callout per month (visit & diagnosis fee waived in your zone)':
     '每月1次紧急上门（在您所在区域内免上门检查费）',
-  '1 free minor repair per month (any repair under $60)':
-    '每月1次免费小额维修（任何低于$60的维修）',
+  '1 free minor repair per month (any repair under $70)':
+    '每月1次免费小额维修（任何低于$70的维修）',
   '1 free bike wash per month': '每月1次免费洗车',
-  'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $25, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-    '数字化服务记录是Standard/VIP会员专享。不含上门检查费 - 您的覆盖服务仍需支付上门检查费（从$25起，视郊区而定）。完整保养服务（基础调校及以上）不计入免费小额维修额度。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
+  'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $35, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+    '数字化服务记录是Standard/VIP会员专享。不含上门检查费 - 您的覆盖服务仍需支付上门检查费（从$35起，视郊区而定）。完整保养服务（基础调校及以上）不计入免费小额维修额度。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
   'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
     '一次洗车加一次平均小额维修价值约$75。使用Basic（$67/月）在享受其他服务5%折扣之前就已经划算了。',
-  '2 free minor repairs per month (any repair under $60)':
-    '每月2次免费小额维修（任何低于$60的维修）',
+  '2 free minor repairs per month (any repair under $70)':
+    '每月2次免费小额维修（任何低于$70的维修）',
   '1 free Tune-Up per month': '每月1次免费基础调校',
   'Visit & diagnosis included on covered visits': '覆盖服务含上门检查费',
-  '1 emergency callout per month (visit & diagnosis fee applies, from $25 depending on your suburb)':
-    '每月1次紧急上门（需付上门检查费，从$25起视郊区而定）',
+  '1 emergency callout per month (visit & diagnosis fee applies, from $35 depending on your suburb)':
+    '每月1次紧急上门（需付上门检查费，从$35起视郊区而定）',
   'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
     '备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
-  'A Tune-Up ($109) + a wash ($35) + 2 minor repairs (~$80) = about $224 in free work every month, for $97.':
-    '1次基础调校（$109）+ 1次洗车（$35）+ 2次小额维修（约$80）= 每月约$224的免费服务，只需$97。',
-  '3 free minor repairs per month (any repair under $60)':
-    '每月3次免费小额维修（任何低于$60的维修）',
+  'A Tune-Up ($119) + a wash ($35) + 2 minor repairs (~$100) = about $254 in free work every month, for $97.':
+    '1次基础调校（$119）+ 1次洗车（$35）+ 2次小额维修（约$100）= 每月约$254的免费服务，只需$97。',
+  '3 free minor repairs per month (any repair under $70)':
+    '每月3次免费小额维修（任何低于$70的维修）',
   '2 free bike washes per month': '每月2次免费洗车',
-  'A Tune-Up ($109) + 2 washes ($70) + 3 minor repairs (~$120) = about $299 in free work every month, for $197.':
-    '1次基础调校（$109）+ 2次洗车（$70）+ 3次小额维修（约$120）= 每月约$299的免费服务，只需$197。',
+  'A Tune-Up ($119) + 2 washes ($70) + 3 minor repairs (~$150) = about $339 in free work every month, for $197.':
+    '1次基础调校（$119）+ 2次洗车（$70）+ 3次小额维修（约$150）= 每月约$339的免费服务，只需$197。',
 
   // ── Gift card success alert ──────────────────────────────────────────
   '🎁 Gift card purchased! It has been emailed to the recipient with their unique code.':
