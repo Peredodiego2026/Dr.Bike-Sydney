@@ -12183,8 +12183,10 @@ Dos decisiones que se ven raras y son a proposito:
 - **Miniatura**: no se genera `_thumb.jpg`. La foto se muestra una sola vez en
   el detalle de la reserva, no en una grilla - eso es Admin > Photos, que
   muestra decenas y por eso si usa miniaturas.
-- Mostrar la foto en el panel de Diego es la tarea siguiente, en esta misma
-  rama.
+- **Mostrar la foto en el panel de Diego NO quedo afuera**: entro en esta misma
+  rama. El detalle de la reserva firma la referencia cada vez que abre (una hora
+  de validez, nada cacheado) y dice `Photo unavailable` cuando no se pudo
+  firmar; el detalle abre igual en los dos casos.
 
 ### Lo que Diego tiene que hacer
 

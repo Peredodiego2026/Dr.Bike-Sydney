@@ -1168,6 +1168,41 @@ export function sanitizeTriage(raw) {
 const TRIAGE_PHOTO_MAX_BYTES = 3_000_000;
 const TRIAGE_PHOTO_DATA_URL = /^data:image\/[a-z0-9.+-]+;base64,/i;
 const TRIAGE_PHOTO_BARE_BASE64 = /^[A-Za-z0-9+/\s]+={0,2}$/;
+// Four seconds, the same bound and the same reason as step 5b's only other
+// pre-response network call (`geocodeAddress`'s `timeoutMs = 4000`,
+// api/_eta.js). This upload is awaited BEFORE the booking's 200 goes out, so a
+// Storage that never answers - not one that fails, one that never answers -
+// would hold the response until Vercel kills the function: the customer sees an
+// error after paying, with a booking that does exist, and books again.
+const TRIAGE_PHOTO_UPLOAD_TIMEOUT_MS = 4000;
+
+// Do the decoded bytes start like an image? The stored object is ALWAYS
+// `.jpg` / `image/jpeg` by design (the extension and the content type are
+// fixed, never taken from what was sent), so this is NOT content negotiation:
+// it is a sanity check on the bytes. Without it, the bare-base64 branch takes
+// any string in the base64 alphabet - base64 of HTML with a `<script>` went
+// through and was written as `.jpg`, which ends as a broken `<img>` in Admin.
+// The types are the ones this project already allows for a job photo
+// (JOB_PHOTO_TYPES in api/_job-photos.js): jpeg, png, webp, heic, heif.
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+function triagePhotoLooksLikeImage(b) {
+  // JPEG: SOI plus the start of the first marker.
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return true;
+  // PNG signature.
+  if (b.subarray(0, 8).equals(PNG_SIGNATURE)) return true;
+  // WEBP: a RIFF container whose form type is WEBP.
+  if (
+    b.subarray(0, 4).toString('latin1') === 'RIFF' &&
+    b.subarray(8, 12).toString('latin1') === 'WEBP'
+  )
+    return true;
+  // HEIC/HEIF: an ISO-BMFF `ftyp` box. The brand that follows has to be a
+  // still-image one: an MP4 video is the same box with a different brand, and
+  // it would be stored as `.jpg` and show as a broken image too.
+  if (b.subarray(4, 8).toString('latin1') === 'ftyp')
+    return /^(hei|hev|mif|msf)/.test(b.subarray(8, 12).toString('latin1'));
+  return false;
+}
 
 // The decoded bytes, or null with a reason in the log. The client already caps
 // the size before sending, but the client can lie, so the cap is checked again
@@ -1200,6 +1235,10 @@ function triagePhotoBuffer(raw) {
     );
     return null;
   }
+  if (!triagePhotoLooksLikeImage(buffer)) {
+    console.warn('[create-booking] triage photo ignored: the bytes are not an image');
+    return null;
+  }
   return buffer;
 }
 
@@ -1218,16 +1257,33 @@ async function storeTriagePhoto(sb, bookingId, raw, serviceKey) {
     console.warn(`[create-booking] triage photo ignored: no signable path for ${bookingId}`);
     return;
   }
-  const up = await fetch(`${SUPABASE_URL}/storage/v1/object/${JOB_PHOTO_BUCKET}/${path}`, {
-    method: 'POST',
-    headers: {
-      apikey: serviceKey,
-      Authorization: `Bearer ${serviceKey}`,
-      'Content-Type': 'image/jpeg',
-      'x-upsert': 'true',
-    },
-    body: buffer,
-  });
+  // The signal releases the request; the race is the bound that decides,
+  // because a promise that never settles at all would hang past any signal.
+  // A rejection lands in step 5d's catch - 200 plus a console.warn - which is
+  // the same place a thrown fetch already lands.
+  let timer;
+  const up = await Promise.race([
+    fetch(`${SUPABASE_URL}/storage/v1/object/${JOB_PHOTO_BUCKET}/${path}`, {
+      method: 'POST',
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        'Content-Type': 'image/jpeg',
+        'x-upsert': 'true',
+      },
+      body: buffer,
+      signal: AbortSignal.timeout(TRIAGE_PHOTO_UPLOAD_TIMEOUT_MS),
+    }).finally(() => clearTimeout(timer)),
+    new Promise((_, reject) => {
+      timer = setTimeout(
+        () =>
+          reject(
+            new Error(`the triage photo upload timed out after ${TRIAGE_PHOTO_UPLOAD_TIMEOUT_MS}ms`)
+          ),
+        TRIAGE_PHOTO_UPLOAD_TIMEOUT_MS
+      );
+    }),
+  ]);
   if (!up.ok) {
     console.warn(
       `[create-booking] triage photo upload failed (HTTP ${up.status}) - the booking is ` +

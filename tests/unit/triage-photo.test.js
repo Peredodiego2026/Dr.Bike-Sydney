@@ -145,7 +145,7 @@ vi.mock('@supabase/supabase-js', () => ({
 }));
 
 // Sin red: ni OSRM ni Nominatim. Lo unico que contesta algo es Storage.
-globalThis.fetch = async (url, opts = {}) => {
+const STORAGE_FETCH = async (url, opts = {}) => {
   const u = String(url);
   if (u.includes('/storage/v1/object/')) {
     uploads.push({
@@ -163,6 +163,7 @@ globalThis.fetch = async (url, opts = {}) => {
   }
   return { ok: false, status: 503, json: async () => ({}), text: async () => '' };
 };
+globalThis.fetch = STORAGE_FETCH;
 
 const { handleCreateBooking } = await import('../../api/auth.js');
 const { triagePhotoRef, jobPhotoPath, JOB_PHOTO_BUCKET } = await import('../../api/_job-photos.js');
@@ -218,6 +219,11 @@ beforeEach(() => {
 afterEach(() => {
   warnSpy.mockRestore();
   errorSpy.mockRestore();
+  // Un test que se cuelga nunca llega a su propio `finally`, asi que el doble
+  // de red y los relojes falsos se deshacen aca: si no, una sola falla arrastra
+  // a todos los tests que vienen detras y el rojo no dice donde esta.
+  globalThis.fetch = STORAGE_FETCH;
+  vi.useRealTimers();
 });
 
 const logged = () =>
@@ -349,6 +355,27 @@ describe('la foto del triage nunca rompe una reserva', () => {
     }
   });
 
+  it('si Storage no contesta NUNCA, la reserva sigue siendo 200', async () => {
+    // El decimo camino, y el unico que no es una falla: un CUELGUE. El
+    // try/catch cubre "tiro", nunca "no contesta nunca" - sin un tope, la
+    // funcion se queda colgada hasta que Vercel la mata y el cliente ve un
+    // error DESPUES de haber pagado, con una reserva que si existe (review
+    // final, Important 2). Relojes falsos, asi que el test no espera de verdad.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    // Nunca se resuelve: ni resuelve ni rechaza, nunca. El afterEach lo deshace.
+    globalThis.fetch = (url, opts) =>
+      String(url).includes('/storage/v1/object/')
+        ? new Promise(() => {})
+        : STORAGE_FETCH(url, opts);
+    const pending = call({ ...PAID, triage_photo: DATA_URL });
+    await vi.advanceTimersByTimeAsync(10000);
+    const res = await pending;
+    expect(res.statusCode, JSON.stringify(res.body)).toBe(200);
+    expect(db.bookings, 'la reserva no quedo').toHaveLength(1);
+    expect(photoWrites(), 'escribio una referencia que no se subio').toHaveLength(0);
+    expect(logged(), 'el cuelgue fue silencioso').toMatch(/timed out/i);
+  });
+
   it('una reserva sin foto no sube nada ni escribe de mas', async () => {
     const res = await call({ ...PAID });
     expect(res.statusCode).toBe(200);
@@ -388,6 +415,34 @@ describe('la foto del triage nunca rompe una reserva', () => {
     }
     expect(uploads, 'nada de eso llego a Storage').toHaveLength(0);
     expect(photoWrites()).toHaveLength(0);
+  });
+
+  it('base64 pelado que no es una imagen se descarta y la reserva sigue siendo 200', async () => {
+    // El alfabeto base64 no dice nada del contenido: esto es base64 de HTML con
+    // un <script>, y hasta este arreglo pasaba el filtro y se escribia como
+    // .jpg (review final, Minor 3). Lo que Diego veia era un <img> roto.
+    const notAnImage = Buffer.from('<html><script>alert(1)</script></html>').toString('base64');
+    const res = await call({ ...PAID, triage_photo: notAnImage });
+    expect(res.statusCode, JSON.stringify(res.body)).toBe(200);
+    expect(db.bookings, 'la reserva no quedo').toHaveLength(1);
+    expect(uploads, 'algo que no es una imagen llego a Storage').toHaveLength(0);
+    expect(photoWrites()).toHaveLength(0);
+    expect(logged()).toMatch(/triage/i);
+  });
+
+  it('un JPEG y un PNG de verdad si pasan, por sus bytes de inicio', async () => {
+    // El otro lado del chequeo: los tipos que este proyecto ya acepta para una
+    // foto de trabajo (JOB_PHOTO_TYPES) siguen entrando.
+    const PNG = Buffer.concat([
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      Buffer.from('dr bike'),
+    ]);
+    for (const bytes of [JPEG, PNG]) {
+      const res = await call({ ...PAID, triage_photo: bytes.toString('base64') });
+      expect(res.statusCode, JSON.stringify(res.body)).toBe(200);
+      db.bookings.length = 0; // la franja se libera para la siguiente vuelta
+    }
+    expect(uploads, 'una imagen de verdad se quedo afuera').toHaveLength(2);
   });
 
   it('una foto ausente (null, vacia) no es un error: no sube nada y no se queja', async () => {

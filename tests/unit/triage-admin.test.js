@@ -24,7 +24,7 @@
 //     free text. The required ones go first (sortAnswerIds, in the catalogue)
 //   - the colours come from tokens: css/admin.css redefines tokens inside
 //     [data-theme='dark'], and a hex there cannot be overridden by dark mode
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import { labelFor, sortAnswerIds } from '../../js/triage-questions.js';
@@ -120,6 +120,12 @@ async function openDetailWith(block, triage, extra = {}) {
     showToast: () => {},
     sb: { auth: { getSession: async () => ({ data: { session: { access_token: 'tok' } } }) } },
     fetch: async () => ({ ok: true, json: async () => ({ urls: [PHOTO_URL] }) }),
+    // The browser globals the signing uses to bound itself. Wrapped rather
+    // than captured, so a test that turns on fake timers AFTER the sandbox was
+    // built still gets the fake ones.
+    setTimeout: (...a) => setTimeout(...a),
+    clearTimeout: (...a) => clearTimeout(...a),
+    AbortSignal,
     ...sandboxExtra,
   };
   vm.createContext(sandbox);
@@ -570,6 +576,71 @@ describe('the booking detail signs the photo when it opens', () => {
     expect(html).not.toContain('<img');
   });
 
+  // The tenth failure path, and the only one that is not a failure: a HANG.
+  // try/catch covers "it threw", never "it never answered" - without a bound,
+  // Diego taps a booking and the modal does not open, for ever, with no
+  // message (review final, Important 1). Fake timers, so nothing waits.
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('opens the detail anyway when the signing never answers, and logs it', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const open = openDetailWith(
+      labelsLoaded(),
+      { brand: 'Shimano', notes: 'Rides daily' },
+      {
+        labelFor,
+        sortAnswerIds,
+        booking: { triage_photo_ref: PHOTO_REF },
+        // Never settles: not a rejection, no resolution, ever.
+        fetch: () => new Promise(() => {}),
+      }
+    );
+    await vi.advanceTimersByTimeAsync(10000);
+    const { els, errors } = await open;
+
+    expect(els['booking-detail-modal'].style.display, 'the modal never opened').toBe('flex');
+    const html = els['bkd-body'].innerHTML;
+    expect(html).toContain('Shimano');
+    expect(html).toContain('Rides daily');
+    expect(html).toContain('Brake Pad Install');
+    // Degrades exactly like a failure already does: words, never a broken img.
+    expect(html).toContain('Photo unavailable');
+    expect(html).not.toContain('<img');
+    expect(errors.join('\n'), 'the timeout was silent').toMatch(/timed out/i);
+  });
+
+  it('opens the detail anyway when the admin session never answers', async () => {
+    // `sb.auth.getSession()` takes no AbortSignal, so it needs a bound of its
+    // own - and the signing must not go out without a session either.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    let fetched = 0;
+    const open = openDetailWith(
+      labelsLoaded(),
+      { brand: 'Shimano' },
+      {
+        labelFor,
+        sortAnswerIds,
+        booking: { triage_photo_ref: PHOTO_REF },
+        sb: { auth: { getSession: () => new Promise(() => {}) } },
+        fetch: async () => {
+          fetched++;
+          return { ok: true, json: async () => ({ urls: [PHOTO_URL] }) };
+        },
+      }
+    );
+    await vi.advanceTimersByTimeAsync(10000);
+    const { els, errors } = await open;
+
+    expect(fetched, 'asked the server to sign without a session').toBe(0);
+    expect(els['booking-detail-modal'].style.display, 'the modal never opened').toBe('flex');
+    const html = els['bkd-body'].innerHTML;
+    expect(html).toContain('Shimano');
+    expect(html).toContain('Photo unavailable');
+    expect(html).not.toContain('<img');
+    expect(errors.join('\n'), 'the timeout was silent').toMatch(/timed out/i);
+  });
 });
 
 describe('the labels are loaded before the detail opens', () => {

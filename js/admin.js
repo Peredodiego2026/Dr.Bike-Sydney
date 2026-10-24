@@ -3510,20 +3510,53 @@ const triageLabelsReady = import('./triage-questions.js')
 // words. A network failure is deliberately NOT caught here: openBookingDetail
 // owns the promise that the modal opens either way, and a second catch would
 // only hide the failure from the one place that has to survive it.
+//
+// Both awaits below are BOUNDED, and that is the point of them being here:
+// openBookingDetail waits for this before it opens the modal, and `try/catch`
+// covers "it threw", never "it never answered". Unbounded, a request that just
+// sits there - which is what Diego's VPN produces in Firefox - is a booking
+// whose detail never opens, for ever, with no message.
 async function signTriagePhoto(bookingId, ref) {
+  // The bound this repo already gives a network call a person is waiting on:
+  // `geocodeAddress`'s `timeoutMs` (api/_eta.js) and
+  // ADMIN_FACTOR_LOOKUP_TIMEOUT_MS (api/auth.js) are both 4000. Long enough
+  // for a healthy round trip, short enough that a sick one costs a pause and
+  // not the panel.
+  const TIMEOUT_MS = 4000;
+  // `AbortSignal.timeout` below releases the socket, but it cannot bound
+  // `sb.auth.getSession()` (it takes no signal) and it is not what decides
+  // here: the race is, because a promise that never settles at all would hang
+  // past any signal. A rejection lands in openBookingDetail's catch, which is
+  // the path that opens the detail with `Photo unavailable`.
+  const bounded = (promise, what) => {
+    let timer;
+    return Promise.race([
+      Promise.resolve(promise).finally(() => clearTimeout(timer)),
+      new Promise((_, reject) => {
+        timer = setTimeout(
+          () => reject(new Error(what + ' timed out after ' + TIMEOUT_MS + 'ms')),
+          TIMEOUT_MS
+        );
+      }),
+    ]);
+  };
   const {
     data: { session },
-  } = await sb.auth.getSession();
-  const r = await fetch('/api/auth', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      role: 'photo-sign',
-      booking_id: bookingId,
-      refs: [ref],
-      access_token: session?.access_token,
+  } = await bounded(sb.auth.getSession(), 'reading the admin session');
+  const r = await bounded(
+    fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+      body: JSON.stringify({
+        role: 'photo-sign',
+        booking_id: bookingId,
+        refs: [ref],
+        access_token: session?.access_token,
+      }),
     }),
-  });
+    'signing the triage photo'
+  );
   if (!r.ok) {
     console.warn('[admin] could not sign the triage photo: HTTP ' + r.status);
     return null;
