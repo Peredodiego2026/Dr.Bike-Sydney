@@ -3364,3 +3364,74 @@ body {
     font-size: 12px;
   }
 }
+
+/* The booking triage in the booking detail (js/admin.js, renderTriageBlock):
+   what the customer answered while booking, so the mechanic knows whether he
+   has the right part before he drives out.
+
+   KEEP THIS BLOCK LAST IN THE FILE and write no hex in it: tests/unit/
+   triage-admin.test.js fails on a hex anywhere from the first triage rule to
+   the end. Tokens only. This file redefines tokens under the dark theme, and a
+   hex written here cannot be overridden by it - that is how a label once ended
+   up at 1.03:1. The panel is --off (the sunken ground), the question is
+   --mgray, the answer is --navy: all three have dark values in variables.css. */
+.triage-block {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: var(--off);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--blue);
+  border-radius: 12px;
+}
+.triage-head {
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--mgray);
+}
+.triage-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.triage-item {
+  margin: 0;
+}
+.triage-q {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--mgray);
+}
+.triage-a {
+  margin: 2px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--navy);
+  /* The notes field is free text, up to 200 characters with no spaces if the
+     customer wants: let it wrap instead of pushing the modal wider. */
+  overflow-wrap: anywhere;
+}
+/* No triage: a dashed outline and no accent bar, so it reads as an empty slot
+   on purpose and not as a card that failed to fill. After .triage-block on
+   purpose - same specificity, so the later rule wins. */
+.triage-empty {
+  background: transparent;
+  border: 1px dashed var(--border);
+}
+.triage-empty-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.triage-empty-sub {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--mgray);
+}

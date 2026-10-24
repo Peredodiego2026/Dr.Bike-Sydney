@@ -3367,6 +3367,21 @@ const BKD_ST_CLASS = {
   cancelled: 'cancelled',
 };
 
+// The triage answers are labelled with the question the customer was asked
+// (labelFor, in js/triage-questions.js). That file is an ES module and this one
+// is a classic script, so it cannot `import` it - but it can import(). The
+// detail waits for the load (openBookingDetail), which is why it never draws an
+// id where a question belongs. If the load fails the error is logged and the
+// detail still opens, with the id standing in for the question.
+let triageLabelFor = (id) => id;
+const triageLabelsReady = import('./triage-questions.js')
+  .then((m) => {
+    triageLabelFor = m.labelFor;
+  })
+  .catch((e) =>
+    console.error('[admin] could not load the triage questions, showing ids:', e.message)
+  );
+
 // Calendar chips only ever loaded a date-range slice of bookings (this
 // month's, this week's), so a booking clicked from the calendar is not
 // reliably in `allBookings` (the Bookings-page cache). Look there first -
@@ -3386,12 +3401,57 @@ async function openBookingDetail(id) {
     }
     b = data;
   }
+  await triageLabelsReady;
   renderBookingDetail(b);
   document.getElementById('booking-detail-modal').style.display = 'flex';
 }
 
 function closeBookingDetail() {
   document.getElementById('booking-detail-modal').style.display = 'none';
+}
+
+// The customer's answers to the booking triage, for the booking detail: short
+// questions asked while booking so the mechanic knows whether he has the right
+// part before he drives out. triage is { question_id: answer } as the server
+// stored it (sanitizeTriage in api/auth.js).
+//
+// MOST bookings have none: every one made before the triage existed, every one
+// made before scripts/add-triage-columns.sql was run (the column is then simply
+// absent, so b.triage is undefined), and every customer who skipped it all.
+// null, undefined, {} and a block of blank answers are one and the same thing
+// here - an empty state that says so - so a booking without a triage reads as
+// "nothing was asked" and never as a panel that failed to load.
+//
+// The server keeps the answers WITHOUT escaping (on purpose, like the rest of
+// the app): escaping is the job of whoever renders. Every answer and every
+// label goes through esc(), and an id the catalogue does not know is its own
+// label, so that is escaped too.
+function renderTriageBlock(triage) {
+  const answers = [];
+  if (triage && typeof triage === 'object' && !Array.isArray(triage)) {
+    for (const [id, value] of Object.entries(triage)) {
+      const text = typeof value === 'number' ? String(value) : value;
+      if (typeof text === 'string' && text.trim() !== '') answers.push([id, text.trim()]);
+    }
+  }
+  if (!answers.length) {
+    return `<section class="triage-block triage-empty" aria-label="Triage">
+        <div class="triage-head">Triage</div>
+        <div class="triage-empty-title">Sin triage</div>
+        <div class="triage-empty-sub">The customer skipped the questions, or booked before they existed.</div>
+      </section>`;
+  }
+  return `<section class="triage-block" aria-label="Triage">
+      <div class="triage-head">Triage</div>
+      <dl class="triage-list">
+        ${answers
+          .map(
+            ([id, text]) =>
+              `<div class="triage-item"><dt class="triage-q">${esc(triageLabelFor(id))}</dt><dd class="triage-a">${esc(text)}</dd></div>`
+          )
+          .join('')}
+      </dl>
+    </section>`;
 }
 
 function renderBookingDetail(b) {
@@ -3433,6 +3493,7 @@ function renderBookingDetail(b) {
     ${row('Discount', b.discount_applied ? '−$' + Number(b.discount_applied).toFixed(2) + (b.discount_code ? ' (' + esc(b.discount_code) + ')' : '') : '')}
     ${row('Total', '<b style="font-size:14px">$' + total.toFixed(2) + '</b>')}
     ${row('Cancelled - reason', b.cancellation_reason ? esc(b.cancellation_reason) : '')}
+    ${renderTriageBlock(b.triage)}
   `;
 
   const actions = [];
