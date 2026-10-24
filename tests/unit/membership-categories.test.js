@@ -1,5 +1,6 @@
 // tests/unit/membership-categories.test.js — Diego's revised membership tiers
-// (2026-07-22): 3 free-quota categories per plan (minor repair <$60, Bike
+// (2026-07-22): 3 free-quota categories per plan (minor repair <$70 since the
+// +$10 of 24-oct-2026, <$60 before), Bike
 // Wash, Tune-Up), matched by price/name against the real services table.
 // Run: npm test
 
@@ -11,23 +12,37 @@ describe('membershipCategoryFor', () => {
     expect(membershipCategoryFor('Bike Wash', 35)).toBe('wash');
   });
 
-  it('categorizes Tune-Up by name even though it is over $60', () => {
-    expect(membershipCategoryFor('Tune-Up', 109)).toBe('tuneup');
+  it('categorizes Tune-Up by name even though it is over $70', () => {
+    expect(membershipCategoryFor('Tune-Up', 119)).toBe('tuneup');
   });
 
-  it('categorizes any other service under $60 as minor', () => {
-    expect(membershipCategoryFor('Gear Adjustment', 59)).toBe('minor');
-    expect(membershipCategoryFor('Wheel Truing — Minor', 17)).toBe('minor');
+  it('categorizes any other service under $70 as minor', () => {
+    expect(membershipCategoryFor('Gear Adjustment', 69)).toBe('minor');
+    expect(membershipCategoryFor('Wheel Truing — Minor', 27)).toBe('minor');
   });
 
-  it('is exactly $60 or more falls outside the minor bucket', () => {
-    expect(membershipCategoryFor('E-bike Diagnostic', 60)).toBeNull();
+  it('is exactly $70 or more falls outside the minor bucket', () => {
+    expect(membershipCategoryFor('E-bike Diagnostic', 70)).toBeNull();
   });
 
-  it('returns null for full-price services that are not wash/tune-up and cost $60+', () => {
-    expect(membershipCategoryFor('Standard Service', 149)).toBeNull();
-    expect(membershipCategoryFor('Standard+ Service', 199)).toBeNull();
-    expect(membershipCategoryFor('Ultimate Overhaul', 369)).toBeNull();
+  // The +$10 of 24-oct-2026 moved the ceiling with the prices, so a member
+  // keeps exactly the services that were free before. Every price the catalog
+  // had under $60 is now $10 more and still minor; $60 and up still is not.
+  it('the +$10 took no service out of a membership', () => {
+    for (const old of [17, 25, 27, 37, 50, 55, 59]) {
+      expect(membershipCategoryFor('Some repair', old + 10), `$${old} -> $${old + 10}`).toBe(
+        'minor'
+      );
+    }
+    for (const old of [60, 65, 69, 79]) {
+      expect(membershipCategoryFor('Some repair', old + 10), `$${old} -> $${old + 10}`).toBeNull();
+    }
+  });
+
+  it('returns null for full-price services that are not wash/tune-up and cost $70+', () => {
+    expect(membershipCategoryFor('Standard Service', 159)).toBeNull();
+    expect(membershipCategoryFor('Standard+ Service', 209)).toBeNull();
+    expect(membershipCategoryFor('Ultimate Overhaul', 379)).toBeNull();
   });
 });
 

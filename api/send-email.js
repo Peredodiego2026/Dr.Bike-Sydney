@@ -432,7 +432,7 @@ async function handler(req, res) {
           <div style="background:#F8FAFC;border-radius:12px;padding:16px;margin-bottom:24px">
             <p style="font-size:12px;color:#475569;margin:0;line-height:1.8">
               &bull; Valid for 7 days from your birthday<br>
-              &bull; Applies to any service $109+<br>
+              &bull; Applies to any service $119+<br>
               &bull; One use per customer<br>
               &bull; Enter code at checkout
             </p>

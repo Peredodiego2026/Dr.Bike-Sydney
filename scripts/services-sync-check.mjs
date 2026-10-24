@@ -440,7 +440,18 @@ if (ldUnmatched.length) {
 // This is also the ONLY thing that notices an edit made in Admin > Services &
 // Prices: rewording a description there detaches it from its dictionary key and
 // that card quietly falls back to English.
-const i18nMissing = missingCatalogTranslations(services, readFileSync('js/i18n.js', 'utf8'));
+// Since the 2026-09-01 split each dictionary is its own file. Composed with the
+// `  es: {` / `  zh: {` markers dictBlock() expects - the same shape as
+// tests/helpers/i18n-source.js. Reading js/i18n.js made this whole check throw.
+const i18nSrc = [
+  '',
+  '  es: {',
+  readFileSync('js/i18n-es.js', 'utf8'),
+  '  zh: {',
+  readFileSync('js/i18n-zh.js', 'utf8'),
+  '};',
+].join('\n');
+const i18nMissing = missingCatalogTranslations(services, i18nSrc);
 
 if (i18nMissing.length) {
   bad++;
@@ -452,7 +463,7 @@ if (i18nMissing.length) {
     console.log(`      "${r.text.length > 90 ? r.text.slice(0, 90) + '...' : r.text}"`);
   }
   console.log('\n  fix: add the exact English string to the Supabase catalog block at the');
-  console.log('       end of both dictionaries in js/i18n.js, then bump CACHE_STATIC in');
+  console.log('       end of js/i18n-es.js and js/i18n-zh.js, then bump CACHE_STATIC in');
   console.log('       sw.js or returning visitors keep the old dictionary.\n');
 }
 

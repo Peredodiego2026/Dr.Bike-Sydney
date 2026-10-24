@@ -76,7 +76,7 @@ const SHARED = {
     'Is My Bike Safe to Ride? Free Check': '¿Mi Bici es Segura? Chequeo Gratis',
     'Free Bike Safety Check': 'Chequeo de Seguridad Gratis',
     'How to Choose a Bike Mechanic in Sydney': 'Cómo Elegir un Mecánico de Bicicletas en Sídney',
-    'Book a Tune-Up — $109 →': 'Reservar un Ajuste — $109 →',
+    'Book a Tune-Up — $119 →': 'Reservar un Ajuste — $119 →',
   },
   zh: {
     'Book Now': '立即预订',
@@ -104,7 +104,7 @@ const SHARED = {
     'Is My Bike Safe to Ride? Free Check': '我的自行车安全吗？免费检测',
     'Free Bike Safety Check': '免费自行车安全检测',
     'How to Choose a Bike Mechanic in Sydney': '如何在悉尼选择自行车技师',
-    'Book a Tune-Up — $109 →': '预订基础保养 — $109 →',
+    'Book a Tune-Up — $119 →': '预订基础保养 — $119 →',
   },
 };
 
@@ -162,8 +162,8 @@ const DICT = {
         'Cotizan precios inusualmente bajos que no reflejan el trabajo real',
       'Can\'t tell you which parts they\'ve replaced after a service':
         'No pueden decirte qué repuestos cambiaron después del servicio',
-      'At Dr. Bike Sydney, all prices are published: Tune-Up $109, Standard $149, Major $199, Ultimate $369. No hidden fees, mobile call-out included.':
-        'En Dr. Bike Sydney todos los precios están publicados: Ajuste $109, Estándar $149, Mayor $199, Definitivo $369. Sin cargos ocultos, la visita a domicilio ya está incluida.',
+      'At Dr. Bike Sydney, all prices are published: Tune-Up $119, Standard $159, Major $209, Ultimate $379. No hidden fees, mobile call-out included.':
+        'En Dr. Bike Sydney todos los precios están publicados: Ajuste $119, Estándar $159, Mayor $209, Definitivo $379. Sin cargos ocultos, la visita a domicilio ya está incluida.',
       '5. Read Reviews Critically': '5. Leé las Reseñas con Ojo Crítico',
       'Google Reviews are the most reliable source in Sydney. Look for:':
         'Las reseñas de Google son la fuente más confiable en Sídney. Fijate en:',
@@ -179,7 +179,7 @@ const DICT = {
       'Book a Dr. Bike Sydney service': 'Reservá un servicio con Dr. Bike Sydney',
       'Experienced, insured, transparent pricing. We come to you anywhere across Sydney — home, work or park.':
         'Experiencia, seguro y precios transparentes. Vamos hasta vos a cualquier parte de Sídney: casa, trabajo o parque.',
-      'Book Now — From $109 →': 'Reservar Ahora — Desde $109 →',
+      'Book Now — From $119 →': 'Reservar Ahora — Desde $119 →',
     },
     zh: {
       'How to Choose a Bike Mechanic in Sydney | Dr. Bike Sydney': '如何在悉尼选择自行车技师 | Dr. Bike Sydney',
@@ -226,8 +226,8 @@ const DICT = {
       'Add significant charges not mentioned in the booking': '在预订时未提及，事后却增加大额费用',
       'Quote unusually low prices that don\'t reflect the work involved': '报价异常低廉，与实际工作量不符',
       'Can\'t tell you which parts they\'ve replaced after a service': '服务结束后说不清楚更换了哪些零件',
-      'At Dr. Bike Sydney, all prices are published: Tune-Up $109, Standard $149, Major $199, Ultimate $369. No hidden fees, mobile call-out included.':
-        '在 Dr. Bike Sydney，所有价格全部公开：基础保养 $109，标准服务 $149，中级服务 $199，全面服务 $369。无隐藏费用，已包含上门服务费。',
+      'At Dr. Bike Sydney, all prices are published: Tune-Up $119, Standard $159, Major $209, Ultimate $379. No hidden fees, mobile call-out included.':
+        '在 Dr. Bike Sydney，所有价格全部公开：基础保养 $119，标准服务 $159，中级服务 $209，全面服务 $379。无隐藏费用，已包含上门服务费。',
       '5. Read Reviews Critically': '5. 批判性地看待评价',
       'Google Reviews are the most reliable source in Sydney. Look for:':
         '在悉尼，Google 评价是最可靠的信息来源。请留意：',
@@ -242,7 +242,7 @@ const DICT = {
       'Book a Dr. Bike Sydney service': '预订 Dr. Bike Sydney 服务',
       'Experienced, insured, transparent pricing. We come to you anywhere across Sydney — home, work or park.':
         '经验丰富、有保险保障、价格透明。我们上门服务悉尼全境——家中、办公室或公园均可。',
-      'Book Now — From $109 →': '立即预订 — 低至 $109 →',
+      'Book Now — From $119 →': '立即预订 — 低至 $119 →',
     },
   },
   'best-bikes-for-sydney-commuting-2026': {
