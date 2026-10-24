@@ -1327,7 +1327,7 @@ async function renderBookService() {
           <div class="section-label" style="margin-top:8px">Which bike?</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;padding:4px 0" id="bike-chips">
             <button class="bike-chip active" data-bike-id="" style="flex-shrink:0;display:inline-flex;align-items:center;height:32px;background:var(--blue-dark);color:var(--white);border:1px solid var(--blue-dark);border-radius:16px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">Skip</button>
-            ${bikes.map((b) => `<button class="bike-chip" data-bike-id="${b.id}" style="flex-shrink:0;display:inline-flex;align-items:center;height:32px;background:var(--white);border:1px solid var(--border);border-radius:16px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--gray);font-family:inherit;white-space:nowrap">${b.name}${b.brand ? ' · ' + b.brand : ''}</button>`).join('')}
+            ${bikes.map((b) => `<button class="bike-chip" data-bike-id="${b.id}" style="flex-shrink:0;display:inline-flex;align-items:center;height:32px;background:var(--white);border:1px solid var(--border);border-radius:16px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;color:var(--gray);font-family:inherit;white-space:nowrap">${escapeHtml(b.name)}${b.brand ? ' · ' + escapeHtml(b.brand) : ''}</button>`).join('')}
           </div>`;
         wrap.querySelectorAll('.bike-chip').forEach((chip) => {
           chip.addEventListener('click', () => {
@@ -1580,7 +1580,7 @@ async function renderBookService() {
           <div style="font-size:13px;color:var(--color-text);line-height:1.5;margin-bottom:12px">It's outside our same-day zone, so there's no fixed price to show you - but we do still come. Book as usual and the last step asks for a price instead of a card: no charge, and the mechanic replies to you personally.</div>
           <a id="s3-coverage-wa" href="https://wa.me/61433963250" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--wa);color:var(--white);padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;min-height:44px;box-sizing:border-box">💬 Ask on WhatsApp</a>
         </div>
-        <div style="font-size:13px;color:var(--gray);padding:0 4px;line-height:1.6">The visit & diagnosis fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.</div>
+        <div style="font-size:13px;color:var(--gray);padding:0 4px;line-height:1.6">The visit & diagnosis fee (from $35, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.</div>
       </div>
       <div class="sticky-bottom">
         <button class="btn btn--primary btn--full" id="s3-continue">Continue to Summary</button>
@@ -5039,7 +5039,7 @@ async function renderMyBookings() {
         overlay.innerHTML = `
           <div id="detail-panel" style="background:var(--white);border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:480px;max-height:85vh;overflow-y:auto;box-shadow:var(--elevation-2)">
             <div style="width:36px;height:4px;background:var(--border);border-radius:4px;margin:0 auto 20px"></div>
-            <div style="font-size:18px;font-weight:800;color:var(--navy);margin-bottom:4px">${booking.service_name || 'Service'}</div>
+            <div style="font-size:18px;font-weight:800;color:var(--navy);margin-bottom:4px">${escapeHtml(booking.service_name || 'Service')}</div>
             <div style="display:inline-block;font-size:11px;font-weight:600;color:${sc};background:${sc}1A;padding:3px 10px;border-radius:20px;margin-bottom:20px">${sl}</div>
             <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;background:var(--surface);border-radius:12px;padding:16px;border:1px solid var(--border)">
               <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Date</span><span style="font-weight:600;color:var(--navy)">${booking.scheduled_date || '--'}</span></div>
@@ -5047,7 +5047,7 @@ async function renderMyBookings() {
               <div style="display:flex;justify-content:space-between;align-items:flex-start;font-size:15px"><span style="color:var(--gray)">Address</span><span style="font-weight:600;color:var(--navy);text-align:right;max-width:60%">${escapeHtml(booking.address || '--')}</span></div>
               <div style="display:flex;justify-content:space-between;font-size:15px"><span style="color:var(--gray)">Visit & diagnosis</span><span style="font-weight:600;color:var(--navy)">$${booking.callout_fee ?? 20}</span></div>
             </div>
-            ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:var(--red-lt);border:1px solid var(--red-edge);border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--red-text);margin-bottom:4px">Cancellation reason</div><div style="font-size:15px;color:#7F1D1D">${booking.cancellation_reason}</div></div>` : ''}
+            ${booking.status === 'cancelled' && booking.cancellation_reason ? `<div style="background:var(--red-lt);border:1px solid var(--red-edge);border-radius:12px;padding:14px 16px;margin-bottom:16px"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--red-text);margin-bottom:4px">Cancellation reason</div><div style="font-size:15px;color:#7F1D1D">${escapeHtml(booking.cancellation_reason)}</div></div>` : ''}
             ${
               booking.status === 'completed' &&
               (booking.photo_before_url || booking.photo_after_url)

@@ -346,7 +346,7 @@ const DICT = {
       'Needs Attention Soon': 'Necesita Atención Pronto',
       'Your bike is rideable but has a few issues that should be fixed soon. Left unattended, these can develop into costly repairs or cause you to get stranded mid-ride.':
         'Tu bici se puede andar, pero tiene algunos problemas que conviene arreglar pronto. Si los dejás pasar, pueden convertirse en reparaciones costosas o dejarte varado a mitad de camino.',
-      'Book a Tune-Up ($109) →': 'Reservar un Ajuste ($109) →',
+      'Book a Tune-Up ($119) →': 'Reservar un Ajuste ($119) →',
       'Mostly Good — Minor Fix Needed': 'Casi Perfecta — Necesita un Ajuste Menor',
       'Your bike is generally safe but has one minor issue. A quick service call can resolve it before it becomes a bigger problem.':
         'Tu bici en general es segura, pero tiene un problema menor. Un servicio rápido puede resolverlo antes de que se convierta en algo más grande.',
@@ -471,7 +471,7 @@ const DICT = {
       'Needs Attention Soon': '需尽快处理',
       'Your bike is rideable but has a few issues that should be fixed soon. Left unattended, these can develop into costly repairs or cause you to get stranded mid-ride.':
         '您的自行车目前可以骑行，但有一些问题应尽快处理。放任不管可能发展成代价更高的维修，或让您在半路抛锚。',
-      'Book a Tune-Up ($109) →': '预订基础保养（$109）→',
+      'Book a Tune-Up ($119) →': '预订基础保养（$119）→',
       'Mostly Good — Minor Fix Needed': '基本良好 — 需小修',
       'Your bike is generally safe but has one minor issue. A quick service call can resolve it before it becomes a bigger problem.':
         '您的自行车总体安全，但有一个小问题。一次快速的上门服务即可解决，避免它演变成更大的麻烦。',

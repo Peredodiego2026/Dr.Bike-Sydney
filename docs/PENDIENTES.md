@@ -5788,6 +5788,24 @@ Lo delicado no fue borrar sino no dejar 404s:
 copia entre si. Dejan de ser un problema de escala, pero necesitan
 contenido local de verdad - y eso depende de que Diego este en Sydney
 (primera semana de noviembre 2026), no de codigo.
+
+**24-oct-2026: el generador no se habia enterado.** Este punto, el 7 de la
+auditoria (consent, 178d06de) y el rename a "visit & diagnosis fee"
+(485ddaab) se hicieron sobre las paginas, no sobre
+`scripts/generate-suburb-pages.mjs`. Correrlo volvia a escribir las 20
+(45 archivos nuevos), sacaba el consent de GA, devolvia "call-out fee",
+apuntaba los vecinos a URLs que son 301 y agregaba 45 URLs al sitemap.
+Arreglado en `fix/suburb-generator-matches-committed`: genera solo las 5,
+los vecinos retirados se resuelven leyendo `vercel.json` (no una copia de
+las redirecciones) y el `lastmod` del sitemap ya no se pisa con la fecha
+del dia en cada corrida. Verificado: las 15 paginas y `sitemap.xml` salen
+con el mismo hash de blob que `main`. Es la segunda vez que el generador
+se separa de lo commiteado (la primera, los tokens, mas arriba), asi que
+ahora es un check: `npm run check` corre `generate-suburb-pages.mjs --check`
+(tambien `npm run suburbs:check`), que regenera en memoria sin escribir ni
+llamar a Supabase - toma los precios de la primera pagina commiteada - y
+falla nombrando cada archivo que no coincide. Un `lastmod` editado a mano
+pasa a proposito: se lee de ese mismo archivo.
 ## 30. Parramatta: el paso de la direccion seguia siendo un callejon (25-ago-2026)
 
 Diego probo Parramatta desde el celular y desde la landing. Salia el panel

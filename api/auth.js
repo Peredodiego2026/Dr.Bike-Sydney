@@ -306,12 +306,12 @@ export function applySurcharge(amount, dateStr) {
 }
 
 // Membership plans (confirmed with Diego, revised version): each plan gets
-// 3 separate monthly quotas - "minor" (any service under $60), "wash" (the
+// 3 separate monthly quotas - "minor" (any service under $70), "wash" (the
 // Bike Wash service), and "tuneup" (the Tune-Up service) - matched against
 // the real services table by price/name, not a hardcoded list. Basic's
 // included visits still incur the callout fee ("solo por ir" - Diego's
 // words); Standard/VIP's waive it entirely. A booking that doesn't fall into
-// any of the 3 categories (e.g. a Standard Service or a repair >= $60), or
+// any of the 3 categories (e.g. a Standard Service or a repair >= $70), or
 // one that does but has used up that category's quota, is full price with
 // the plan's ongoing discount applied to both price and fee (same
 // both-components convention the Sunday surcharge already uses). VIP's
@@ -335,7 +335,8 @@ export const MEMBERSHIP_PLANS = {
   },
 };
 
-const MINOR_SERVICE_MAX_PRICE = 60;
+// 70 since the +$10 of 24-oct-2026 (was 60): the same services stay "minor".
+const MINOR_SERVICE_MAX_PRICE = 70;
 
 // Which free-quota bucket (if any) a service falls into, matched against the
 // base (pre-surcharge) price/name so a Sunday surcharge never pushes a
@@ -2774,10 +2775,22 @@ async function handleMechanicComplete(req, res) {
       const qty = parseInt(p?.qty, 10);
       if (!p?.id || !Number.isFinite(qty) || qty <= 0) continue;
       if (costLookupOk) partsCostActual += qty * (costById.get(p.id) || 0);
-      const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/decrement_part_stock`, {
+      // adjust_part_stock (negative delta) instead of decrement_part_stock: it
+      // does the same atomic, non-negative decrement AND writes a job_used row
+      // to stock_movements with this booking's id, so cancelling the job later
+      // can return exactly what it took (revertJobStock). Same return shape
+      // (id, name, new_stock, min_stock) plus `applied`, so the low-stock check
+      // below is unchanged.
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
         method: 'POST',
         headers: sbHdr,
-        body: JSON.stringify({ p_part_id: p.id, p_qty: qty }),
+        body: JSON.stringify({
+          p_part_id: p.id,
+          p_delta: -qty,
+          p_reason: 'job_used',
+          p_job_id: booking_id,
+          p_created_by: String(auth.mechanic?.name || auth.mechanic?.id || 'mechanic'),
+        }),
       });
       if (!r.ok) continue;
       const row = (await r.json())[0];
@@ -3713,6 +3726,58 @@ async function handleClientHistory(req, res) {
   return res.status(200).json(data || []);
 }
 
+// Give a cancelled job its parts back. Reads what the job actually took from
+// the ledger (its job_used rows) rather than the booking's free-text
+// parts_used, and returns it as job_reverted through the same atomic RPC.
+//
+// Works on the NET per part (job_used + job_reverted so far), not on "has it
+// been reverted before": a job that is cancelled, reopened, completed again
+// and cancelled again owes the second deduction too, and a first version that
+// stopped at the first job_reverted row would have kept it. Idempotent all the
+// same - once a job is given back its net is 0 and a second call does nothing.
+// Returns what it gave back, { [partId]: qty }.
+export async function revertJobStock(bookingId, serviceKey, createdBy = 'revert') {
+  const hdr = {
+    apikey: serviceKey,
+    Authorization: `Bearer ${serviceKey}`,
+    'Content-Type': 'application/json',
+  };
+  const returned = {};
+  try {
+    const resp = await fetch(
+      `${SUPABASE_URL}/rest/v1/stock_movements?select=part_id,delta,reason&job_id=eq.${encodeURIComponent(bookingId)}`,
+      { headers: hdr }
+    );
+    // A failed read gives back nothing: guessing would invent stock.
+    if (!resp.ok) return returned;
+    const rows = await resp.json();
+    const net = new Map();
+    for (const r of rows) {
+      if (r.reason !== 'job_used' && r.reason !== 'job_reverted') continue;
+      net.set(r.part_id, (net.get(r.part_id) || 0) + Number(r.delta));
+    }
+    for (const [partId, n] of net) {
+      if (!(n < 0)) continue; // nothing (left) to give back for this part
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
+        method: 'POST',
+        headers: hdr,
+        body: JSON.stringify({
+          p_part_id: partId,
+          p_delta: -n, // exactly what is still out
+          p_reason: 'job_reverted',
+          p_job_id: bookingId,
+          p_created_by: createdBy,
+        }),
+      });
+      if (r.ok) returned[partId] = -n;
+      else console.warn('[revert-stock] RPC failed for part', partId, r.status);
+    }
+  } catch (e) {
+    console.warn('[revert-stock] could not return stock for', bookingId, e.message);
+  }
+  return returned;
+}
+
 async function handleMechanicUpdateStatus(req, res) {
   const { booking_id, status, mechanic_notes } = req.body;
   if (!booking_id || !status)
@@ -3735,15 +3800,23 @@ async function handleMechanicUpdateStatus(req, res) {
     status === 'enroute'
       ? `&or=(mechanic_id.is.null,mechanic_id.eq.${encodeURIComponent(mechanic.id)})`
       : `&mechanic_id=eq.${encodeURIComponent(mechanic.id)}`;
+  // A cancel only matches a job that is not cancelled yet, so the stock
+  // return below fires on the transition itself: a double tap, or two phones
+  // cancelling at once, updates one row once and returns the parts once.
+  const transitionFilter = status === 'cancelled' ? '&status=neq.cancelled' : '';
   const updateResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}${ownershipFilter}`,
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}${ownershipFilter}${transitionFilter}`,
     {
       method: 'PATCH',
       headers: {
         apikey: SERVICE_KEY,
         Authorization: `Bearer ${SERVICE_KEY}`,
         'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
+        // representation (not minimal): we need to know whether a row actually
+        // changed before returning stock, so a mechanic cancelling a job that
+        // is not theirs (ownership filter matches nothing) never triggers a
+        // revert.
+        Prefer: 'return=representation',
       },
       body: JSON.stringify({
         status,
@@ -3757,13 +3830,33 @@ async function handleMechanicUpdateStatus(req, res) {
     console.error('update-status error:', updateResp.status, errText);
     return res.status(500).json({ error: 'Failed to update booking', detail: errText });
   }
+  // Cancelling a job that had been completed must give its parts back. Only on
+  // a real cancel that actually hit a row this mechanic owns; revertJobStock is
+  // idempotent and a no-op when the job never used parts, so the common case
+  // (cancelling a pending job) costs one cheap ledger read and nothing else.
+  if (status === 'cancelled') {
+    const updated = await updateResp.json().catch(() => []);
+    if (Array.isArray(updated) && updated.length) {
+      await revertJobStock(
+        booking_id,
+        SERVICE_KEY,
+        String(mechanic?.name || mechanic?.id || 'mechanic')
+      );
+    }
+  }
   return res.status(200).json({ ok: true });
 }
 
-async function handleMechanicParts(req, res) {
-  const auth = await authMechanic(req);
-  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+// ── Admin inventory, server-side ───────────────────────────────────────────
+// The panel used to read and write parts_inventory straight from the browser
+// with the anon key (relying on RLS). These move it behind the service key -
+// the project rule for elevated writes - and route every stock change through
+// the adjust_part_stock ledger, so the history covers admin moves too, not just
+// what mechanics use.
+export async function handleAdminInventoryList(req, res) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
   const resp = await fetch(
     `${SUPABASE_URL}/rest/v1/parts_inventory?select=*&order=category.asc,name.asc`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
@@ -3772,29 +3865,358 @@ async function handleMechanicParts(req, res) {
   return res.status(200).json(await resp.json());
 }
 
-async function handleMechanicPartsUpdate(req, res) {
+// A non-negative number, or NaN when it is not one. '' and null are "no value",
+// which only nullable fields accept.
+function invNumber(v, { int = false, nullable = false } = {}) {
+  if (v === null || v === '') return nullable ? null : NaN;
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0 || (int && !Number.isInteger(n))) return NaN;
+  return n;
+}
+function invText(v, max) {
+  if (v === null || v === undefined) return null;
+  return String(v).trim().slice(0, max) || null;
+}
+
+export async function handleAdminInventoryUpsert(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const b = req.body || {};
+  const name = typeof b.name === 'string' ? b.name.trim() : '';
+  if (!name) return res.status(400).json({ error: 'name required' });
+  if (name.length > 120) return res.status(400).json({ error: 'name is too long (120 max)' });
+  const who = String(auth.user?.email || 'admin');
+  const sbHdr = {
+    apikey: SERVICE_KEY,
+    Authorization: `Bearer ${SERVICE_KEY}`,
+    'Content-Type': 'application/json',
+  };
+
+  // Validated here, not trusted from the page: these numbers become the price a
+  // client is charged and the stock-value totals in Finance.
+  const meta = { name };
+  if (b.category !== undefined) meta.category = invText(b.category, 40) || 'General';
+  for (const [f, max] of [
+    ['wheel_size', 20],
+    ['valve_type', 20],
+    ['width_range', 20],
+  ])
+    if (b[f] !== undefined) meta[f] = invText(b[f], max);
+  for (const [f, opts] of [
+    ['min_stock', { int: true }],
+    ['cost_price', {}],
+    ['sell_price', { nullable: true }],
+    ['valve_length_mm', { int: true, nullable: true }],
+  ]) {
+    if (b[f] === undefined) continue;
+    const n = invNumber(b[f], opts);
+    if (Number.isNaN(n))
+      return res.status(400).json({ error: `${f} must be a number of 0 or more` });
+    meta[f] = n;
+  }
+  let stock = null;
+  if (b.stock !== undefined && b.stock !== null && b.stock !== '') {
+    stock = invNumber(b.stock, { int: true });
+    if (Number.isNaN(stock))
+      return res.status(400).json({ error: 'stock must be a whole number of 0 or more' });
+  }
+
+  if (b.id) {
+    // Existing part: metadata is a plain PATCH; a stock change is an auditable
+    // 'adjustment' through the RPC, never a blind overwrite.
+    const up = await fetch(
+      `${SUPABASE_URL}/rest/v1/parts_inventory?id=eq.${encodeURIComponent(b.id)}`,
+      {
+        method: 'PATCH',
+        headers: { ...sbHdr, Prefer: 'return=representation' },
+        body: JSON.stringify(meta),
+      }
+    );
+    if (!up.ok) return res.status(500).json({ error: 'Failed to save part' });
+    const saved = await up.json().catch(() => []);
+    if (!Array.isArray(saved) || !saved.length)
+      return res.status(404).json({ error: 'Part not found - it may have been deleted' });
+    // "Set the stock to N" becomes the difference from what is there now. Read
+    // and adjust are two steps, so a mechanic using the same part in between
+    // makes the final count off by that one use - the ledger still records
+    // every real change, and the admin sees the true number after the reload.
+    if (stock !== null) {
+      // The PATCH above already returned the row, current stock included.
+      const delta = stock - Number(saved[0].stock);
+      if (delta !== 0) {
+        const adj = await fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
+          method: 'POST',
+          headers: sbHdr,
+          body: JSON.stringify({
+            p_part_id: b.id,
+            p_delta: delta,
+            p_reason: 'adjustment',
+            p_created_by: who,
+          }),
+        });
+        if (!adj.ok)
+          return res.status(500).json({ error: 'Part saved, but the stock change failed' });
+      }
+    }
+    return res.status(200).json({ ok: true, id: b.id });
+  }
+
+  // New part: insert with its starting stock, then record the 'initial' movement
+  // (the stock is already set, so log it rather than adjust from zero).
+  const startStock = stock ?? 0;
+  const ins = await fetch(`${SUPABASE_URL}/rest/v1/parts_inventory`, {
+    method: 'POST',
+    headers: { ...sbHdr, Prefer: 'return=representation' },
+    body: JSON.stringify({ ...meta, stock: startStock }),
+  });
+  if (!ins.ok) return res.status(500).json({ error: 'Failed to create part' });
+  const created = (await ins.json())?.[0];
+  if (created?.id && startStock > 0) {
+    await fetch(`${SUPABASE_URL}/rest/v1/stock_movements`, {
+      method: 'POST',
+      headers: { ...sbHdr, Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        part_id: created.id,
+        delta: startStock,
+        reason: 'initial',
+        created_by: who,
+      }),
+    });
+  }
+  return res.status(200).json({ ok: true, id: created?.id || null });
+}
+
+export async function handleAdminInventoryMove(req, res, reason) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const id = req.body?.id;
+  // restock is always positive; adjustment may be either way.
+  const delta =
+    reason === 'restock' ? Math.abs(parseInt(req.body?.qty, 10)) : parseInt(req.body?.delta, 10);
+  if (!id || !Number.isFinite(delta) || delta === 0)
+    return res.status(400).json({ error: 'id and a non-zero amount required' });
+  if (Math.abs(delta) > 10000) return res.status(400).json({ error: 'amount is too large' });
+  // Why it moved (damaged, lost, miscounted, which supplier) - kept with the
+  // movement for the repurchase study. Optional here; the Adjust dialog asks
+  // for it, the quick +/- buttons do not.
+  const note =
+    typeof req.body?.note === 'string' ? req.body.note.trim().slice(0, 200) || null : null;
+  const sbHdr = {
+    apikey: SERVICE_KEY,
+    Authorization: `Bearer ${SERVICE_KEY}`,
+    'Content-Type': 'application/json',
+  };
+  const call = (withNote) =>
+    fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
+      method: 'POST',
+      headers: sbHdr,
+      body: JSON.stringify({
+        p_part_id: id,
+        p_delta: delta,
+        p_reason: reason,
+        p_created_by: String(auth.user?.email || 'admin'),
+        ...(withNote ? { p_note: note } : {}),
+      }),
+    });
+  let r = await call(!!note);
+  // Before scripts/add-stock-movement-notes.sql runs, the function has no
+  // p_note and PostgREST answers 404 (PGRST202). The stock change matters more
+  // than the note: do it without, and say the note was not kept.
+  let noteKept = !!note;
+  if (note && r.status === 404) {
+    r = await call(false);
+    noteKept = false;
+  }
+  if (!r.ok) return res.status(500).json({ error: 'Failed to update stock' });
+  const row = (await r.json())?.[0];
+  if (!row) return res.status(404).json({ error: 'Part not found' });
+  return res
+    .status(200)
+    .json({ ok: true, new_stock: row.new_stock, applied: row.applied, note_kept: noteKept });
+}
+
+// One part's whole stock history, newest first, with the job each use belongs
+// to - the raw material of the repurchase study.
+export async function handleAdminInventoryHistory(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const id = req.body?.id;
+  if (!id) return res.status(400).json({ error: 'id required' });
+  const hdr = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
+  // select=* so the note shows once its column exists, and nothing breaks before.
+  const mv = await fetch(
+    `${SUPABASE_URL}/rest/v1/stock_movements?select=*&part_id=eq.${encodeURIComponent(id)}&order=created_at.desc&limit=200`,
+    { headers: hdr }
+  );
+  if (!mv.ok) return res.status(500).json({ error: 'Failed to load the history' });
+  const rows = (await mv.json()) || [];
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const jobIds = [...new Set(rows.map((r) => r.job_id).filter((j) => UUID.test(j || '')))];
+  const jobs = new Map();
+  if (jobIds.length) {
+    const bk = await fetch(
+      `${SUPABASE_URL}/rest/v1/bookings?select=id,client_name,service_name,scheduled_date&id=in.(${jobIds.map((j) => `"${j}"`).join(',')})`,
+      { headers: hdr }
+    );
+    if (bk.ok) for (const b of (await bk.json()) || []) jobs.set(b.id, b);
+    else console.warn('[inventory-history] booking lookup failed:', bk.status);
+  }
+  return res.status(200).json({
+    movements: rows.map((r) => ({
+      at: r.created_at,
+      delta: r.delta,
+      reason: r.reason,
+      by: r.created_by || null,
+      note: r.note ?? null,
+      job: r.job_id
+        ? {
+            id: r.job_id,
+            client_name: jobs.get(r.job_id)?.client_name || null,
+            service_name: jobs.get(r.job_id)?.service_name || null,
+            date: jobs.get(r.job_id)?.scheduled_date || null,
+          }
+        : null,
+    })),
+  });
+}
+
+// What went into jobs this month (Sydney's month, not the server's UTC one):
+// units from the ledger (used minus returned), cost from the per-job snapshot
+// bookings.parts_cost_actual - the same number Finance reads.
+export async function handleAdminInventorySummary(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const hdr = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
+  const monthStart = `${sydneyToday().slice(0, 8)}01`;
+  const since = sydneyLocalToUtc(monthStart, '00:00').toISOString();
+  const [mv, bk] = await Promise.all([
+    fetch(
+      `${SUPABASE_URL}/rest/v1/stock_movements?select=delta&reason=in.(job_used,job_reverted)&created_at=gte.${encodeURIComponent(since)}`,
+      { headers: hdr }
+    ),
+    fetch(
+      `${SUPABASE_URL}/rest/v1/bookings?select=parts_cost_actual&status=eq.completed&completed_at=gte.${encodeURIComponent(since)}`,
+      { headers: hdr }
+    ),
+  ]);
+  if (!mv.ok || !bk.ok) return res.status(500).json({ error: 'Failed to load this month' });
+  const units = -((await mv.json()) || []).reduce((s, r) => s + Number(r.delta || 0), 0);
+  const jobs = ((await bk.json()) || []).filter((b) => b.parts_cost_actual !== null);
+  const cost = jobs.reduce((s, b) => s + Number(b.parts_cost_actual || 0), 0);
+  return res.status(200).json({
+    month_start: monthStart,
+    units_used: Math.max(0, units),
+    cost_used: Math.round(cost * 100) / 100,
+    jobs_with_parts: jobs.filter((b) => Number(b.parts_cost_actual) > 0).length,
+  });
+}
+
+// Deactivate / reactivate a part. Parts are never deleted - Diego, 23-oct-2026:
+// the usage history is what a repurchase study is built on. A deactivated part
+// leaves every mechanic list and keeps its stock and all its movements. The
+// database refuses to delete a part with history anyway
+// (scripts/add-parts-active-keep-history.sql, FK on delete restrict).
+export async function handleAdminInventoryActive(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const id = req.body?.id;
+  const active = req.body?.active;
+  if (!id || typeof active !== 'boolean')
+    return res.status(400).json({ error: 'id and active (true or false) required' });
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/parts_inventory?id=eq.${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: SERVICE_KEY,
+      Authorization: `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify({ active }),
+  });
+  if (!r.ok) {
+    const detail = await r.text().catch(() => '');
+    // Merged before the SQL was run: say so instead of a bare 500.
+    if (/active/i.test(detail) && /column|exist|schema/i.test(detail))
+      return res.status(503).json({
+        error: 'Run scripts/add-parts-active-keep-history.sql in Supabase first',
+      });
+    return res.status(500).json({ error: 'Failed to update the part' });
+  }
+  const rows = await r.json().catch(() => []);
+  if (!Array.isArray(rows) || !rows.length)
+    return res.status(404).json({ error: 'Part not found' });
+  return res.status(200).json({ ok: true, active: rows[0].active });
+}
+
+export async function handleMechanicParts(req, res) {
   const auth = await authMechanic(req);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
-  const { id, stock } = req.body;
-  if (!id) return res.status(400).json({ error: 'id required' });
-  const qty = parseInt(stock, 10);
-  if (!Number.isFinite(qty) || qty < 0) return res.status(400).json({ error: 'Invalid stock' });
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
-  const resp = await fetch(
-    `${SUPABASE_URL}/rest/v1/parts_inventory?id=eq.${encodeURIComponent(id)}`,
-    {
-      method: 'PATCH',
-      headers: {
-        apikey: SERVICE_KEY,
-        Authorization: `Bearer ${SERVICE_KEY}`,
-        'Content-Type': 'application/json',
-        Prefer: 'return=minimal',
-      },
-      body: JSON.stringify({ stock: qty }),
-    }
-  );
-  if (!resp.ok) return res.status(500).json({ error: 'Failed to update stock' });
-  return res.status(200).json({ ok: true });
+  const hdr = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
+  const base = `${SUPABASE_URL}/rest/v1/parts_inventory?select=*&order=category.asc,name.asc`;
+  // Deactivated parts stay out of every mechanic list (the job's parts picker,
+  // the stock screen, the price catalog). Until the `active` column exists the
+  // filter is a 400 - and then nothing can be inactive, so the full list is
+  // the right answer.
+  let resp = await fetch(`${base}&active=is.true`, { headers: hdr });
+  if (resp.status === 400) resp = await fetch(base, { headers: hdr });
+  if (!resp.ok) return res.status(500).json({ error: 'Failed to load inventory' });
+  return res.status(200).json(await resp.json());
+}
+
+// The mechanic's stock screen (+ / -). It used to PATCH stock to whatever
+// number the phone was showing: no trace in the history, and a stale screen
+// (another mechanic used one meanwhile) overwrote the real count. Now the phone
+// sends the change it made; older cached copies of the app still send the
+// absolute number, which becomes a change against what the database holds now.
+// Either way it goes through adjust_part_stock, so it lands in the history.
+export async function handleMechanicPartsUpdate(req, res) {
+  const auth = await authMechanic(req);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const { id } = req.body;
+  if (!id) return res.status(400).json({ error: 'id required' });
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const hdr = {
+    apikey: SERVICE_KEY,
+    Authorization: `Bearer ${SERVICE_KEY}`,
+    'Content-Type': 'application/json',
+  };
+  let delta;
+  if (req.body.delta !== undefined) {
+    delta = parseInt(req.body.delta, 10);
+    if (!Number.isFinite(delta) || Math.abs(delta) > 1000)
+      return res.status(400).json({ error: 'Invalid change' });
+  } else {
+    const qty = parseInt(req.body.stock, 10);
+    if (!Number.isFinite(qty) || qty < 0) return res.status(400).json({ error: 'Invalid stock' });
+    const cur = await fetch(
+      `${SUPABASE_URL}/rest/v1/parts_inventory?select=stock&id=eq.${encodeURIComponent(id)}&limit=1`,
+      { headers: hdr }
+    );
+    const row = cur.ok ? (await cur.json())?.[0] : null;
+    if (!row) return res.status(404).json({ error: 'Part not found' });
+    delta = qty - Number(row.stock);
+  }
+  // A zero change writes nothing and still answers with the current count.
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/rpc/adjust_part_stock`, {
+    method: 'POST',
+    headers: hdr,
+    body: JSON.stringify({
+      p_part_id: id,
+      p_delta: delta,
+      p_reason: 'adjustment',
+      p_created_by: String(auth.mechanic?.name || auth.mechanic?.id || 'mechanic'),
+    }),
+  });
+  if (!r.ok) return res.status(500).json({ error: 'Failed to update stock' });
+  const out = (await r.json())?.[0];
+  if (!out) return res.status(404).json({ error: 'Part not found' });
+  return res.status(200).json({ ok: true, stock: out.new_stock });
 }
 
 async function handleMechanicMessages(req, res) {
@@ -4624,7 +5046,6 @@ const ALL_SLOTS = [
   '2:00 PM',
   '3:00 PM',
   '4:00 PM',
-  '5:00 PM',
 ];
 
 // Minutes since midnight, or -1 for anything this cannot read.
@@ -5655,10 +6076,46 @@ async function verifyAdminSession(access_token, SERVICE_KEY) {
   return { sb, user, aal };
 }
 
+// Admin > Bookings > Cancel. Used to be a browser-side update with the anon
+// key, which could cancel a COMPLETED job and leave the parts it used out of
+// stock for good - the admin's Cancel button shows on every booking that is
+// not cancelled yet, completed ones included. Now it cancels here and gives
+// the parts back (revertJobStock, a no-op for a job that never used any).
+// Matches only a booking that is not cancelled yet, so the return fires on
+// the transition and a double click cannot return the stock twice.
+export async function handleAdminCancelBooking(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const id = req.body?.id;
+  if (!id) return res.status(400).json({ error: 'id required' });
+  // Stored as plain text, escaped wherever it is shown (admin.js and app.js).
+  const reason =
+    typeof req.body?.reason === 'string' ? req.body.reason.trim().slice(0, 500) || null : null;
+  const r = await fetch(
+    `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(id)}&status=neq.cancelled`,
+    {
+      method: 'PATCH',
+      headers: {
+        apikey: SERVICE_KEY,
+        Authorization: `Bearer ${SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify({ status: 'cancelled', cancellation_reason: reason }),
+    }
+  );
+  if (!r.ok) return res.status(500).json({ error: 'Could not cancel the booking' });
+  const rows = await r.json().catch(() => []);
+  if (!Array.isArray(rows) || !rows.length)
+    return res.status(409).json({ error: 'Booking not found or already cancelled' });
+  const returned = await revertJobStock(id, SERVICE_KEY, String(auth.user?.email || 'admin'));
+  return res.status(200).json({ booking: rows[0], parts_returned: returned });
+}
+
 // Cleans up a booking's synced calendar event after an admin-side cancel
-// (admin.js's confirmCancel() cancels the booking directly via the browser
-// Supabase client, so this is the one server hop needed to reach the Google
-// Calendar credentials, which must never be exposed client-side).
+// (admin.js's confirmCancel() cancels through handleAdminCancelBooking, but the
+// Google Calendar credentials live only here and must never reach the browser).
 async function handleAdminDeleteCalendarEvent(req, res) {
   const { access_token, event_id } = req.body;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -6364,6 +6821,8 @@ async function handler(req, res) {
           role === 'photo-sign' ||
           // Admin > Photos re-reads the list after every select-and-act.
           role.startsWith('admin-photos-') ||
+          // Admin > Spare Parts: +/- stock and reloads after each change.
+          role.startsWith('admin-inventory-') ||
           // Admin > Shop Orders re-reads the list after every step it moves.
           role === 'admin-shop' ||
           role.startsWith('client-')
@@ -6431,6 +6890,7 @@ async function handler(req, res) {
   if (role === 'admin-services-save') return handleAdminServicesSave(req, res);
   if (role === 'admin-create-booking') return handleAdminCreateBooking(req, res);
   if (role === 'admin-services-delete') return handleAdminServicesDelete(req, res);
+  if (role === 'admin-cancel-booking') return handleAdminCancelBooking(req, res);
   if (role === 'admin-delete-calendar-event') return handleAdminDeleteCalendarEvent(req, res);
   if (role === 'submit-claim') return handleSubmitClaim(req, res);
   if (role === 'admin-orphan-audit') return handleAdminOrphanAudit(req, res);
@@ -6444,6 +6904,13 @@ async function handler(req, res) {
   if (role === 'admin-photos-feature') return handleAdminPhotosFeature(req, res);
   if (role === 'admin-photos-unfeature') return handleAdminPhotosUnfeature(req, res);
   if (role === 'admin-photos-order') return handleAdminPhotosOrder(req, res);
+  if (role === 'admin-inventory-list') return handleAdminInventoryList(req, res);
+  if (role === 'admin-inventory-upsert') return handleAdminInventoryUpsert(req, res);
+  if (role === 'admin-inventory-restock') return handleAdminInventoryMove(req, res, 'restock');
+  if (role === 'admin-inventory-adjust') return handleAdminInventoryMove(req, res, 'adjustment');
+  if (role === 'admin-inventory-active') return handleAdminInventoryActive(req, res);
+  if (role === 'admin-inventory-history') return handleAdminInventoryHistory(req, res);
+  if (role === 'admin-inventory-summary') return handleAdminInventorySummary(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
   if (role === 'admin-analytics') return handleAdminAnalytics(req, res);

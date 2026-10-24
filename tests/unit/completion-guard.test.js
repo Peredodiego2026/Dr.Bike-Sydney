@@ -97,7 +97,7 @@ describe('handleMechanicComplete wiring', () => {
     const guardAt = fn.indexOf('completionVerdict(');
     expect(guardAt, 'completionVerdict not called in handleMechanicComplete').toBeGreaterThan(-1);
     expect(guardAt).toBeLessThan(fn.indexOf('paymentIntents.create'));
-    expect(guardAt).toBeLessThan(fn.indexOf('decrement_part_stock'));
+    expect(guardAt).toBeLessThan(fn.indexOf("p_reason: 'job_used'"));
     expect(guardAt).toBeLessThan(fn.indexOf('sendCompletionNotifications'));
   });
 
@@ -182,7 +182,8 @@ describe('handleMechanicComplete - parts cost lookup failure handling (review fi
     // filter on either just as it would on the original threat (quotes/
     // commas/parens), reintroducing the same whole-batch failure this test
     // exists to guard against (review finding).
-    const uuidRe = /\/\^\[0-9a-f\]\{8\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{12\}\$\/i/;
+    const uuidRe =
+      /\/\^\[0-9a-f\]\{8\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{4\}-\[0-9a-f\]\{12\}\$\/i/;
     expect(fn).toMatch(uuidRe);
     // Extract the exact regex literal from the source and run it for real,
     // rather than trusting the text alone matches what it looks like.

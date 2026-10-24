@@ -361,8 +361,23 @@ document.addEventListener('click', function (e) {
     case 'open-part-modal':
       openPartModal(d.id);
       break;
-    case 'delete-part':
-      deletePart(d.id);
+    case 'deactivate-part':
+      setPartActive(d.id, false);
+      break;
+    case 'reactivate-part':
+      setPartActive(d.id, true);
+      break;
+    case 'part-history':
+      openPartHistory(d.id);
+      break;
+    case 'close-part-history':
+      document.getElementById('invh-modal')?.remove();
+      break;
+    case 'part-restock':
+      partStockMove(d.id, 'restock', 1);
+      break;
+    case 'part-adjust':
+      partStockMove(d.id, 'adjust', Number(d.sign));
       break;
     case 'close-part-modal':
       document.getElementById('part-modal')?.remove();
@@ -1467,6 +1482,9 @@ async function loadFinance() {
         .join('')
     : '<tr><td colspan="7"><div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:10px"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><div style="font-size:15px;font-weight:600;color:var(--mgray)">No transactions yet</div><div style="font-size:13px;color:var(--mgray);opacity:0.7">Completed jobs will appear here</div></div></td></tr>';
 
+  const partsSold = finPartsSold(jobs);
+  renderFinanceParts(partsSold, periodStr);
+
   // Store for export
   window._finData = {
     jobs,
@@ -1488,10 +1506,93 @@ async function loadFinance() {
     // it had checked. See exportBAS().
     expenses: exp,
     expensesAvailable: _expenses.available !== false,
+    partsSold,
     periodStr,
     dateFrom,
     dateTo,
   };
+}
+
+// Parts fitted on the period's completed jobs, from each job's own snapshot:
+// what the client was charged (parts_charged.items, at the price the mechanic
+// showed on the phone) against what those parts cost (parts_cost_actual,
+// priced from parts_inventory at completion). A job that charged parts but
+// has no cost recorded cannot have a margin - it is counted apart, never as a
+// $0 cost, which would read as pure profit.
+function finPartsSold(jobs) {
+  const out = { charged: 0, cost: 0, units: 0, jobs: 0, uncosted: 0, uncostedCharged: 0 };
+  for (const b of jobs) {
+    const items = Array.isArray(b.parts_charged?.items) ? b.parts_charged.items : [];
+    let charged = 0;
+    let units = 0;
+    for (const p of items) {
+      const qty = Number(p?.qty) || 0;
+      if (qty <= 0) continue;
+      units += qty;
+      charged += Number(p?.total) || qty * (Number(p?.unit_price) || 0);
+    }
+    const hasCost = b.parts_cost_actual !== null && b.parts_cost_actual !== undefined;
+    const cost = hasCost ? Number(b.parts_cost_actual) || 0 : 0;
+    if (!units && !cost) continue;
+    out.jobs++;
+    out.units += units;
+    if (hasCost) {
+      out.charged += charged;
+      out.cost += cost;
+    } else {
+      out.uncosted++;
+      out.uncostedCharged += charged;
+    }
+  }
+  out.margin = out.charged - out.cost;
+  out.totalCharged = out.charged + out.uncostedCharged;
+  return out;
+}
+
+// Finance > Parts & stock. The sold half comes from the jobs already loaded;
+// the shelf half is read now, and if that read fails only that half says so.
+// Stock is not a cost of the period: a part becomes a cost when it is fitted.
+async function renderFinanceParts(s, periodStr) {
+  const soldBox = document.getElementById('fin-parts-sold');
+  const stockBox = document.getElementById('fin-parts-stock');
+  if (!soldBox || !stockBox) return;
+  const sub = document.getElementById('fin-parts-sub');
+  if (sub) sub.textContent = `${periodStr} · fitted on completed jobs, and on the shelf today`;
+  const signed = (n) => (n < 0 ? '–' : '') + anMoney(Math.abs(n));
+  const row = (label, val, strong) => `<div class="pl-row${strong ? ' subtotal' : ''}">
+      <span class="pl-label${strong ? ' dark' : ''}">${esc(label)}</span>
+      <span style="font-weight:${strong ? 700 : 500};color:var(--navy);font-variant-numeric:tabular-nums">${val}</span>
+    </div>`;
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+  if (!s.jobs) {
+    soldBox.innerHTML = `<div class="fin-parts-h"><b>Sold in jobs</b><span>Nothing in this period</span></div>
+      <div class="fin-parts-note">No parts were fitted on the jobs completed in this period.</div>`;
+  } else {
+    const pct = s.charged > 0 ? Math.round((s.margin / s.charged) * 100) : null;
+    soldBox.innerHTML = `<div class="fin-parts-h"><b>Sold in jobs</b><span>${plural(s.units, 'part')} in ${plural(s.jobs, 'job')}</span></div>
+      ${row('Charged to clients', anMoney(s.charged))}
+      ${row('What those parts cost', signed(-s.cost))}
+      ${row('Margin on parts', signed(s.margin) + (pct === null ? '' : ` · ${pct}%`), true)}
+      ${s.uncosted ? `<div class="fin-parts-note">Plus ${anMoney(s.uncostedCharged)} charged on ${plural(s.uncosted, 'job')} with no parts cost recorded - left out of the margin.</div>` : ''}
+      ${s.totalCharged > 0 ? `<div class="fin-parts-note warn">The ${anMoney(s.totalCharged)} of parts is not in Revenue, the P&amp;L or the BAS above - those only add the service and the visit fee.</div>` : ''}`;
+  }
+
+  stockBox.innerHTML = `<div class="fin-parts-h"><b>On the shelf now</b><span>Loading...</span></div>`;
+  let parts;
+  try {
+    parts = await photosApi('admin-inventory-list');
+  } catch (e) {
+    stockBox.innerHTML = `<div class="fin-parts-h"><b>On the shelf now</b></div>
+      <div class="fin-parts-note warn">Could not read the stock: ${esc(e.message)}</div>`;
+    return;
+  }
+  const v = invStockValuation(parts || []);
+  stockBox.innerHTML = `<div class="fin-parts-h"><b>On the shelf now</b><span>${plural(v.units, 'unit')} across ${plural((parts || []).length, 'part')}</span></div>
+    ${row('At cost - what you own', anMoney(v.cost))}
+    ${row('At client price', anMoney(v.sell))}
+    ${row('Margin still to make', anMoney(v.margin), true)}
+    <div class="fin-parts-note">Buying stock is not a cost of the period: a part becomes a cost when it is fitted on a job.</div>`;
 }
 
 // One cell of a CSV, quoted and disarmed.
@@ -1536,6 +1637,10 @@ function exportFinanceCSV() {
     ['Net Revenue', d.netRevenue, '', '', '', '', ''],
     ['Net Profit', d.netProfit, '', '', '', '', ''],
     ['Margin', d.margin + '%', '', '', '', '', ''],
+    // Not part of the revenue above - see renderFinanceParts().
+    ['Parts charged to clients (not in revenue)', d.partsSold.totalCharged, '', '', '', '', ''],
+    ['Parts cost (jobs with a recorded cost)', d.partsSold.cost, '', '', '', '', ''],
+    ['Parts margin (jobs with a recorded cost)', d.partsSold.margin, '', '', '', '', ''],
   ];
   const csv = rows.map(csvRow).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
@@ -3132,15 +3237,17 @@ async function confirmCancel() {
   const reason = document.getElementById('cancel-reason').value;
   const notes = document.getElementById('cancel-notes').value;
   const fullReason = [reason, notes].filter(Boolean).join(' — ');
-  const { data: upd, error: cErr } = await sb
-    .from('bookings')
-    .update({ status: 'cancelled', cancellation_reason: fullReason })
-    .eq('id', id)
-    .select();
-  if (cErr || !upd || !upd.length) {
-    showToast(
-      'Could not cancel: ' + (cErr?.message || 'no permission / run add-cancellation-reason.sql')
-    );
+  // Server-side (api/auth.js handleAdminCancelBooking): cancelling a completed
+  // job there also puts the parts it used back in stock, which the old
+  // browser-side update never did.
+  let upd;
+  let partsBack = 0;
+  try {
+    const d = await photosApi('admin-cancel-booking', { id, reason: fullReason });
+    upd = [d.booking];
+    partsBack = Object.values(d.parts_returned || {}).reduce((s, q) => s + q, 0);
+  } catch (e) {
+    showToast('Could not cancel: ' + e.message);
     return;
   }
   const b = allBookings.find((x) => x.id === id);
@@ -3150,7 +3257,11 @@ async function confirmCancel() {
   }
   document.getElementById('cancel-modal').style.display = 'none';
   applyBookingFilters();
-  showToast('Booking cancelled');
+  showToast(
+    partsBack
+      ? `Booking cancelled · ${partsBack} part${partsBack === 1 ? '' : 's'} back in stock`
+      : 'Booking cancelled'
+  );
 
   if (upd[0]?.google_event_id) {
     const { data: sess } = await sb.auth.getSession();
@@ -8550,10 +8661,16 @@ async function deleteContact(id) {
 
 // ── INVENTORY / SPARE PARTS ────────────────────────────────────────────────────
 let inventoryData = [];
+// 'Tubes' is the category of the 61 Duro inner tubes seeded on 2026-10-22
+// (scripts/add-stock-movements-and-tube-seed.sql). Without it here they were
+// listed under General, and opening one in the edit modal left no option
+// selected - the browser then picks the first ('Brakes'), so saving any tube
+// silently moved it to Brakes.
 const PART_CATEGORIES = [
   'Brakes',
   'Drivetrain',
   'Wheels & Tyres',
+  'Tubes',
   'Cockpit',
   'Cables',
   'Suspension',
@@ -8567,17 +8684,56 @@ async function loadInventory() {
   tbody.innerHTML =
     '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--mgray)">Loading...</td></tr>';
 
-  const { data, error } = await sb.from('parts_inventory').select('*').order('name');
-  if (error) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--red-text)">Error: ${escapeHtml(error.message)}<br><small>Run the SQL migration first (see console)</small></td></tr>`;
-    console.log(
-      `SQL: CREATE TABLE parts_inventory (id uuid PRIMARY KEY, name text, category text, stock integer, min_stock integer, cost_price numeric, created_at timestamptz)`
-    );
+  let data;
+  // This month's usage comes alongside; if it fails the list still shows.
+  const summary = photosApi('admin-inventory-summary').catch((e) => {
+    console.warn('[inventory] month summary failed:', e.message);
+    return null;
+  });
+  try {
+    data = await photosApi('admin-inventory-list');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--red-text)">Error: ${escapeHtml(e.message)}</td></tr>`;
     return;
   }
 
   inventoryData = data || [];
   renderInventory();
+  renderInventoryMonth(await summary);
+}
+
+// "Used this month" was a hardcoded $0 until 2026-10-24 ("updated from
+// bookings later" - it never was). Now: cost from each completed job's own
+// snapshot, units from the stock history, in Sydney's month.
+function renderInventoryMonth(s) {
+  const val = document.getElementById('inv-used-month');
+  const sub = document.getElementById('inv-used-sub');
+  if (!val || !sub) return;
+  if (!s) {
+    val.textContent = '—';
+    sub.textContent = 'could not load this month';
+    return;
+  }
+  val.textContent = anMoney(s.cost_used);
+  sub.textContent = `${s.units_used} part${s.units_used === 1 ? '' : 's'} in ${s.jobs_with_parts} job${s.jobs_with_parts === 1 ? '' : 's'} · at cost`;
+}
+
+// What is on the shelf, valued three ways - the Inventory KPIs and Finance's
+// Parts & stock card both read it from here. Every unit counts, inactive parts
+// included (they are still in the van). Client price and the margin in it only
+// cover parts that have a client price.
+function invStockValuation(parts) {
+  const priced = parts.filter((p) => p.sell_price !== null && p.sell_price !== undefined);
+  return {
+    cost: parts.reduce((s, p) => s + (Number(p.stock) || 0) * (Number(p.cost_price) || 0), 0),
+    sell: priced.reduce((s, p) => s + (Number(p.stock) || 0) * Number(p.sell_price), 0),
+    margin: priced.reduce(
+      (s, p) => s + (Number(p.stock) || 0) * (Number(p.sell_price) - (Number(p.cost_price) || 0)),
+      0
+    ),
+    units: parts.reduce((s, p) => s + (Number(p.stock) || 0), 0),
+    priced: priced.length,
+  };
 }
 
 function renderInventory() {
@@ -8587,14 +8743,22 @@ function renderInventory() {
   const firstOfMonth = new Date();
   firstOfMonth.setDate(1);
 
-  const totalParts = inventoryData.length;
-  const lowStock = inventoryData.filter((p) => p.stock <= p.min_stock).length;
-  const stockValue = inventoryData.reduce((s, p) => s + p.stock * (p.cost_price || 0), 0);
+  // Parts are deactivated, never deleted (their usage history feeds the
+  // repurchase study). `active` is undefined until the column exists - active.
+  const isActive = (p) => p.active !== false;
+  const activeParts = inventoryData.filter(isActive);
+  const totalParts = activeParts.length;
+  const lowStock = activeParts.filter((p) => p.stock <= p.min_stock).length;
+  const v = invStockValuation(inventoryData);
 
   document.getElementById('inv-total-parts').textContent = totalParts;
   document.getElementById('inv-low-stock').textContent = lowStock;
-  document.getElementById('inv-stock-value').textContent = anMoney(stockValue);
-  document.getElementById('inv-used-month').textContent = '$0'; // updated from bookings later
+  document.getElementById('inv-stock-value').textContent = anMoney(v.cost);
+  const stockSub = document.getElementById('inv-stock-sub');
+  if (stockSub)
+    stockSub.textContent = v.priced
+      ? `at cost · ${anMoney(v.sell)} at client price · ${anMoney(v.margin)} margin`
+      : 'at cost price';
 
   if (!inventoryData.length) {
     tbody.innerHTML = `<tr><td colspan="7"><div style="display:flex;flex-direction:column;align-items:center;padding:48px 24px;gap:10px">
@@ -8616,10 +8780,11 @@ function renderInventory() {
   }
 
   const byCat = {};
-  filtered.forEach((p) => {
+  filtered.filter(isActive).forEach((p) => {
     const cat = PART_CATEGORIES.includes(p.category) ? p.category : 'General';
     (byCat[cat] = byCat[cat] || []).push(p);
   });
+  const inactive = filtered.filter((p) => !isActive(p));
 
   function partRow(p) {
     const isLow = p.stock <= p.min_stock;
@@ -8638,28 +8803,55 @@ function renderInventory() {
         <div style="display:flex;gap:6px">
           <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="-1" style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:15px;cursor:pointer;font-weight:700">−</button>
           <button data-action="adjust-stock" data-id="${p.id}" data-stock="${p.stock}" data-delta="1"  style="background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:15px;cursor:pointer;font-weight:700">+</button>
+          <button data-action="part-history" data-id="${p.id}" title="Stock history, restock and corrections" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">History</button>
           <button data-action="open-part-modal" data-id="${p.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">Edit</button>
-          <button data-action="delete-part" data-id="${p.id}" style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red-text);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
+          <button data-action="deactivate-part" data-id="${p.id}" title="Deactivate - hides it from the mechanics, keeps its history" aria-label="Deactivate ${escapeHtml(p.name)}" style="background:var(--red-lt);border:1.5px solid var(--red-edge);color:var(--red-text);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">✕</button>
         </div>
       </td>
     </tr>`;
   }
 
-  tbody.innerHTML = PART_CATEGORIES.filter((cat) => byCat[cat]?.length)
-    .map(
-      (cat) =>
-        `<tr><td colspan="7" style="background:var(--off);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--mgray);padding:8px 12px">${cat}</td></tr>` +
-        byCat[cat].map(partRow).join('')
-    )
-    .join('');
+  function inactiveRow(p) {
+    return `<tr style="opacity:.6">
+      <td data-label="Part" style="font-weight:600;color:var(--gray)">${escapeHtml(p.name)}</td>
+      <td data-label="Stock" style="font-weight:700;font-size:15px;color:var(--gray)">${p.stock}</td>
+      <td data-label="Min" style="color:var(--mgray)">${p.min_stock}</td>
+      <td data-label="Cost">$${parseFloat(p.cost_price || 0).toFixed(2)}</td>
+      <td data-label="Client price" style="color:var(--gray)">${p.sell_price !== null && p.sell_price !== undefined ? '$' + parseFloat(p.sell_price).toFixed(2) : '—'}</td>
+      <td data-label="Status"><span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;background:var(--surface);color:var(--gray);border:1px solid var(--border)">Inactive</span></td>
+      <td data-label="Actions">
+        <div style="display:flex;gap:6px">
+          <button data-action="part-history" data-id="${p.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 8px;font-size:13px;cursor:pointer">History</button>
+          <button data-action="reactivate-part" data-id="${p.id}" style="background:var(--white);border:1.5px solid var(--border);color:var(--navy);border-radius:6px;padding:3px 10px;font-size:13px;font-weight:600;cursor:pointer">Reactivate</button>
+        </div>
+      </td>
+    </tr>`;
+  }
+
+  tbody.innerHTML =
+    PART_CATEGORIES.filter((cat) => byCat[cat]?.length)
+      .map(
+        (cat) =>
+          `<tr><td colspan="7" style="background:var(--off);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--mgray);padding:8px 12px">${cat}</td></tr>` +
+          byCat[cat].map(partRow).join('')
+      )
+      .join('') +
+    (inactive.length
+      ? `<tr><td colspan="7" style="background:var(--off);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--mgray);padding:8px 12px">Inactive · hidden from mechanics, history kept</td></tr>` +
+        inactive.map(inactiveRow).join('')
+      : '');
 }
 
-async function adjustStock(id, current, delta) {
-  const newStock = Math.max(0, current + delta);
-  await sb.from('parts_inventory').update({ stock: newStock }).eq('id', id);
-  const part = inventoryData.find((p) => p.id === id);
-  if (part) part.stock = newStock;
-  renderInventory();
+async function adjustStock(id, _current, delta) {
+  // Goes through the ledger (admin-inventory-adjust -> adjust_part_stock), so the
+  // change is auditable and clamped at 0 server-side. Reload to show the truth.
+  try {
+    await photosApi('admin-inventory-adjust', { id, delta });
+  } catch (e) {
+    showToast('Could not update stock: ' + e.message);
+    return;
+  }
+  await loadInventory();
 }
 
 function openPartModal(id) {
@@ -8720,14 +8912,10 @@ async function savePart(id) {
     cost_price: cost,
     sell_price: sell,
   };
-  let error;
-  if (id) {
-    ({ error } = await sb.from('parts_inventory').update(payload).eq('id', id));
-  } else {
-    ({ error } = await sb.from('parts_inventory').insert(payload));
-  }
-  if (error) {
-    showToast('Save failed: ' + error.message);
+  try {
+    await photosApi('admin-inventory-upsert', { ...(id ? { id } : {}), ...payload });
+  } catch (e) {
+    showToast('Save failed: ' + e.message);
     return;
   }
   document.getElementById('part-modal').remove();
@@ -8735,11 +8923,202 @@ async function savePart(id) {
   loadInventory();
 }
 
-async function deletePart(id) {
-  if (!confirm('Delete this part from inventory?')) return;
-  await sb.from('parts_inventory').delete().eq('id', id);
-  showToast('Part removed');
+// Parts are never deleted: their usage history is what a repurchase study is
+// built on (Diego, 23-oct-2026). Deactivating hides a part from the mechanics
+// and keeps its stock and every movement; reactivating brings it back.
+async function setPartActive(id, active) {
+  if (
+    !active &&
+    !confirm(
+      "Deactivate this part?\n\nIt disappears from the mechanics' lists. Its stock and its whole usage history are kept, and you can reactivate it any time."
+    )
+  )
+    return;
+  try {
+    await photosApi('admin-inventory-active', { id, active });
+  } catch (e) {
+    showToast((active ? 'Could not reactivate: ' : 'Could not deactivate: ') + e.message);
+    return;
+  }
+  showToast(active ? 'Part reactivated' : 'Part deactivated · history kept');
   loadInventory();
+}
+
+// ── Part history: restock, correct with a reason, and every movement ──────────
+// The history is what a repurchase study is built on (Diego, 23-oct-2026), so
+// a correction outside a job has to say why (damaged, lost, miscounted).
+const MOVE_LABEL = {
+  job_used: {
+    label: 'Used in job',
+    bg: 'var(--red-lt)',
+    fg: 'var(--red-text)',
+    what: 'Used in a job',
+  },
+  job_reverted: {
+    label: 'Returned',
+    bg: 'var(--green-lt)',
+    fg: 'var(--green-ink)',
+    what: 'Returned to stock',
+  },
+  restock: {
+    label: 'Restock',
+    bg: 'var(--blue-lt)',
+    fg: 'var(--blue-text)',
+    what: 'Added to stock',
+  },
+  adjustment: {
+    label: 'Correction',
+    bg: 'var(--amber-lt)',
+    fg: 'var(--amber-ink)',
+    what: 'Stock corrected',
+  },
+  initial: {
+    label: 'Starting stock',
+    bg: 'var(--surface)',
+    fg: 'var(--gray)',
+    what: 'Loaded into inventory',
+  },
+};
+
+function moveRow(m) {
+  const t = MOVE_LABEL[m.reason] || { label: m.reason, bg: 'var(--surface)', fg: 'var(--gray)' };
+  const when = new Date(m.at).toLocaleString('en-AU', {
+    timeZone: 'Australia/Sydney',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+  const what = m.job
+    ? [m.job.client_name || 'Job', m.job.service_name, m.job.date].filter(Boolean).join(' · ')
+    : m.note || t.what || t.label;
+  const meta = [when, m.by ? `by ${m.by}` : '', m.job && m.note ? m.note : '']
+    .filter(Boolean)
+    .join(' · ');
+  return `<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--border-lt)">
+    <span style="flex-shrink:0;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:${t.bg};color:${t.fg}">${escapeHtml(t.label)}</span>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;font-weight:600;color:var(--navy);overflow-wrap:anywhere">${escapeHtml(what)}</div>
+      <div style="font-size:12px;color:var(--gray);margin-top:2px;overflow-wrap:anywhere">${escapeHtml(meta)}</div>
+    </div>
+    <div style="flex-shrink:0;font-size:15px;font-weight:700;color:${m.delta < 0 ? 'var(--red-text)' : 'var(--green-ink)'}">${m.delta > 0 ? '+' : ''}${Number(m.delta)}</div>
+  </div>`;
+}
+
+async function openPartHistory(id) {
+  const p = inventoryData.find((x) => x.id === id);
+  if (!p) return;
+  document.getElementById('invh-modal')?.remove();
+  const inactive = p.active === false;
+  const lbl =
+    'font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em';
+  const btn = (bg, fg, border) =>
+    `min-height:44px;background:${bg};color:${fg};border:${border};border-radius:8px;padding:0 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)`;
+  const modal = document.createElement('div');
+  modal.id = 'invh-modal';
+  modal.style.cssText =
+    'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
+  modal.innerHTML = `<div role="dialog" aria-modal="true" aria-labelledby="invh-title" style="background:var(--white);border-radius:16px;width:100%;max-width:560px;max-height:calc(100vh - 40px);display:flex;flex-direction:column;box-shadow:0 4px 24px rgba(0,0,0,0.12)">
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:20px 20px 12px">
+      <div style="flex:1;min-width:0">
+        <div id="invh-title" style="font-size:15px;font-weight:700;color:var(--navy);overflow-wrap:anywhere">${escapeHtml(p.name)}</div>
+        <div style="font-size:12px;color:var(--gray);margin-top:2px">In stock: <strong style="color:var(--navy)">${Number(p.stock)}</strong> · minimum ${Number(p.min_stock)}${inactive ? ' · inactive' : ''}</div>
+      </div>
+      <button data-action="close-part-history" aria-label="Close" style="width:44px;height:44px;flex-shrink:0;background:none;border:none;font-size:20px;color:var(--gray);cursor:pointer">✕</button>
+    </div>
+    <div style="overflow-y:auto;padding:0 20px 20px">
+      ${
+        inactive
+          ? `<div style="font-size:13px;color:var(--gray);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:16px">This part is inactive. Reactivate it to change its stock - its history stays below either way.</div>`
+          : `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px">
+        <div style="border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+          <div style="${lbl}">Restock</div>
+          <input class="inp" id="invh-restock-qty" type="number" min="1" step="1" placeholder="How many" aria-label="How many to add">
+          <input class="inp" id="invh-restock-note" maxlength="200" placeholder="Supplier / invoice (optional)" aria-label="Restock note">
+          <button data-action="part-restock" data-id="${p.id}" style="${btn('var(--blue)', 'var(--white)', 'none')}">Add to stock</button>
+        </div>
+        <div style="border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+          <div style="${lbl}">Correct stock</div>
+          <input class="inp" id="invh-adjust-qty" type="number" min="1" step="1" placeholder="How many" aria-label="How many to correct">
+          <input class="inp" id="invh-adjust-note" maxlength="200" placeholder="Why? Damaged, lost, miscount..." aria-label="Reason for the correction">
+          <div style="display:flex;gap:8px">
+            <button data-action="part-adjust" data-id="${p.id}" data-sign="-1" style="flex:1;${btn('var(--white)', 'var(--red-text)', '1.5px solid var(--red-edge)')}">− Remove</button>
+            <button data-action="part-adjust" data-id="${p.id}" data-sign="1" style="flex:1;${btn('var(--white)', 'var(--navy)', '1.5px solid var(--border)')}">+ Add</button>
+          </div>
+        </div>
+      </div>`
+      }
+      <div style="${lbl}">History</div>
+      <div id="invh-list"><div style="padding:24px 0;text-align:center;font-size:13px;color:var(--mgray)">Loading...</div></div>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) modal.remove();
+  });
+  modal.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') modal.remove();
+  });
+  modal.querySelector('[data-action="close-part-history"]').focus();
+
+  const list = modal.querySelector('#invh-list');
+  try {
+    const { movements = [] } = await photosApi('admin-inventory-history', { id });
+    list.innerHTML = movements.length
+      ? movements.map(moveRow).join('')
+      : '<div style="padding:24px 0;text-align:center;font-size:13px;color:var(--mgray)">No movements yet</div>';
+  } catch (e) {
+    list.innerHTML = `<div style="padding:24px 0;text-align:center;font-size:13px;color:var(--red-text)">Could not load the history: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function partStockMove(id, kind, sign) {
+  const modal = document.getElementById('invh-modal');
+  const qtyEl = document.getElementById(
+    kind === 'restock' ? 'invh-restock-qty' : 'invh-adjust-qty'
+  );
+  const noteEl = document.getElementById(
+    kind === 'restock' ? 'invh-restock-note' : 'invh-adjust-note'
+  );
+  const qty = parseInt(qtyEl?.value, 10);
+  const note = (noteEl?.value || '').trim();
+  if (!Number.isFinite(qty) || qty < 1) {
+    showToast('Enter how many');
+    qtyEl?.focus();
+    return;
+  }
+  if (kind === 'adjust' && !note) {
+    showToast('Say why - damaged, lost, miscount...');
+    noteEl?.focus();
+    return;
+  }
+  const buttons = modal ? [...modal.querySelectorAll('button')] : [];
+  buttons.forEach((b) => {
+    b.disabled = true;
+    b.style.opacity = '0.5';
+    b.style.cursor = 'not-allowed';
+  });
+  try {
+    const d =
+      kind === 'restock'
+        ? await photosApi('admin-inventory-restock', { id, qty, note })
+        : await photosApi('admin-inventory-adjust', { id, delta: sign * qty, note });
+    showToast(
+      `Stock now ${d.new_stock}` +
+        (note && d.note_kept === false ? ' · the note was not saved (run the notes SQL)' : '')
+    );
+  } catch (e) {
+    showToast('Could not update stock: ' + e.message);
+    buttons.forEach((b) => {
+      b.disabled = false;
+      b.style.opacity = '';
+      b.style.cursor = '';
+    });
+    return;
+  }
+  await loadInventory();
+  openPartHistory(id);
 }
 
 // ── SERVICES & PRICES ───────────────────────────────────────────────────────

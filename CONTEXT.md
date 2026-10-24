@@ -1,6 +1,81 @@
 # CONTEXT — Dr. Bike Sydney (session journal)
 
-## Current state (2026-10-06) - read this first
+## Current state (2026-10-22) - read this first
+
+Inventario completo de los 35 chats de Code de este proyecto, cruzado con git,
+con `docs/PENDIENTES.md` y con produccion. Este bloque existe porque Diego se
+perdio entre tantos chats: es el mapa. **`docs/PENDIENTES.md` tiene items que
+su propia tabla da por abiertos y ya estan cerrados** (abajo, "Cerrados que
+el documento daba por abiertos") - antes de trabajar uno, leer su seccion
+propia y comprobarlo contra el codigo o la base.
+
+### En curso (22-oct)
+- **Triage de reserva** (preguntas guiadas por servicio, foto opcional, cola de
+  revision con aviso a Diego). Spec y plan en `main` (#506,
+  `docs/superpowers/specs/2026-10-22-triage-reserva-design.md`). Implementacion
+  en la rama `feat/triage-captura`, 6 tareas por subagentes; al 22-oct iba la 1.
+- **Inventario.** Paso 1 mergeado (#507): `stock_movements`, RPC
+  `adjust_part_stock`, columnas de camaras y seed de 61 camaras Duro. **La
+  tabla ya existe en produccion** (probado con la anon key: 200, vacia por
+  RLS). Faltan los pasos 2-5: API, Admin, mecanico, finanzas.
+- **Despues del inventario, decidido por Diego el 22-oct:** horario 8-17 para
+  todo, y **+$10 a los 33 servicios y a la visita** (toca `services`,
+  `callout_zones`, el schema de la landing, `terms.html` y `api/chat.js` - ver
+  la regla de cobertura de copy en CLAUDE.md). Luego SEO: aparecer primero en
+  Google y Gemini (Instagram `drbike_au` y la ficha de Maps van al `sameAs`).
+
+### Pendiente Diego - pruebas reales que nadie hizo nunca
+- **Antes del 29-oct:** re-subir la foto pesada del mecanico (cuota de Storage).
+- El TEST FINAL completo: `docs/PENDIENTES.md` seccion 23, 21 checkboxes.
+- Una reserva de invitado de punta a punta con tarjeta real, y el ETA del
+  seguimiento en esa reserva nueva.
+- Completar un trabajo del mecanico sin senal, con telefono real (14.10).
+- Compra de prueba en la tienda con `4242 4242 4242 4242`.
+- Simulacro de restauracion del backup (`docs/RUNBOOK-BACKUP-RESTORE.md`).
+- Admin > Orphan Payments sobre 04-jul a 05-ago, y decidir cada devolucion.
+- Volver a correr la consulta de la seccion 3 de `docs/RUNBOOK-SQL.md`: la
+  ultima corrida completa es del 03-sep.
+
+### Pendiente Diego - decisiones
+- Abrir la tienda: LEBYCLE permite revender en AU, moneda de la lista
+  mayorista, claves Stripe live, webhook (`docs/SHOP-OPEN.md`).
+- Mostrar la foto + descripcion de la bici fuera de la reserva (PENDIENTES 83);
+  el triage lo cubre dentro del flujo, la landing sigue sin mostrarlo.
+- Azul del logotipo en las paginas legales (19.1), ruteo de iPad (9.5-bis),
+  Stripe 23 / API Endive (112).
+- El contador: el BAS sigue mostrando $0 de credito de GST
+  (`js/admin.js:1444`, PENDIENTES 20.3).
+- Borrar en Vercel `MAPBOX_TOKEN`, `GOOGLE_PLACES_API_KEY`, `POSTHOG_KEY` (5.4).
+
+### Negocio (ROADMAP sep-dic, nada empezado)
+Google Business Profile + resenas tras cada trabajo, contenido 3/semana,
+medir el embudo, primeras membresias y referidos, texto propio por suburbio
+(nov, con Diego en Sydney), abogado de marca. Blindaje #2: 11-ene-2027.
+
+### Codigo anotado sin duenio
+- Una excepcion en un render deja la pantalla en blanco sin reintentar (81).
+- `job-photos` sigue publico para trabajos, perfiles y resenas (104).
+- `terms/privacy/claims.html` no cargan `css/variables.css` (19.2, 19.3).
+- Lighthouse formal (3.4) y prueba de carga (5.2) nunca corridos.
+- Dependabot #501-#505 abiertos.
+
+### Cerrados que el documento daba por abiertos (verificado 22-oct)
+- **12.6:** `Bike Assembly` ($80) y `E-bike service` ($129) existen en
+  `services` (leido en vivo con la anon key, 33 filas).
+- **12.11:** `restoreAdminSession()` valida el par de tokens con
+  `sb.auth.setSession()`; una clave inventada en localStorage ya no abre nada.
+- **14.3:** Diego le aviso a Thais el 10-ago.
+- **2.1:** no queda ningun PIN guardado en localStorage en `js/mechanic.js`.
+
+### Chats que no son de codigo
+Tarjetas de presentacion (hechas, 4 variantes), wallet de fidelizacion (no
+comprar), patente (no viable), guion de GST para la ATO, balance y estado de
+resultados, prompt del presupuesto de herramientas. `create-video` nunca
+arranco. Visa y payslips no son de Dr.Bike.
+
+---
+
+## 2026-10-06 — Tienda LEBYCLE completa y cerrada (historial)
 
 **La tienda de repuestos LEBYCLE (dropshipping) esta COMPLETA, mergeada y en
 produccion - pero CERRADA.** Solo la ve la cuenta de Diego

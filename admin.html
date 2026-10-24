@@ -33,7 +33,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
 <link rel="stylesheet" href="css/variables.css?v=b58e9c267c">
-<link rel="stylesheet" href="css/admin.css?v=e6af1f5440">
+<link rel="stylesheet" href="css/admin.css?v=efeaf2db02">
 <style>
 @media(max-width:768px){
   .content{padding:12px 10px !important}
@@ -462,7 +462,6 @@
               <option value="14:00">2:00 PM</option>
               <option value="15:00">3:00 PM</option>
               <option value="16:00">4:00 PM</option>
-              <option value="17:00">5:00 PM</option>
             </select>
           </div>
         </div>
@@ -504,7 +503,6 @@
             <option value="14:00">2:00 PM</option>
             <option value="15:00">3:00 PM</option>
             <option value="16:00">4:00 PM</option>
-            <option value="17:00">5:00 PM</option>
           </select>
         </div>
         <div id="admin-resched-error" style="display:none;font-size:12px;color:var(--red-text);margin-bottom:12px"></div>
@@ -756,6 +754,15 @@
         <div class="card" id="fin-pl">
           <div class="card-hdr"><div><div class="card-title">P&L Summary</div><div class="card-sub" id="fin-pl-period">Loading...</div></div></div>
           <div id="fin-pl-rows"></div>
+        </div>
+      </div>
+
+      <!-- Repuestos: lo vendido en el periodo (margen real por trabajo) y el stock de hoy -->
+      <div class="card" id="fin-parts-card" style="margin-top:16px">
+        <div class="card-hdr"><div><div class="card-title">Parts &amp; stock</div><div class="card-sub" id="fin-parts-sub">Loading...</div></div></div>
+        <div class="fin-parts">
+          <div id="fin-parts-sold"></div>
+          <div id="fin-parts-stock"></div>
         </div>
       </div>
 
@@ -1417,8 +1424,8 @@
       <div class="kpis" style="margin-bottom:20px">
         <div class="kpi-card blue" style="text-align:center"><div class="kpi-label">TOTAL PARTS</div><div class="kpi-value" id="inv-total-parts" style="color:var(--blue-text)">—</div><div class="kpi-sub">in inventory</div></div>
         <div class="kpi-card orange" style="text-align:center"><div class="kpi-label">LOW STOCK</div><div class="kpi-value" id="inv-low-stock" style="color:var(--amber-bright)">—</div><div class="kpi-sub">below minimum</div></div>
-        <div class="kpi-card green" style="text-align:center"><div class="kpi-label">STOCK VALUE</div><div class="kpi-value" id="inv-stock-value" style="color:var(--green-text)">$—</div><div class="kpi-sub">at cost price</div></div>
-        <div class="kpi-card red" style="text-align:center"><div class="kpi-label">USED THIS MONTH</div><div class="kpi-value" id="inv-used-month" style="color:var(--red-text)">$—</div><div class="kpi-sub">parts cost</div></div>
+        <div class="kpi-card green" style="text-align:center"><div class="kpi-label">STOCK VALUE</div><div class="kpi-value" id="inv-stock-value" style="color:var(--green-text)">$—</div><div class="kpi-sub" id="inv-stock-sub">at cost price</div></div>
+        <div class="kpi-card red" style="text-align:center"><div class="kpi-label">USED THIS MONTH</div><div class="kpi-value" id="inv-used-month" style="color:var(--red-text)">$—</div><div class="kpi-sub" id="inv-used-sub">parts cost, used in jobs</div></div>
       </div>
       <!-- Search -->
       <div style="position:relative;margin-bottom:16px;max-width:360px">
@@ -1690,5 +1697,5 @@
 
 
 <script type="module" src="js/shop-import.js?v=bfc77bc7e1"></script>
-<script src="js/admin.js?v=88e8bcac90"></script>
+<script src="js/admin.js?v=2031029473"></script>
 </body></html>

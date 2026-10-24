@@ -29,20 +29,8 @@ describe('toDbTime - what the server is willing to accept', () => {
         '2:00 PM',
         '3:00 PM',
         '4:00 PM',
-        '5:00 PM',
       ].map(toDbTime)
-    ).toEqual([
-      '08:00',
-      '09:00',
-      '10:00',
-      '11:00',
-      '12:00',
-      '13:00',
-      '14:00',
-      '15:00',
-      '16:00',
-      '17:00',
-    ]);
+    ).toEqual(['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00']);
   });
 
   it('every converted slot passes the endpoint regex', () => {

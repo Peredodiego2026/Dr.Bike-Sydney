@@ -12,6 +12,7 @@
 // mano) y un fetch falso que hace de Storage. Un test que leyera el fuente
 // pasaria igual sobre un codigo que tira la reserva por otro camino.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { FEE_BANDS } from '../../api/_coverage.js';
 
 process.env.SUPABASE_SERVICE_KEY = 'test-service-key';
 process.env.SUPABASE_URL = 'https://example.supabase.co';
@@ -121,7 +122,14 @@ vi.mock('stripe', () => ({
     constructor() {
       // $25 es la banda de Terrey Hills, que es a lo que resuelve la direccion
       // de abajo sin ninguna red (api/_coverage.js).
-      this.paymentIntents = { retrieve: async (id) => ({ id, status: 'succeeded', amount: 2500 }) };
+      this.paymentIntents = {
+        // Lo que el cliente pago, en centavos. Sale de FEE_BANDS y no de un
+        // numero escrito a mano: el servidor recalcula la zona y devuelve 402
+        // ("Payment amount mismatch") si no coincide, asi que un cambio de
+        // precios como el +$10 de octubre rompia estos tests sin tocar el
+        // triage. La direccion del fixture cae en la primera banda.
+        retrieve: async (id) => ({ id, status: 'succeeded', amount: FEE_BANDS[0].fee * 100 }),
+      };
       this.checkout = { sessions: { retrieve: async () => ({}) } };
       this.refunds = { create: async () => ({ id: 're_1' }) };
     }

@@ -62,9 +62,15 @@ export const PERIMETER_MAX_MINUTES = 45;
 // the CBD measures 25 router minutes, so it was being charged $35 when
 // `callout_zones` - and this file's own comment - said $45. Same for North
 // Sydney, Chatswood, Bondi Junction and Lane Cove.
+//
+// +$10 on every fee from 24-oct-2026 (Diego: "a la visita tambien"): 25/45
+// became 35/55, and the peninsula and north-corridor fees below moved with
+// them. So did every `callout_zones` row (scripts/raise-prices-10.sql) - that
+// table is layer 2 of resolveCoverage() and has to stay on the same ladder,
+// or a booking made while routing is down is priced on the old one.
 export const FEE_BANDS = [
-  { maxMinutes: 25, fee: 25 },
-  { maxMinutes: PERIMETER_MAX_MINUTES, fee: 45 },
+  { maxMinutes: 25, fee: 35 },
+  { maxMinutes: PERIMETER_MAX_MINUTES, fee: 55 },
 ];
 
 // The fees a booking is ever allowed to be charged. Used to sanity-check a
@@ -83,14 +89,15 @@ export const FEE_BANDS = [
 //
 // It is not the same kind of trip. No bridge, no tolls, no city traffic, one
 // straight road through the suburbs the van already works in. It is the home
-// corridor, and it is capped at $35 however far up it goes.
+// corridor, and it is capped at $45 however far up it goes (it was $35 until
+// the +$10 of 24-oct-2026).
 //
 // Coded here and not in a table on purpose. Diego asked for this to be "by
 // zone" so it can never error: a routing service that is down, a geocoder
 // that has never heard of Careel Bay, a database that times out - none of
 // them can turn a Palm Beach address into a rejection, because none of them
 // are consulted. The postcode or the suburb name is enough.
-export const PENINSULA_FAR_FEE = 35;
+export const PENINSULA_FAR_FEE = 45;
 
 // 2104 Bayview, 2105 Church Point and the offshore communities, 2106 Newport,
 // 2107 Avalon Beach and neighbours, 2108 Palm Beach and Whale Beach.
@@ -164,17 +171,17 @@ export const VALID_FEES = [...new Set([...FEE_BANDS.map((b) => b.fee), PENINSULA
 
 // ── The near half of the north corridor ───────────────────────────────────
 //
-// Terrey Hills measures 26 real minutes - one minute past the $25 band - and
+// Terrey Hills measures 26 real minutes - one minute past the first band - and
 // without this it would cost the same as the Sydney CBD. It is the same road
 // the van already drives to Frenchs Forest, in the same council area, with no
 // bridge and no toll. The clock alone gets it wrong for exactly the reason the
 // peninsula gets it wrong: what a trip costs is not only how long it takes.
 //
 // Postcode 2084 is Terrey Hills, Duffys Forest and Cottage Point. Cottage
-// Point is further out than the others and $25 is generous there - it is four
+// Point is further out than the others and the first-band fee is generous there - it is four
 // streets at the end of a dead end and it will almost never come up. Being
 // generous in his own council is the right side to err on.
-export const NORTH_NEAR_FEE = 25;
+export const NORTH_NEAR_FEE = 35;
 export const NORTH_NEAR_POSTCODES = new Set(['2084']);
 export const NORTH_NEAR_SUBURBS = new Set([
   'terrey hills',
@@ -284,8 +291,8 @@ export function resolveCoverage({ minutes = null, zone = null, km = null, addres
 
   // Layer 2: routing was unavailable, but the suburb is one we have priced.
   // The fee is trusted as-is. Whether it is inside the perimeter is inferred
-  // from that fee: the bands above stop at $45, so a zone priced higher was
-  // always a trip beyond the 45-minute line.
+  // from that fee: the bands above stop at $55 ($45 before 24-oct-2026), so a
+  // zone priced higher was always a trip beyond the 45-minute line.
   if (zone && Number.isFinite(Number(zone.calloutFee))) {
     const fee = Number(zone.calloutFee);
     const maxInPerimeterFee = FEE_BANDS[FEE_BANDS.length - 1].fee;

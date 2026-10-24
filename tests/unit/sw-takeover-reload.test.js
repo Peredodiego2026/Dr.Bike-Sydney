@@ -24,6 +24,7 @@
 
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
+import vm from 'node:vm';
 
 const root = new URL('../../', import.meta.url);
 const read = (p) => fs.readFileSync(new URL(p, root), 'utf8');
@@ -68,6 +69,57 @@ describe('every page that registers the worker reloads when it takes over', () =
       const block = src.slice(i, i + 400);
       expect(block).toMatch(/location\.reload\(\)/);
       expect(block, 'no guard against reloading twice').toMatch(/swReloaded|__swReloaded/);
+    });
+  }
+});
+
+// A first visit has no controller. The freshly installed worker still calls
+// clients.claim(), and that fires controllerchange too - but this page came
+// whole from the network, so there is no old cache to lose. Reloading there
+// loaded the page twice for every new visitor, about a second after arrival:
+// measured on production on 2026-10-24, mobile and desktop alike. It is also
+// what broke mobile-spa.test.js ("Execution context was destroyed"), since
+// every Playwright test is a first visit.
+//
+// These run the real snippet from each page against a fake service worker, so
+// they test what the code does, not what it looks like.
+function loadTakeover(src, { controlled }) {
+  const start = src.indexOf("if ('serviceWorker' in navigator)");
+  const listener = src.indexOf("addEventListener('controllerchange'", start);
+  const end = src.indexOf('});', listener) + 3;
+  const listeners = [];
+  const page = { reloads: 0 };
+  const serviceWorker = {
+    controller: controlled ? {} : null,
+    register: () => Promise.resolve(),
+    addEventListener: (type, fn) => type === 'controllerchange' && listeners.push(fn),
+  };
+  vm.runInNewContext(src.slice(start, end), {
+    navigator: { serviceWorker },
+    location: { reload: () => page.reloads++ },
+  });
+  page.takeOver = () => {
+    serviceWorker.controller = {};
+    listeners.forEach((fn) => fn());
+  };
+  return page;
+}
+
+describe('the takeover reload only fires for a page that had a worker', () => {
+  for (const file of SURFACES) {
+    const src = read(file);
+
+    it(`${file}: a first visit is not reloaded when the new worker claims it`, () => {
+      const page = loadTakeover(src, { controlled: false });
+      page.takeOver();
+      expect(page.reloads).toBe(0);
+    });
+
+    it(`${file}: a page running under the old worker reloads once on a deploy`, () => {
+      const page = loadTakeover(src, { controlled: true });
+      page.takeOver();
+      page.takeOver();
+      expect(page.reloads).toBe(1);
     });
   }
 });

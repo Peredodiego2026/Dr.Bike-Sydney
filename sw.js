@@ -241,20 +241,14 @@
 // v134: "Photo unavailable", para una foto del chat que no se pudo firmar.
 // v135: la casilla "puede mostrar esta foto en su sitio web" de la resena, y
 // js/supabase.js manda la respuesta (photo_web_ok).
-// v148: el triage del paso 1. js/i18n-es.js y js/i18n-zh.js cambiaron dos veces
-// (las preguntas, y el encabezado del panel) y js/triage-questions.js es nuevo:
-// los tres se importan sin ?v=, asi que este numero es lo unico que los entrega.
-// v149: js/app.js cambio (el triage guarda el paso 'service' y no uno inventado, y los dos
-// toques programaticos de tarjeta dejaron de desplazar). Nuevo ?v= en las paginas.
-// v150: js/triage-questions.js gano un export (sortAnswerIds: el orden en que
-// el Admin lee las respuestas). Se importa sin ?v=, asi que este numero es lo
-// unico que entrega la version nueva - con la vieja en cache el export no
-// existe, y de ahi la guarda typeof en js/admin.js.
-// v151: la foto del triage. js/i18n-es.js y js/i18n-zh.js cambiaron (la copy de
-// la foto: el boton, el por que, y los dos avisos de cuando no se puede
-// mandar). Se importan sin ?v=, asi que este numero es lo unico que los renueva.
-// Las dos tareas salieron en ramas paralelas y se juntaron aca: v150 nunca se
-// desplego sola, asi que v151 es la que llega al navegador con las dos cosas.
+// v151: el triage de la reserva. js/i18n-es.js y js/i18n-zh.js cambiaron (las
+// preguntas, el encabezado del panel y la copy de la foto) y
+// js/triage-questions.js es nuevo y gano despues un export (sortAnswerIds, el
+// orden en que el Admin lee las respuestas). Los tres se importan sin ?v=, asi
+// que este numero es lo unico que los entrega - y con el catalogo viejo en
+// cache ese export no existe, de ahi la guarda typeof en js/admin.js.
+// La rama paso por v148..v151 mientras se construia; ninguna de esas se
+// desplego, asi que llega una sola: esta.
 const CACHE_STATIC = 'drbike-static-v151';
 const CACHE_PAGES  = 'drbike-pages-v78';
 

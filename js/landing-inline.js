@@ -1680,33 +1680,33 @@ document.addEventListener('DOMContentLoaded', function() {
     basic: {
       label: 'Basic Plan', price: '$67/month',
       includes: [
-        '1 free minor repair per month (any repair under $60)',
+        '1 free minor repair per month (any repair under $70)',
         '1 free bike wash per month',
         '5% off extra services',
         'Priority scheduling (72hs)'
       ],
-      excludes: 'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $25, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
+      excludes: 'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $35, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
       savings: 'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.'
     },
     standard: {
       label: 'Standard Plan', price: '$97/month',
       includes: [
-        '2 free minor repairs per month (any repair under $60)',
+        '2 free minor repairs per month (any repair under $70)',
         '1 free bike wash per month',
         '1 free Tune-Up per month',
         'Visit & diagnosis included on covered visits',
         '10% off extra services',
         'Priority scheduling (48hs)',
         'Digital bike history log',
-        '1 emergency callout per month (visit & diagnosis fee applies, from $25 depending on your suburb)'
+        '1 emergency callout per month (visit & diagnosis fee applies, from $35 depending on your suburb)'
       ],
       excludes: 'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
-      savings: 'A Tune-Up ($109) + a wash ($35) + 2 minor repairs (~$80) = about $224 in free work every month, for $97.'
+      savings: 'A Tune-Up ($119) + a wash ($35) + 2 minor repairs (~$100) = about $254 in free work every month, for $97.'
     },
     vip: {
       label: 'VIP Plan', price: '$197/month',
       includes: [
-        '3 free minor repairs per month (any repair under $60)',
+        '3 free minor repairs per month (any repair under $70)',
         '2 free bike washes per month',
         '1 free Tune-Up per month',
         'Visit & diagnosis included on covered visits',
@@ -1717,7 +1717,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'Dedicated mechanic'
       ],
       excludes: 'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
-      savings: 'A Tune-Up ($109) + 2 washes ($70) + 3 minor repairs (~$120) = about $299 in free work every month, for $197.'
+      savings: 'A Tune-Up ($119) + 2 washes ($70) + 3 minor repairs (~$150) = about $339 in free work every month, for $197.'
     }
   };
 
@@ -2209,9 +2209,16 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
       // una sola vez al cambiar de controlador es la unica salida limpia; el
       // borrador de reserva vive en localStorage, asi que el cliente vuelve con
       // su "tenes una reserva en curso" intacta.
+//
+// Solo si la pagina YA tenia un worker al cargar. En la primera visita no hay
+// controlador: el worker recien instalado llama a clients.claim() y eso tambien
+// dispara controllerchange, pero esta pagina salio entera de la red y no hay
+// cache viejo que se le borre. Recargar ahi cargaba la pagina dos veces a todo
+// cliente nuevo, un segundo despues de llegar (medido en produccion el 24-oct).
+const swHadController = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
 let swReloaded = false;
 navigator.serviceWorker.addEventListener('controllerchange', function () {
-  if (swReloaded) return;
+  if (!swHadController || swReloaded) return;
   swReloaded = true;
   location.reload();
 });

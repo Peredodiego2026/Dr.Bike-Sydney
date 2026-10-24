@@ -28,6 +28,63 @@ consulta responde una sola pregunta - si falta correr un script - y nada mas.
 
 ---
 
+## NUEVO (25-oct-2026): +$10 a todos los servicios y a la visita
+
+**Hay que correr `scripts/raise-prices-10.sql` una vez, y mergear su PR justo
+despues** (primero el SQL, despues el merge). Sube $10 cada servicio con precio
+(el de $0 no) y cada zona de `callout_zones`. Seguro de correr dos veces: cada
+tabla se sube solo si sigue en el precio viejo. Verificacion al pie del script:
+tiene que dar `119 | 27 | 379 | 35 / 45 / 55 / 65 / 75`.
+
+---
+
+## NUEVO (24-oct-2026): nota en cada movimiento de stock
+
+**Hay que correr `scripts/add-stock-movement-notes.sql` una vez** (despues del
+de "repuestos se desactivan"). Idempotente. Agrega la columna `note` al
+historial de stock (el motivo de un ajuste: rota, perdida, conteo mal hecho; o
+el proveedor de una reposicion) y le suma ese parametro a `adjust_part_stock`.
+Antes de correrlo la app funciona igual; las notas simplemente no se guardan.
+Verificacion al pie del script: tiene que dar `true | 1 | 6`.
+
+---
+
+## NUEVO (23-oct-2026): repuestos se desactivan, nunca se borran
+
+**Hay que correr `scripts/add-parts-active-keep-history.sql` una vez en el SQL
+editor de Supabase**, idealmente ANTES de mergear el PR que lo trae (si no, la
+app funciona igual, pero el boton de desactivar no hace nada hasta que se corra).
+Es idempotente. Hace dos cosas:
+
+- agrega la columna `active` a `parts_inventory` (todos los repuestos quedan
+  activos): desactivar oculta un repuesto del celular del mecanico sin perderlo;
+- hace que la base **rechace borrar un repuesto que tenga historial** - antes,
+  borrarlo se llevaba todos sus movimientos. Un repuesto que nunca se movio se
+  puede seguir borrando.
+
+Al pie del script hay una consulta de verificacion: tiene que dar `true | r`.
+
+---
+
+## NUEVO (22-oct-2026): inventario - ledger de movimientos + camaras Duro
+
+**Hay que correr `scripts/add-stock-movements-and-tube-seed.sql` una vez en el
+SQL editor de Supabase.** Es idempotente (se puede correr dos veces sin
+duplicar). Agrega, SIN tocar lo que ya funciona:
+
+- la tabla `stock_movements` (historial auditable de cada cambio de stock),
+- la funcion `adjust_part_stock()` (mueve stock y escribe el historial en una
+  sola operacion; ademas puede DEVOLVER stock, para revertir un trabajo),
+- cuatro columnas de camara en `parts_inventory` (medida, valvula, largo, ancho),
+- las 61 camaras Duro (18 variantes) a costo $2 / precio $15.
+
+Al final del script hay dos consultas de verificacion: deben dar **18 variantes
+/ 61 unidades** y al menos 18 filas `initial` en el historial. Hasta que no se
+corra, los commits de codigo que vienen despues (endpoints, admin, mecanico) no
+tienen la tabla ni la funcion contra que trabajar.
+
+---
+
 ### El resultado anterior, del 2026-08-10
 
 Diego corrio la consulta de la seccion 3 contra produccion el mismo dia. **Las
@@ -397,13 +454,42 @@ with
   union all select 52, 'shop-ship-surcharge.sql', 'shop_products.ship_surcharge (recargo de envio del pesado)',
     (exists (select 1 from col where t='shop_products' and c='ship_surcharge')
      and exists (select 1 from pg_constraint where conname = 'shop_products_ship_surcharge_check'))
-  -- 53 entro el 2026-10-23 con el triage de la reserva: las respuestas que el
+  -- 53 entro el 2026-10-22 con el inventario: el ledger stock_movements, la
+  -- funcion adjust_part_stock (mueve stock y escribe el ledger en una sola
+  -- operacion; puede devolver stock al revertir) y las 4 columnas de camara en
+  -- parts_inventory. El seed de las 61 Duro es dato, no esquema: se verifica con
+  -- las dos consultas al pie del propio .sql, no aca.
+  union all select 53, 'add-stock-movements-and-tube-seed.sql', 'tabla stock_movements, funcion adjust_part_stock, y las 4 columnas de camara en parts_inventory',
+    (exists (select 1 from tbl where t = 'stock_movements')
+     and exists (select 1 from fn where f = 'adjust_part_stock')
+     and (select count(*) = 4 from col where t='parts_inventory'
+            and c in ('wheel_size','valve_type','valve_length_mm','width_range')))
+  -- 54 entro el 2026-10-23: los repuestos se desactivan, nunca se borran.
+  -- parts_inventory.active y la FK del historial en RESTRICT (antes CASCADE:
+  -- borrar un repuesto borraba todos sus movimientos, y Diego necesita el
+  -- historial completo para estudiar la recompra).
+  union all select 54, 'add-parts-active-keep-history.sql', 'parts_inventory.active, y el historial no se puede borrar con el repuesto (FK restrict)',
+    (exists (select 1 from col where t='parts_inventory' and c='active')
+     and exists (select 1 from pg_constraint where conname = 'stock_movements_part_id_fkey'
+                   and confdeltype = 'r'))
+  -- 55 entro el 2026-10-24: la nota en cada movimiento, y adjust_part_stock con
+  -- p_note. UNA sola version de la funcion: si quedaran la de 5 y la de 6
+  -- argumentos, cada llamada sin nota seria ambigua y PostgREST la rechazaria.
+  union all select 55, 'add-stock-movement-notes.sql', 'stock_movements.note, y adjust_part_stock con nota (una sola version, 6 argumentos)',
+    (exists (select 1 from col where t='stock_movements' and c='note')
+     and (select count(*) = 1 from pg_proc where proname = 'adjust_part_stock')
+     and exists (select 1 from pg_proc where proname = 'adjust_part_stock' and pronargs = 6))
+  -- 56 entro el 2026-10-25: +$10 a todos los servicios y a la visita. Es dato,
+  -- no esquema; la unica senal de que se corrio es el precio del Tune-Up.
+  union all select 56, 'raise-prices-10.sql', '+$10 a todos los servicios y a cada zona de callout_zones',
+    ((select price from public.services where name = 'Tune-Up') >= 119)
+  -- 57 entro el 2026-10-23 con el triage de la reserva: las respuestas que el
   -- cliente da en el paso 1. Si falta, las reservas siguen funcionando: el
   -- servidor escribe `triage` en un UPDATE aparte, despues de crearlas, y solo
   -- llegan sin triage. Cuesta las respuestas, no la reserva (seccion 13). Se
   -- mira `triage` y tambien las dos de referencias porque la migracion es una
   -- sola y una a medias no sirve.
-  union all select 53, 'add-triage-columns.sql', 'bookings.triage (jsonb) + triage_photo_ref + triage_video_ref',
+  union all select 57, 'add-triage-columns.sql', 'bookings.triage (jsonb) + triage_photo_ref + triage_video_ref',
     (select count(*) = 3 from col where t='bookings' and c in ('triage','triage_photo_ref','triage_video_ref'))
 )
 select n as "#", script, que_agrega as "que agrega",
@@ -411,7 +497,7 @@ select n as "#", script, que_agrega as "que agrega",
 from chk order by n;
 ```
 
-**Como se lee el resultado:** 48 filas. Las que digan `OK` ya estan hechas y no
+**Como se lee el resultado:** 52 filas. Las que digan `OK` ya estan hechas y no
 hay que tocarlas. Las que digan `>>> FALTA <<<` se corren siguiendo el orden de
 la seccion 5, saltando las que dieron OK.
 
