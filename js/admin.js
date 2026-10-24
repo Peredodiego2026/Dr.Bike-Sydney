@@ -3368,15 +3368,22 @@ const BKD_ST_CLASS = {
 };
 
 // The triage answers are labelled with the question the customer was asked
-// (labelFor, in js/triage-questions.js). That file is an ES module and this one
-// is a classic script, so it cannot `import` it - but it can import(). The
-// detail waits for the load (openBookingDetail), which is why it never draws an
-// id where a question belongs. If the load fails the error is logged and the
-// detail still opens, with the id standing in for the question.
+// (labelFor) and read in the order sortAnswerIds sets, both from
+// js/triage-questions.js. That file is an ES module and this one is a classic
+// script, so it cannot `import` it - but it can import(). The detail waits for
+// the load (openBookingDetail), which is why it never draws an id where a
+// question belongs. If the load fails the error is logged and the detail still
+// opens, with the ids standing in for the questions and jsonb's own order.
 let triageLabelFor = (id) => id;
+let triageSortIds = (ids) => ids;
 const triageLabelsReady = import('./triage-questions.js')
   .then((m) => {
-    triageLabelFor = m.labelFor;
+    // Guarded, not assigned straight: the module is imported with NO `?v=`,
+    // so sw.js can hand back a copy from before an export existed, and
+    // overwriting a fallback with `undefined` throws on the first call and
+    // takes the whole detail modal with it (docs/PENDIENTES.md 21.5, 21.9).
+    if (typeof m.labelFor === 'function') triageLabelFor = m.labelFor;
+    if (typeof m.sortAnswerIds === 'function') triageSortIds = m.sortAnswerIds;
   })
   .catch((e) =>
     console.error('[admin] could not load the triage questions, showing ids:', e.message)
@@ -3427,27 +3434,27 @@ function closeBookingDetail() {
 // label goes through esc(), and an id the catalogue does not know is its own
 // label, so that is escaped too.
 function renderTriageBlock(triage) {
-  const answers = [];
+  const answers = new Map();
   if (triage && typeof triage === 'object' && !Array.isArray(triage)) {
     for (const [id, value] of Object.entries(triage)) {
       const text = typeof value === 'number' ? String(value) : value;
-      if (typeof text === 'string' && text.trim() !== '') answers.push([id, text.trim()]);
+      if (typeof text === 'string' && text.trim() !== '') answers.set(id, text.trim());
     }
   }
-  if (!answers.length) {
+  if (!answers.size) {
     return `<section class="triage-block triage-empty" aria-label="Triage">
         <div class="triage-head">Triage</div>
-        <div class="triage-empty-title">Sin triage</div>
+        <div class="triage-empty-title">No triage</div>
         <div class="triage-empty-sub">The customer skipped the questions, or booked before they existed.</div>
       </section>`;
   }
   return `<section class="triage-block" aria-label="Triage">
       <div class="triage-head">Triage</div>
       <dl class="triage-list">
-        ${answers
+        ${triageSortIds([...answers.keys()])
           .map(
-            ([id, text]) =>
-              `<div class="triage-item"><dt class="triage-q">${esc(triageLabelFor(id))}</dt><dd class="triage-a">${esc(text)}</dd></div>`
+            (id) =>
+              `<div class="triage-item"><dt class="triage-q">${esc(triageLabelFor(id))}</dt><dd class="triage-a">${esc(answers.get(id))}</dd></div>`
           )
           .join('')}
       </dl>
@@ -3483,6 +3490,7 @@ function renderBookingDetail(b) {
 
   document.getElementById('bkd-body').innerHTML = `
     ${row('Service', esc(b.service_name || '—'))}
+    ${renderTriageBlock(b.triage)}
     ${row('Date', date)}
     ${row('Time', esc(b.scheduled_time || '—'))}
     ${row('Address', esc(b.address || '—'))}
@@ -3493,7 +3501,6 @@ function renderBookingDetail(b) {
     ${row('Discount', b.discount_applied ? '−$' + Number(b.discount_applied).toFixed(2) + (b.discount_code ? ' (' + esc(b.discount_code) + ')' : '') : '')}
     ${row('Total', '<b style="font-size:14px">$' + total.toFixed(2) + '</b>')}
     ${row('Cancelled - reason', b.cancellation_reason ? esc(b.cancellation_reason) : '')}
-    ${renderTriageBlock(b.triage)}
   `;
 
   const actions = [];

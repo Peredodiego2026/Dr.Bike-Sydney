@@ -417,3 +417,35 @@ export function questionsFor(service) {
 export function labelFor(id) {
   return BY_ID.get(id)?.ask ?? id;
 }
+
+// The order the saved answers are READ in (Admin's booking detail). Returns a
+// new array; the input is not touched.
+//
+//   1. the questions WITHOUT `optional`, in catalogue order (QUESTIONS above)
+//   2. then the `optional: true` ones, in that same order
+//   3. then any id this file does not know, in the order it arrived
+//
+// Why this order: jsonb hands the keys back sorted by length and then
+// alphabetically, which is neither the order the customer saw nor the order
+// that matters - the answer that decides the part can land under the free
+// text. The answers that decide the part never carry `optional`, so
+// required-first puts them on top, and it needs nothing the saved row lacks.
+//
+// The order the customer actually saw cannot be rebuilt here: questionsFor()
+// needs { name, category } and `bookings` stores only service_name.
+//
+// The policy lives next to the questions because it depends on `optional`,
+// which is a detail of this catalogue: the day a second screen shows answers,
+// it does not reinvent it.
+export function sortAnswerIds(ids) {
+  const unknown = ALL_QUESTION_IDS.length * 2;
+  const rank = (id) => {
+    const i = ALL_QUESTION_IDS.indexOf(id);
+    if (i === -1) return unknown;
+    return BY_ID.get(id).optional ? ALL_QUESTION_IDS.length + i : i;
+  };
+  // sort() is stable, so two ids of equal rank (two the catalogue does not
+  // know) keep the order they came in, and a repeated id neither disappears
+  // nor duplicates.
+  return [...ids].sort((a, b) => rank(a) - rank(b));
+}

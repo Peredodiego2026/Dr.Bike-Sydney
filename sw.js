@@ -246,7 +246,11 @@
 // los tres se importan sin ?v=, asi que este numero es lo unico que los entrega.
 // v149: js/app.js cambio (el triage guarda el paso 'service' y no uno inventado, y los dos
 // toques programaticos de tarjeta dejaron de desplazar). Nuevo ?v= en las paginas.
-const CACHE_STATIC = 'drbike-static-v149';
+// v150: js/triage-questions.js gano un export (sortAnswerIds: el orden en que
+// el Admin lee las respuestas). Se importa sin ?v=, asi que este numero es lo
+// unico que entrega la version nueva - con la vieja en cache el export no
+// existe, y de ahi la guarda typeof en js/admin.js.
+const CACHE_STATIC = 'drbike-static-v150';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

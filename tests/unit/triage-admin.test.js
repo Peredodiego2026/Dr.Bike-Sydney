@@ -19,12 +19,15 @@
 //     symptom fields are text the customer typed. Rendering is where it is
 //     escaped, so this is where it is tested
 //   - the detail opens before the labels have loaded and shows ids instead
+//   - the order on screen: jsonb hands the keys back by length and then
+//     alphabetically, so the answer that decides the part can land under the
+//     free text. The required ones go first (sortAnswerIds, in the catalogue)
 //   - the colours come from tokens: css/admin.css redefines tokens inside
 //     [data-theme='dark'], and a hex there cannot be overridden by dark mode
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import vm from 'node:vm';
-import { labelFor } from '../../js/triage-questions.js';
+import { labelFor, sortAnswerIds } from '../../js/triage-questions.js';
 
 const root = new URL('../../', import.meta.url);
 const read = (p) => fs.readFileSync(new URL(p, root), 'utf8').split('\r\n').join('\n');
@@ -40,14 +43,80 @@ function sliceFn(head) {
   return admin.slice(start, end + 2);
 }
 
-// The triage renderer, with the real esc() and the real catalogue label lookup.
-// `triageLabelFor` is the name js/admin.js gives labelFor once its module loads.
+// The triage renderer, with the real esc() and the real catalogue lookups.
+// `triageLabelFor` and `triageSortIds` are the names js/admin.js gives
+// labelFor and sortAnswerIds once their module loads.
 function loadRenderer(extra = {}) {
-  const ctx = vm.createContext({ triageLabelFor: labelFor, ...extra });
+  const ctx = vm.createContext({
+    triageLabelFor: labelFor,
+    triageSortIds: sortAnswerIds,
+    ...extra,
+  });
   vm.runInContext(sliceFn('function esc(') + '\n' + sliceFn('function renderTriageBlock('), ctx);
   return ctx;
 }
 const renderTriageBlock = (triage) => loadRenderer().renderTriageBlock(triage);
+
+// The module-load block as it ships: the two identity fallbacks and the
+// import() that replaces them, from `let triageLabelFor` to the blank line
+// that ends the statement.
+function moduleLoadBlock() {
+  const start = admin.indexOf('let triageLabelFor');
+  expect(start, 'js/admin.js no longer declares the triage fallbacks').toBeGreaterThan(-1);
+  const end = admin.indexOf('\n\n', start);
+  expect(end, 'the triage load block runs into the rest of the file').toBeGreaterThan(start);
+  const block = admin.slice(start, end);
+  expect(block, 'the triage load block no longer loads its module').toContain(
+    './triage-questions.js'
+  );
+  return block;
+}
+
+// Runs `block` (the module load) and then the four real functions the detail
+// needs, all in one context, and opens the detail of a booking whose answers
+// are `triage`. Returns the page it wrote into and what reached console.error.
+async function openDetailWith(block, triage) {
+  const els = {};
+  const errors = [];
+  const sandbox = {
+    console: { error: (...a) => errors.push(a.join(' ')) },
+    document: {
+      getElementById: (id) => (els[id] ||= { innerHTML: '', textContent: '', style: {} }),
+    },
+    allBookings: [
+      {
+        id: 'b1',
+        status: 'confirmed',
+        client_name: 'Sam',
+        service_name: 'Brake Pad Install',
+        scheduled_date: '2026-11-03',
+        scheduled_time: '09:30',
+        van_number: 1,
+        triage,
+      },
+    ],
+    BKD_ST_CLASS: {},
+    anBookingRevenue: () => 0,
+    vanColor: () => 'red',
+    showToast: () => {},
+  };
+  vm.createContext(sandbox);
+  // `let`/`const` at the top of a vm script land in the context's lexical
+  // scope, not on the sandbox, so the slices below see them but the test
+  // cannot read them back by name - it reads the page instead.
+  vm.runInContext(block, sandbox);
+  vm.runInContext(
+    [
+      sliceFn('function esc('),
+      sliceFn('function renderTriageBlock('),
+      sliceFn('function renderBookingDetail('),
+      sliceFn('async function openBookingDetail('),
+    ].join('\n'),
+    sandbox
+  );
+  await vm.runInContext("openBookingDetail('b1')", sandbox);
+  return { els, errors };
+}
 
 describe('renderTriageBlock - what the customer answered', () => {
   it('shows each answer under its question, not under its id', () => {
@@ -63,11 +132,43 @@ describe('renderTriageBlock - what the customer answered', () => {
     expect(html.split(labelFor('brand')).join('')).not.toContain('brand');
   });
 
-  it('shows every answer it was given, in the order they came', () => {
-    const html = renderTriageBlock({ speeds: '11 speeds', tyre_size: '29 x 2.1', notes: 'Rides daily' });
-    const at = ['11 speeds', '29 x 2.1', 'Rides daily'].map((v) => html.indexOf(v));
-    expect(at.every((i) => i > -1)).toBe(true);
+  it('shows the required answers before the optional ones, not in jsonb order', () => {
+    // Brakes: `brand` and `brake_type` decide the pads, the fluid and the
+    // bleed kit; `brake_model` and `notes` are the ones the customer may skip.
+    // jsonb would hand these back by key length, which buries `brand`.
+    const html = renderTriageBlock({
+      notes: 'Rides daily',
+      brake_model: 'SLX',
+      brake_type: 'Hydraulic',
+      brand: 'Shimano',
+    });
+    const at = ['brand', 'brake_type', 'notes', 'brake_model'].map((id) =>
+      html.indexOf(labelFor(id))
+    );
+    expect(
+      at.every((i) => i > -1),
+      'an answer went missing'
+    ).toBe(true);
     expect([...at].sort((a, b) => a - b)).toEqual(at);
+  });
+
+  it('shows an id the catalogue does not know last, and still shows it', () => {
+    // An old booking, or a question that was removed: it cannot be ranked
+    // against the catalogue, so it goes to the end rather than disappearing.
+    const html = renderTriageBlock({
+      retired_question: 'Yes',
+      notes: 'Rides daily',
+      brand: 'Shimano',
+    });
+    const at = [labelFor('brand'), labelFor('notes'), 'retired_question'].map((v) =>
+      html.indexOf(v)
+    );
+    expect(
+      at.every((i) => i > -1),
+      'an answer went missing'
+    ).toBe(true);
+    expect([...at].sort((a, b) => a - b)).toEqual(at);
+    expect(html).toContain('Yes');
   });
 
   it('keeps an answer of 0 and leaves out the ones that say nothing', () => {
@@ -106,9 +207,9 @@ describe('renderTriageBlock - a booking with no triage', () => {
   };
 
   for (const [name, value] of Object.entries(empties)) {
-    it(`says "Sin triage" for ${name}`, () => {
+    it(`says "No triage" for ${name}`, () => {
       const html = renderTriageBlock(value);
-      expect(html).toContain('Sin triage');
+      expect(html).toContain('No triage');
       expect(html).not.toMatch(/undefined|null|NaN|\[object/);
     });
   }
@@ -124,7 +225,7 @@ describe('renderTriageBlock - a booking with no triage', () => {
   });
 
   it('is not the empty state when there is even one answer', () => {
-    expect(renderTriageBlock({ notes: 'Rides daily' })).not.toContain('Sin triage');
+    expect(renderTriageBlock({ notes: 'Rides daily' })).not.toContain('No triage');
   });
 });
 
@@ -188,20 +289,36 @@ describe('the booking detail shows the triage', () => {
     expect(html).toContain('Squealing');
     // ...and the rest of the detail is still there.
     expect(html).toContain('Brake Pad Install');
-    expect(html).not.toContain('Sin triage');
+    expect(html).not.toContain('No triage');
+  });
+
+  it('sits right under the service, above the date and the money', () => {
+    // The modal scrolls. If the point is to decide in five seconds, the triage
+    // cannot be the last item, under the callout fee, the discount and the
+    // total - it is the detail of the service it sits under.
+    const html = detail({ ...base, triage: { brand: 'Shimano' }, callout_fee: 25 });
+    const at = (s) => {
+      const i = html.indexOf(s);
+      expect(i, `${s} is gone from the detail`).toBeGreaterThan(-1);
+      return i;
+    };
+    expect(at('Brake Pad Install')).toBeLessThan(at('triage-block'));
+    expect(at('triage-block')).toBeLessThan(at('>Date<'));
+    expect(at('triage-block')).toBeLessThan(at('>Callout fee<'));
+    expect(at('triage-block')).toBeLessThan(at('>Total<'));
   });
 
   it('says there is no triage when the booking has none', () => {
     for (const triage of [null, undefined, {}]) {
       const html = detail({ ...base, triage });
-      expect(html).toContain('Sin triage');
+      expect(html).toContain('No triage');
       expect(html).toContain('Brake Pad Install');
     }
   });
 
   it('says so too when the triage column does not exist yet (the SQL has not been run)', () => {
     const html = detail({ ...base }); // no `triage` key at all
-    expect(html).toContain('Sin triage');
+    expect(html).toContain('No triage');
   });
 
   it('does not let a typed answer break out of the detail', () => {
@@ -219,13 +336,53 @@ describe('the labels are loaded before the detail opens', () => {
     expect(fs.existsSync(url)).toBe(true);
     const mod = await import(url.href);
     expect(typeof mod.labelFor).toBe('function');
+    expect(typeof mod.sortAnswerIds).toBe('function');
     expect(admin).toMatch(/triageLabelFor\s*=\s*\w+\.labelFor/);
   });
 
-  it('a failed load is logged and the detail still opens', () => {
-    const from = admin.indexOf("import('./triage-questions.js')");
-    expect(from, "js/admin.js does not import('./triage-questions.js')").toBeGreaterThan(-1);
-    expect(admin.slice(from, from + 400)).toMatch(/\.catch\(\(?\w+\)?\s*=>\s*console\.error\(/);
+  it('a failed load is logged, the detail opens, and the ids stand in', async () => {
+    // Runs the block that ships, instead of grepping it for a `.catch(`: a
+    // proxy for the claim passes green over a live bug (the lesson is in
+    // docs/PENDIENTES.md). A dynamic import inside a vm context rejects
+    // unless node runs with --experimental-vm-modules, which this suite does
+    // not - so the import really fails here, in the .catch() that ships.
+    const { els, errors } = await openDetailWith(moduleLoadBlock(), {
+      brand: 'Shimano',
+      notes: 'Rides daily',
+    });
+
+    expect(els['booking-detail-modal'].style.display, 'the modal stayed closed').toBe('flex');
+    const html = els['bkd-body'].innerHTML;
+    // The documented degradation: the raw ids, not the questions.
+    expect(html).toContain('brand');
+    expect(html).toContain('notes');
+    expect(html).toContain('Shimano');
+    expect(html).toContain('Rides daily');
+    expect(html).not.toContain(labelFor('brand'));
+    expect(errors.join('\n')).toContain('could not load the triage questions');
+  });
+
+  it('a cached older copy of the module without sortAnswerIds degrades, it does not throw', async () => {
+    // js/triage-questions.js is imported with no ?v=, so sw.js can serve a
+    // copy from before sortAnswerIds existed (CACHE_STATIC is what renews it).
+    // Assigning that missing export over the fallback would throw on the
+    // first call and break the whole detail modal.
+    const stale = moduleLoadBlock().replace(
+      "import('./triage-questions.js')",
+      'Promise.resolve({ labelFor: (id) => id })'
+    );
+    const { els, errors } = await openDetailWith(stale, {
+      brand: 'Shimano',
+      notes: 'Rides daily',
+    });
+
+    expect(els['booking-detail-modal'].style.display, 'the modal stayed closed').toBe('flex');
+    const html = els['bkd-body'].innerHTML;
+    // jsonb order, because the identity fallback is still in place.
+    expect(html.indexOf('brand')).toBeLessThan(html.indexOf('notes'));
+    expect(html).toContain('Shimano');
+    expect(html).toContain('Rides daily');
+    expect(errors, 'a module that loaded is not an error').toEqual([]);
   });
 
   it('openBookingDetail waits for them before it draws', async () => {

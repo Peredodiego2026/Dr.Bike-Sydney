@@ -14,6 +14,7 @@ import {
   SERVICE_OVERRIDES,
   ALL_QUESTION_IDS,
   labelFor,
+  sortAnswerIds,
 } from '../../js/triage-questions.js';
 import es from '../../js/i18n-es.js';
 import zh from '../../js/i18n-zh.js';
@@ -143,6 +144,58 @@ it('ALL_QUESTION_IDS cubre todo id que alguna pregunta usa', () => {
 it('labelFor devuelve la pregunta, y el id si no la conoce', () => {
   expect(labelFor('brand')).toMatch(/brake|brand/i);
   expect(labelFor('no_existe')).toBe('no_existe');
+});
+
+// El orden en que el Admin lee las respuestas. El jsonb las devuelve ordenadas
+// por largo de clave y despues alfabeticamente, que no es ni el orden que vio
+// el cliente ni el que le importa al duenio.
+describe('sortAnswerIds - el orden en que se leen las respuestas', () => {
+  const optional = new Set(
+    reachableQuestions()
+      .filter((q) => q.optional)
+      .map((q) => q.id)
+  );
+  const isOptional = (id) => optional.has(id);
+
+  it('las requeridas primero, en orden de catalogo, y despues las opcionales', () => {
+    const sorted = sortAnswerIds([...ALL_QUESTION_IDS].reverse());
+    const firstOptional = sorted.findIndex(isOptional);
+    expect(firstOptional, 'ninguna pregunta esta marcada optional').toBeGreaterThan(-1);
+    // Ninguna requerida despues de la primera opcional.
+    expect(sorted.slice(firstOptional).filter((id) => !isOptional(id))).toEqual([]);
+    // Y dentro de cada grupo, el orden de definicion de QUESTIONS.
+    for (const group of [sorted.slice(0, firstOptional), sorted.slice(firstOptional)]) {
+      const byCatalog = [...group].sort(
+        (a, b) => ALL_QUESTION_IDS.indexOf(a) - ALL_QUESTION_IDS.indexOf(b)
+      );
+      expect(group).toEqual(byCatalog);
+    }
+  });
+
+  it("en 'Brakes', la marca y el tipo quedan arriba del modelo", () => {
+    // `brand` y `brake_type` deciden las pastillas, el liquido y el kit de
+    // purga; `brake_model` es la que el cliente puede saltear.
+    const sorted = sortAnswerIds(['brake_model', 'brake_type', 'brand']);
+    expect(sorted.indexOf('brand')).toBeLessThan(sorted.indexOf('brake_model'));
+    expect(sorted.indexOf('brake_type')).toBeLessThan(sorted.indexOf('brake_model'));
+  });
+
+  it('los ids que el catalogo no conoce van al final, en el orden en que venian', () => {
+    const sorted = sortAnswerIds(['retirada_2', 'notes', 'retirada_1', 'brand']);
+    expect(sorted).toEqual(['brand', 'notes', 'retirada_2', 'retirada_1']);
+  });
+
+  it('no pierde ni duplica nada, ni toca la entrada', () => {
+    const input = [...ALL_QUESTION_IDS].reverse();
+    const copy = [...input];
+    const sorted = sortAnswerIds(input);
+    expect(input, 'muto la entrada').toEqual(copy);
+    expect(sorted).toHaveLength(ALL_QUESTION_IDS.length);
+    expect([...sorted].sort()).toEqual([...ALL_QUESTION_IDS].sort());
+    // Un id repetido no puede llegar (son claves de un objeto), pero si llega
+    // no debe desaparecer.
+    expect(sortAnswerIds(['brand', 'brand', 'notes'])).toEqual(['brand', 'brand', 'notes']);
+  });
 });
 
 // ---------------------------------------------------------------------------
