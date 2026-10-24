@@ -622,8 +622,8 @@ export default {
   'About Us': '关于我们',
   'My Account': '我的账户',
   'Sydney, NSW': '悉尼, NSW',
-  'Mon – Sun: 8:30AM – 4:00PM': '周一至周日：8:30 - 16:00',
-  'Mon - Sun: 8:30AM - 4:00PM': '周一至周日：8:30 - 16:00',
+  'Mon – Sun: 8:00AM – 5:00PM': '周一至周日：8:00 - 17:00',
+  'Mon - Sun: 8:00AM - 5:00PM': '周一至周日：8:00 - 17:00',
   'Healthy bikes, happy riders': '健康的自行车，快乐的骑行者',
 
   // ── landing.html (desktop) — Navbar ──────────────────────────────────
@@ -768,9 +768,8 @@ export default {
   'Service Type': '服务类型',
   'Preferred date': '首选日期',
   'Preferred Time': '首选时间',
-  'Morning (8:30am - 12pm)': '上午 (8:30 - 12:00)',
-  'Afternoon (12pm - 4pm)': '下午 (12:00 - 16:00)',
-  'Evening (4pm - 7pm)': '傍晚 (16:00 - 19:00)',
+  'Morning (8am - 12pm)': '上午 (8:00 - 12:00)',
+  'Afternoon (12pm - 5pm)': '下午 (12:00 - 17:00)',
   'Enter your address': '输入您的地址',
   'Continue Booking': '继续预订',
   '✓ Confirmation in minutes': '✓ 几分钟内确认',

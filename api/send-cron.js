@@ -1188,7 +1188,7 @@ async function handleB2B(req, res) {
         <div style="background:#0D1F3C;padding:24px;text-align:center"><h1 style="color:#fff;font-size:20px;margin:0">DR BIKE SYDNEY</h1></div>
         <div style="padding:32px 24px">
           <h2>Thanks for your enquiry, ${contactName}!</h2>
-          <p style="color:#475569;line-height:1.7">We received your fleet enquiry for <strong>${businessName}</strong> (${fleetSize} bikes). We'll get back to you within <strong>2 business hours</strong> (Mon–Sat 8am–6pm AEST).</p>
+          <p style="color:#475569;line-height:1.7">We received your fleet enquiry for <strong>${businessName}</strong> (${fleetSize} bikes). We'll get back to you within <strong>2 business hours</strong> (every day 8am–5pm, Sydney time).</p>
         </div>
         <div style="padding:16px;background:#F8FAFC;font-size:12px;color:#94A3B8;text-align:center">Dr. Bike Sydney · contact@drbikesydney.com.au</div>
       </div>`,

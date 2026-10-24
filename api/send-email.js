@@ -247,7 +247,7 @@ async function handler(req, res) {
             <p style="font-size:12px;color:#2563EB;margin:0;line-height:1.6;opacity:0.8">Worn brake pads, stretched cables and dirty drivetrains reduce performance and can be dangerous. A quick tune-up extends your bike's life significantly.</p>
           </div>
           <a href="https://drbikesydney.com.au" style="display:block;background:#15803D;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;margin-bottom:12px">Book a service now →</a>
-          <p style="font-size:12px;color:#94A3B8;text-align:center;margin:0">We come to you — home, work or park · Mon–Sat</p>
+          <p style="font-size:12px;color:#94A3B8;text-align:center;margin:0">We come to you — home, work or park · every day 8am–5pm</p>
         </div>${footer()}`,
     },
     review_request: {
@@ -438,7 +438,7 @@ async function handler(req, res) {
             </p>
           </div>
           <a href="https://drbikesydney.com.au/?coupon=BDAY20" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:12px">Redeem my birthday gift &rarr;</a>
-          <p style="font-size:12px;color:#94A3B8;text-align:center;margin:0">We come to you &mdash; home, work or park &middot; Mon&ndash;Sat</p>
+          <p style="font-size:12px;color:#94A3B8;text-align:center;margin:0">We come to you &mdash; home, work or park &middot; every day 8am&ndash;5pm</p>
         </div>${footer()}`,
     },
     payment_action_required: {
@@ -464,7 +464,8 @@ async function handler(req, res) {
               <tr><td style="padding:0 0 8px;color:${MUTED};font-size:13px">Your order</td><td style="padding:0 0 8px;font-weight:600;color:${INK};font-size:13px;text-align:right">#${orderRef}</td></tr>
               ${shopItems
                 .map(
-                  (i) => `<tr><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};color:${INK}">${i.qty} &times; ${i.name}${i.variant ? `<br><span style="color:${MUTED};font-size:12px">${i.variant}</span>` : ''}</td><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};font-weight:600;color:${INK};text-align:right;vertical-align:top">$${i.lineTotal.toFixed(2)}</td></tr>`
+                  (i) =>
+                    `<tr><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};color:${INK}">${i.qty} &times; ${i.name}${i.variant ? `<br><span style="color:${MUTED};font-size:12px">${i.variant}</span>` : ''}</td><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};font-weight:600;color:${INK};text-align:right;vertical-align:top">$${i.lineTotal.toFixed(2)}</td></tr>`
                 )
                 .join('')}
               ${shopShipping > 0 ? `<tr><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};color:${MUTED}">Shipping</td><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};font-weight:600;color:${INK};text-align:right">$${shopShipping.toFixed(2)}</td></tr>` : ''}
