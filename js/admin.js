@@ -1575,7 +1575,7 @@ async function renderFinanceParts(s, periodStr) {
       ${row('What those parts cost', signed(-s.cost))}
       ${row('Margin on parts', signed(s.margin) + (pct === null ? '' : ` · ${pct}%`), true)}
       ${s.uncosted ? `<div class="fin-parts-note">Plus ${anMoney(s.uncostedCharged)} charged on ${plural(s.uncosted, 'job')} with no parts cost recorded - left out of the margin.</div>` : ''}
-      ${s.totalCharged > 0 ? `<div class="fin-parts-note warn">The ${anMoney(s.totalCharged)} of parts is not in Revenue, the P&amp;L or the BAS above - those only add the service and the visit fee.</div>` : ''}`;
+      ${s.totalCharged > 0 ? `<div class="fin-parts-note">The ${anMoney(s.totalCharged)} of parts is included in Revenue, the P&amp;L and the BAS above.</div>` : ''}`;
   }
 
   stockBox.innerHTML = `<div class="fin-parts-h"><b>On the shelf now</b><span>Loading...</span></div>`;
@@ -1637,8 +1637,16 @@ function exportFinanceCSV() {
     ['Net Revenue', d.netRevenue, '', '', '', '', ''],
     ['Net Profit', d.netProfit, '', '', '', '', ''],
     ['Margin', d.margin + '%', '', '', '', '', ''],
-    // Not part of the revenue above - see renderFinanceParts().
-    ['Parts charged to clients (not in revenue)', d.partsSold.totalCharged, '', '', '', '', ''],
+    // Already inside the revenue above - a breakdown, not an addition.
+    [
+      'Parts charged to clients (included in revenue)',
+      d.partsSold.totalCharged,
+      '',
+      '',
+      '',
+      '',
+      '',
+    ],
     ['Parts cost (jobs with a recorded cost)', d.partsSold.cost, '', '', '', '', ''],
     ['Parts margin (jobs with a recorded cost)', d.partsSold.margin, '', '', '', '', ''],
   ];
@@ -3918,7 +3926,9 @@ async function loadMechStats(vanNum) {
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const { data } = await sb
     .from('bookings')
-    .select('service_price,callout_fee,client_rating,completed_at,scheduled_date,status')
+    .select(
+      'service_price,callout_fee,final_charge_amount,discount_applied,parts_charged,client_rating,completed_at,scheduled_date,status'
+    )
     .eq('van_number', vanNum)
     .eq('status', 'completed')
     .gte('scheduled_date', weekAgo);
@@ -4359,8 +4369,33 @@ function anCompletedInRange(all, from, to) {
 // surfaces fall back to `?? 20` for display, but inventing a fee on a metrics
 // screen is exactly the failure this screen is built to avoid. How many rows
 // are in that state is reported instead - see anCalloutGaps().
+//
+// Until 2026-10-25 it was service_price + callout_fee, which is not what the
+// client paid: parts sold on the job were in no revenue figure and no BAS, and
+// a discount code or referral credit (discount_applied) was counted as if the
+// client had paid it. Diego asked for parts in revenue; the discount is the
+// same correction - both are on the client's charge.
+//
+// Now: the visit fee taken at booking, plus the completion charge - service
+// minus discount_applied, plus parts, minus a completion discount. That charge
+// is final_charge_amount, exactly what the mechanic's phone charged (tip NOT
+// included: it is the mechanic's and never a taxable sale). A row without one
+// (not finished yet, or finished before the column existed) is worked out from
+// the same pieces the phone uses (api/_completion-notify.js
+// calcCompletionTotals). Self-contained on purpose: tests lift it from source.
 function anBookingRevenue(b) {
-  return (Number(b.service_price) || 0) + (Number(b.callout_fee) || 0);
+  const callout = Number(b.callout_fee) || 0;
+  if (b.final_charge_amount !== null && b.final_charge_amount !== undefined) {
+    return callout + (Number(b.final_charge_amount) || 0);
+  }
+  const items = Array.isArray(b.parts_charged?.items) ? b.parts_charged.items : [];
+  const parts = items.reduce((s, p) => {
+    const qty = Number(p?.qty) || 0;
+    return qty > 0 ? s + (Number(p?.total) || qty * (Number(p?.unit_price) || 0)) : s;
+  }, 0);
+  const service = Math.max(0, (Number(b.service_price) || 0) - (Number(b.discount_applied) || 0));
+  const completionDiscount = Number(b.parts_charged?.discount_amount) || 0;
+  return callout + Math.max(0, service + parts - completionDiscount);
 }
 function anRevenueOf(rows) {
   return rows.reduce((s, b) => s + anBookingRevenue(b), 0);
@@ -4402,7 +4437,7 @@ let _partsCostColumnMissing = false;
 
 async function fetchAnalyticsBookings() {
   const baseCols =
-    'id,client_id,client_name,client_email,service_name,service_price,callout_fee,suburb,address,status,scheduled_date,created_at,completed_at,mechanic_accepted_at,time_to_book_seconds,utm_source,utm_medium,utm_campaign,profiles(full_name,email)';
+    'id,client_id,client_name,client_email,service_name,service_price,callout_fee,final_charge_amount,discount_applied,parts_charged,suburb,address,status,scheduled_date,created_at,completed_at,mechanic_accepted_at,time_to_book_seconds,utm_source,utm_medium,utm_campaign,profiles(full_name,email)';
   const query = (cols) =>
     sb
       .from('bookings')

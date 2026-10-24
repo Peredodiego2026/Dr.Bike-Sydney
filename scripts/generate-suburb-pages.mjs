@@ -133,6 +133,13 @@ const BLOG_POSTS = {
 const SERVICE_KEYS = ['Tune-Up', 'Standard Service', 'Standard+ Service', 'Ultimate Overhaul'];
 const SERVICE_PRICES = ['$119', '$159', '$209', '$379'];
 
+// The Google Business Profile and Instagram, as structured data: sameAs is how
+// Google ties these pages to the same business as the Maps listing (Diego,
+// 22-oct-2026). The cid is the second half of the listing's feature id
+// 0x6762fdefebf19285:0x52872725f8bdca88, in decimal.
+const MAPS_URL = 'https://maps.google.com/?cid=5946764877006490248';
+const SAME_AS = ['https://www.instagram.com/drbike_au/', MAPS_URL];
+
 // The visible prices get overwritten in the browser by js/live-prices.js from the
 // Supabase `services` table, but the Service schema is static HTML - so when the
 // defaults above drift, the structured data starts telling Google a price the
@@ -474,9 +481,12 @@ function page(sub, lang) {
     image: `${SITE}/images/hero-van.png`,
     description,
     inLanguage: meta.hreflang,
+    // The business is in Sydney; the suburb is where it SERVES. Writing the
+    // suburb as the address made 5 pages each claim a location we do not have,
+    // which is what Google's guidelines call a fake local listing.
     address: {
       '@type': 'PostalAddress',
-      addressLocality: sub.name,
+      addressLocality: 'Sydney',
       addressRegion: 'NSW',
       addressCountry: 'AU',
     },
@@ -485,6 +495,8 @@ function page(sub, lang) {
     priceRange: '$119-$379',
     openingHours: 'Mo-Su 08:00-17:00',
     areaServed: { '@type': 'City', name: `${sub.name}, Sydney` },
+    hasMap: MAPS_URL,
+    sameAs: SAME_AS,
   });
 
   // Service schema: says what we actually sell, in this area, at what price, in

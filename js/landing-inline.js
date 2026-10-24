@@ -1685,7 +1685,7 @@ document.addEventListener('DOMContentLoaded', function() {
         '5% off extra services',
         'Priority scheduling (72hs)'
       ],
-      excludes: 'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $35, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
+      excludes: 'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $35, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.',
       savings: 'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.'
     },
     standard: {
@@ -1700,7 +1700,7 @@ document.addEventListener('DOMContentLoaded', function() {
         'Digital bike history log',
         '1 emergency callout per month (visit & diagnosis fee applies, from $35 depending on your suburb)'
       ],
-      excludes: 'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
+      excludes: 'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.',
       savings: 'A Tune-Up ($119) + a wash ($35) + 2 minor repairs (~$100) = about $254 in free work every month, for $97.'
     },
     vip: {
@@ -1716,7 +1716,7 @@ document.addEventListener('DOMContentLoaded', function() {
         '1 emergency callout per month (visit & diagnosis fee waived in your zone)',
         'Dedicated mechanic'
       ],
-      excludes: 'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.',
+      excludes: 'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.',
       savings: 'A Tune-Up ($119) + 2 washes ($70) + 3 minor repairs (~$150) = about $339 in free work every month, for $197.'
     }
   };
