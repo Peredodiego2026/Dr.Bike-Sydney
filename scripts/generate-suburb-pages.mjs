@@ -1,6 +1,8 @@
 // scripts/generate-suburb-pages.mjs — generates the suburb landing pages.
 //
-// Run: node scripts/generate-suburb-pages.mjs
+// Run: node scripts/generate-suburb-pages.mjs           (rewrites the pages)
+//      node scripts/generate-suburb-pages.mjs --check   (writes nothing, exits 1
+//                                                        on any difference)
 //
 // Why a generator: the 20 suburb pages were 20 hand-maintained copies of the
 // same 155-line file, differing only in the suburb name and the list of areas.
@@ -31,55 +33,71 @@ const TODAY = new Date().toISOString().slice(0, 10);
 const ASSET_VERSION = '20260726';
 
 // Suburb names and area lists are proper nouns: identical in all 3 languages.
+//
+// Only these 5 are published. The other 15 were retired on 2026-08-25
+// (9f3096ac): each page was 94% the same copy with the name swapped - what
+// Google calls doorway pages - and several promised service where the van does
+// not go. vercel.json 301s every retired URL to the page below that covers it.
+// A suburb comes back with real local content of its own (docs/PENDIENTES.md
+// 29), not by re-adding its slug here.
 const SUBURBS = [
   { slug: 'bondi', name: 'Bondi', areas: 'Bondi Beach, Bondi Junction, Bronte, Tamarama, Waverley' },
   { slug: 'cbd', name: 'Sydney CBD', areas: 'Sydney CBD, Pyrmont, Ultimo, Chippendale, Surry Hills' },
-  { slug: 'chatswood', name: 'Chatswood', areas: 'Chatswood, Gordon, Killara, Lindfield, Roseville' },
-  { slug: 'eastern-suburbs', name: 'Eastern Suburbs', areas: 'Bondi, Coogee, Randwick, Paddington, Double Bay' },
-  { slug: 'hills-district', name: 'Hills District', areas: 'Castle Hill, Baulkham Hills, Kellyville, Rouse Hill, Bella Vista' },
-  { slug: 'hornsby', name: 'Hornsby', areas: 'Hornsby, Waitara, Asquith, Mount Colah, Berowra' },
   { slug: 'inner-west', name: 'Inner West', areas: 'Newtown, Marrickville, Leichhardt, Petersham, Glebe' },
-  { slug: 'manly', name: 'Manly', areas: 'Manly, Freshwater, Curl Curl, Dee Why, Queenscliff' },
-  { slug: 'marrickville', name: 'Marrickville', areas: 'Marrickville, Dulwich Hill, Hurlstone Park, Tempe, Sydenham' },
-  { slug: 'mosman', name: 'Mosman', areas: 'Mosman, Neutral Bay, Cremorne, Kirribilli, Milsons Point' },
-  { slug: 'newtown', name: 'Newtown', areas: 'Newtown, Enmore, St Peters, Erskineville, Alexandria' },
   { slug: 'north-shore', name: 'North Shore', areas: 'Chatswood, Lane Cove, Willoughby, Mosman, Cremorne' },
   { slug: 'northern-beaches', name: 'Northern Beaches', areas: 'Narrabeen, Mona Vale, Avalon, Newport, Collaroy' },
-  { slug: 'parramatta', name: 'Parramatta', areas: 'Parramatta, Westmead, Harris Park, Granville, Rosehill' },
-  { slug: 'penrith', name: 'Penrith', areas: 'Penrith, Kingswood, Jamisontown, Glenmore Park, St Marys' },
-  { slug: 'ryde', name: 'Ryde', areas: 'Ryde, West Ryde, Meadowbank, Shepherds Bay, Top Ryde' },
-  { slug: 'st-george', name: 'St George', areas: 'Kogarah, Hurstville, Rockdale, Bexley, Carlton' },
-  { slug: 'strathfield', name: 'Strathfield', areas: 'Strathfield, Burwood, Croydon, Homebush, Auburn' },
-  { slug: 'surry-hills', name: 'Surry Hills', areas: 'Surry Hills, Darlinghurst, Redfern, Waterloo, Zetland' },
-  { slug: 'sutherland-shire', name: 'Sutherland Shire', areas: 'Cronulla, Miranda, Caringbah, Engadine, Gymea' },
 ];
 
 // Neighbouring areas, by Sydney geography. Used for internal links: every
 // suburb page was a dead end that only linked to Home/Services/Terms/Privacy,
 // so nothing passed authority between them and a visitor in the wrong suburb had
 // no way across. Links always stay inside the same language.
+//
+// A neighbour can be a retired suburb. Its link keeps the suburb's name but
+// points at the page vercel.json redirects it to - which is how 9f3096ac
+// rewrote them by hand, so that no internal link goes through a 301. Some of
+// those land on the page itself (North Shore's three); changing that changes
+// live pages, so it is a decision of its own, not a side effect of this script.
 const NEIGHBOURS = {
   bondi: ['eastern-suburbs', 'surry-hills', 'cbd'],
   cbd: ['surry-hills', 'inner-west', 'bondi'],
-  chatswood: ['north-shore', 'mosman', 'hornsby'],
-  'eastern-suburbs': ['bondi', 'surry-hills', 'cbd'],
-  'hills-district': ['parramatta', 'penrith', 'hornsby'],
-  hornsby: ['chatswood', 'north-shore', 'hills-district'],
   'inner-west': ['newtown', 'marrickville', 'cbd'],
-  manly: ['northern-beaches', 'mosman', 'north-shore'],
-  marrickville: ['newtown', 'inner-west', 'st-george'],
-  mosman: ['north-shore', 'manly', 'chatswood'],
-  newtown: ['inner-west', 'marrickville', 'surry-hills'],
   'north-shore': ['chatswood', 'mosman', 'hornsby'],
   'northern-beaches': ['manly', 'mosman', 'north-shore'],
-  parramatta: ['hills-district', 'ryde', 'strathfield'],
-  penrith: ['hills-district', 'parramatta', 'strathfield'],
-  ryde: ['north-shore', 'parramatta', 'chatswood'],
-  'st-george': ['sutherland-shire', 'marrickville', 'strathfield'],
-  strathfield: ['inner-west', 'parramatta', 'ryde'],
-  'surry-hills': ['cbd', 'newtown', 'bondi'],
-  'sutherland-shire': ['st-george', 'marrickville', 'cbd'],
 };
+
+const RETIRED_NAMES = {
+  'eastern-suburbs': 'Eastern Suburbs',
+  'surry-hills': 'Surry Hills',
+  newtown: 'Newtown',
+  marrickville: 'Marrickville',
+  chatswood: 'Chatswood',
+  mosman: 'Mosman',
+  hornsby: 'Hornsby',
+  manly: 'Manly',
+};
+
+// Where a retired URL goes is decided in vercel.json's `redirects`; read it
+// there instead of repeating it here, so the links cannot drift from the 301s.
+const REDIRECTS = JSON.parse(fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf8')).redirects;
+
+function redirectTarget(urlPath) {
+  for (const r of REDIRECTS) {
+    const re = new RegExp(`^${r.source.replaceAll('.', '\\.').replace(/:slug\(([^)]+)\)/, '($1)')}$`);
+    if (re.test(urlPath)) return r.destination;
+  }
+  return null;
+}
+
+function neighbourLink(slug, from, prefix) {
+  const published = SUBURBS.find((s) => s.slug === slug);
+  if (published) return { name: published.name, href: `${prefix}/${slug}` };
+  const href = redirectTarget(`${prefix}/${slug}`);
+  if (!href || !RETIRED_NAMES[slug]) {
+    throw new Error(`neighbour "${slug}" of ${from} is not published and has no name + redirect in vercel.json`);
+  }
+  return { name: RETIRED_NAMES[slug], href };
+}
 
 // Existing blog posts. Used to be English-only (linked from English suburb
 // pages only, on the theory that sending a Spanish reader to an English
@@ -173,7 +191,7 @@ const COPY = {
     areasLabel: '📍 Areas covered: {areas}',
     servicesH2: 'Our Services &amp; Pricing',
     pricingNote:
-      'All prices include the mobile call-out fee. No hidden charges. Sunday &amp; NSW public holiday bookings +20%; Saturday is normal price.',
+      'All prices include the visit & diagnosis fee. No hidden charges. Sunday &amp; NSW public holiday bookings +20%; Saturday is normal price.',
     serviceNames: ['Tune-Up', 'Standard Service', 'Standard+ Service', 'Ultimate Overhaul'],
     serviceDescs: [
       'Gears, brakes, wheels trued · ~1 hour',
@@ -208,7 +226,7 @@ const COPY = {
       ],
       [
         'How much does a bike service cost in {name}?',
-        'Our Tune-Up starts at $109 and includes the mobile call-out fee. Full pricing is listed above. No hidden charges.',
+        'Our Tune-Up starts at $109 and includes the visit & diagnosis fee. Full pricing is listed above. No hidden charges.',
       ],
     ],
     ctaH2: 'Ready to book in {name}?',
@@ -501,24 +519,26 @@ function page(sub, lang) {
     ],
   });
 
-  const neighbours = (NEIGHBOURS[sub.slug] || [])
-    .map((slug) => SUBURBS.find((s) => s.slug === slug))
-    .filter(Boolean);
+  const neighbours = (NEIGHBOURS[sub.slug] || []).map((slug) =>
+    neighbourLink(slug, sub.slug, meta.prefix)
+  );
 
   const nearbySection = neighbours.length
     ? `
 <section class="section">
   <h2>${fill(c.nearbyH2, sub)}</h2>
   <p>${c.nearbyP}</p>
-  <p class="links-row">${neighbours
-    .map((n) => `<a href="${meta.prefix}/${n.slug}">${n.name}</a>`)
-    .join('')}</p>
+  <p class="links-row">${neighbours.map((n) => `<a href="${n.href}">${n.name}</a>`).join('')}</p>
   <h3 class="links-h3">${c.readMore}</h3>
   <p class="links-row">${BLOG_POSTS[lang].map(([href, label]) => `<a href="${href}">${label}</a>`).join('')}</p>
 </section>
 `
     : '';
 
+  // The analytics tags ship as type="text/plain", which no browser runs;
+  // js/consent.js makes them real only once the visitor accepts (audit point 7,
+  // 178d06de). Emitted already gated, in the exact shape scripts/consent-gate.mjs
+  // writes, so a regeneration can never ship a page that tracks before consent.
   return `<!DOCTYPE html>
 <html lang="${meta.htmlLang}">
 <head>
@@ -544,8 +564,9 @@ ${alternates}
   <script type="application/ld+json">${faqSchema}</script>
   <script type="application/ld+json">${breadcrumbSchema}</script>
   <script type="application/ld+json">${serviceSchema}</script>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
-  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-GXYD68JXZW');</script>
+  <script src="/js/consent.js"></script>
+  <script type="text/plain" data-consent="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
+  <script type="text/plain" data-consent="analytics">window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-GXYD68JXZW');</script>
   <link rel="stylesheet" href="/css/variables.css">
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
@@ -708,13 +729,29 @@ function alternatesXml(slug) {
     .join('\n');
 }
 
+// lastmod, per URL. Stamping TODAY on all of them made every run rewrite the
+// whole sitemap and told Google every page had changed when none had. Now a URL
+// keeps the date the sitemap on disk gives it, and only moves to TODAY when this
+// run rewrote its page with different content, or when it is new.
+const SITEMAP_PATH = path.join(ROOT, 'sitemap.xml');
+const lastmod = new Map(
+  fs.existsSync(SITEMAP_PATH)
+    ? [
+        ...fs
+          .readFileSync(SITEMAP_PATH, 'utf8')
+          .matchAll(/<loc>([^<]+)<\/loc>[\s\S]*?<lastmod>([^<]+)<\/lastmod>/g),
+      ].map((m) => [m[1], m[2]])
+    : []
+);
+const lastmodOf = (url) => lastmod.get(url) || TODAY;
+
 function sitemap() {
   const entries = [];
 
   for (const p of STATIC_PAGES) {
     entries.push(`  <url>
     <loc>${SITE}${p.path}</loc>
-    <lastmod>${TODAY}</lastmod>
+    <lastmod>${lastmodOf(`${SITE}${p.path}`)}</lastmod>
     <changefreq>${p.changefreq}</changefreq>
     <priority>${p.priority}</priority>
   </url>`);
@@ -734,7 +771,7 @@ function sitemap() {
       entries.push(`  <url>
     <loc>${SITE}${l.prefix}/blog/${slug}</loc>
 ${alts}
-    <lastmod>${TODAY}</lastmod>
+    <lastmod>${lastmodOf(`${SITE}${l.prefix}/blog/${slug}`)}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>${code === 'en' ? '0.7' : '0.5'}</priority>
   </url>`);
@@ -746,7 +783,7 @@ ${alts}
       entries.push(`  <url>
     <loc>${SITE}${l.prefix}/${p.slug}</loc>
 ${alternatesXml(p.slug)}
-    <lastmod>${TODAY}</lastmod>
+    <lastmod>${lastmodOf(`${SITE}${l.prefix}/${p.slug}`)}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>${code === 'en' ? p.priority : '0.7'}</priority>
   </url>`);
@@ -758,7 +795,7 @@ ${alternatesXml(p.slug)}
       entries.push(`  <url>
     <loc>${SITE}${l.prefix}/${sub.slug}</loc>
 ${alternatesXml(sub.slug)}
-    <lastmod>${TODAY}</lastmod>
+    <lastmod>${lastmodOf(`${SITE}${l.prefix}/${sub.slug}`)}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>${code === 'en' ? '0.8' : '0.6'}</priority>
   </url>`);
@@ -772,21 +809,81 @@ ${entries.join('\n')}
 `;
 }
 
-// ── Write ───────────────────────────────────────────────────────────────────
-// Resolved once, so all 60 pages and every Service schema quote the same number.
-const PRICES = await livePrices();
-let written = 0;
-for (const [code, meta] of Object.entries(LANGS)) {
-  const dir = code === 'en' ? ROOT : path.join(ROOT, code);
-  fs.mkdirSync(dir, { recursive: true });
-  for (const sub of SUBURBS) {
-    fs.writeFileSync(path.join(dir, `${sub.slug}.html`), page(sub, code));
-    written++;
-  }
-  console.log(`${code}: ${SUBURBS.length} pages -> ${path.relative(ROOT, dir) || '.'}/`);
+// ── Check mode ──────────────────────────────────────────────────────────────
+// The pages drifted from this script twice - hex instead of tokens (fixed in
+// #285), then consent, copy and links (#517) - each time because a fix went
+// into the pages and not here, and nothing compared the two. --check is that
+// comparison, in npm run check.
+//
+// Offline on purpose: CI has no business calling Supabase, and what drifts is
+// the template, not the prices. So it takes the prices the committed first page
+// shows; every other page is then held to the same numbers.
+const CHECK = process.argv.includes('--check');
+
+function committedPrices() {
+  const file = path.join(ROOT, `${SUBURBS[0].slug}.html`);
+  const html = fs.readFileSync(file, 'utf8');
+  return SERVICE_KEYS.map((key) => {
+    const esc = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const m = new RegExp(`data-service="${esc}"><h3>[^<]*</h3><div class="price">([^<]+)</div>`).exec(html);
+    if (!m) throw new Error(`${path.relative(ROOT, file)} has no price card for "${key}"`);
+    return m[1];
+  });
 }
 
-fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sitemap());
+// CRLF-blind: a Windows checkout with core.autocrlf holds the committed files
+// with \r\n, which is the same file git-wise.
+const onDisk = (file) =>
+  fs.existsSync(file) ? fs.readFileSync(file, 'utf8').replaceAll('\r\n', '\n') : null;
+
+// ── Write ───────────────────────────────────────────────────────────────────
+// Resolved once, so all 15 pages and every Service schema quote the same number.
+const PRICES = CHECK ? committedPrices() : await livePrices();
+let written = 0;
+let changed = 0;
+const drifted = [];
+// Compared before the pages: a drifted page moves its own lastmod below, and
+// the sitemap would then be reported for a change nobody made to it. lastmod
+// values themselves always pass - they are read from this same file.
+if (CHECK && onDisk(SITEMAP_PATH) !== sitemap()) drifted.push('sitemap.xml');
+for (const [code, meta] of Object.entries(LANGS)) {
+  const dir = code === 'en' ? ROOT : path.join(ROOT, code);
+  if (!CHECK) fs.mkdirSync(dir, { recursive: true });
+  for (const sub of SUBURBS) {
+    const file = path.join(dir, `${sub.slug}.html`);
+    const html = page(sub, code);
+    if (onDisk(file) !== html) {
+      lastmod.set(`${SITE}${meta.prefix}/${sub.slug}`, TODAY);
+      changed++;
+      drifted.push(path.relative(ROOT, file).replaceAll('\\', '/'));
+    }
+    if (CHECK) continue;
+    fs.writeFileSync(file, html);
+    written++;
+  }
+  if (!CHECK) console.log(`${code}: ${SUBURBS.length} pages -> ${path.relative(ROOT, dir) || '.'}/`);
+}
+
+if (CHECK) {
+  if (drifted.length) {
+    console.error(
+      `\nsuburbs-check: ${drifted.length} file(s) differ from what scripts/generate-suburb-pages.mjs writes\n`
+    );
+    for (const f of drifted) console.error(`  x ${f}`);
+    console.error(
+      '\nA hand edit to these files is undone by the next regeneration. Put the change in the' +
+        '\ngenerator, then run: npm run suburbs:generate\n'
+    );
+    process.exit(1);
+  }
+  console.log(
+    `suburbs-check: OK - ${SUBURBS.length * Object.keys(LANGS).length} suburb pages and sitemap.xml match the generator.`
+  );
+  process.exit(0);
+}
+console.log(`content changed: ${changed} of ${written} pages`);
+
+fs.writeFileSync(SITEMAP_PATH, sitemap());
 console.log(
   `sitemap.xml: ${STATIC_PAGES.length + (SUBURBS.length + BLOG_SLUGS.length + TRANSLATED_STATIC_PAGES.length) * 3} urls ` +
     `(${SUBURBS.length} suburbs + ${BLOG_SLUGS.length} blog posts + ${TRANSLATED_STATIC_PAGES.length} translated pages, x 3 languages)`
