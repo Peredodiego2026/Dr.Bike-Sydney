@@ -18,7 +18,14 @@ const filesThatReadDiscountCodes = ['js/app.js', 'landing.html', 'js/admin.js'];
 describe('discount_codes column names', () => {
   for (const file of filesThatReadDiscountCodes) {
     it(`${file} does not reference the non-existent discount_amount column`, () => {
-      const content = readFileSync(join(root, file), 'utf8');
+      // parts_charged.discount_amount is a different thing and real: the
+      // completion discount the mechanic's phone sends inside the parts_charged
+      // JSON (js/mechanic.js submitComplete, read by api/_completion-notify.js).
+      // Revenue reads it since 2026-10-25. Only the discount_codes column is wrong.
+      const content = readFileSync(join(root, file), 'utf8').replace(
+        /parts_charged\?\.discount_amount/g,
+        ''
+      );
       expect(content).not.toMatch(/discount_amount/);
     });
 
