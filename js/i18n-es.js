@@ -1919,4 +1919,14 @@ export default {
   'Help us bring the right part': 'Ayudanos a llevar la pieza correcta',
   'Optional. Skip anything you are not sure about.': 'Opcional. Omití lo que no sepas.',
   'The bar tape we fit comes in black.': 'La cinta de manubrio que colocamos es negra.',
+  // La foto del triage. 'Remove photo' ya esta mas arriba (la resena lo usa de
+  // aria-label) y una clave repetida hace fallar scripts/i18n-check.mjs.
+  'Add a photo of your bike': 'Sumá una foto de tu bici',
+  'It is how the mechanic knows which part to load in the van before he drives out.':
+    'Así el mecánico sabe qué pieza cargar en la van antes de salir.',
+  'Take a photo': 'Sacar una foto',
+  'That photo is too big to send. Your booking is not affected.':
+    'Esa foto es demasiado grande para enviarla. Tu reserva no se ve afectada.',
+  'We could not read that photo. Your booking is not affected.':
+    'No pudimos leer esa foto. Tu reserva no se ve afectada.',
 };

@@ -114,6 +114,12 @@ del chat del mecanico. Hasta que exista, la app del mecanico las sigue subiendo
 al bucket publico `job-photos`, igual que siempre: el servidor contesta "no
 hay bucket" y la app cae ahi a proposito (`api/_job-photos.js`).
 
+**Desde el 24-oct-2026 este bucket tambien guarda la foto del triage**: la que
+el cliente saca de su bici en el paso 1 de la reserva, en
+`jobs/<reserva>/triage_<ts>.jpg` (seccion 13). Esa foto **no** cae al bucket
+publico si este no existe: puede mostrar la casa o la calle del cliente, asi
+que se pierde y queda en el log. Un motivo mas para crearlo.
+
 ### Como se crea (30 segundos, no es SQL)
 
 1. Supabase > **Storage** > **New bucket**
@@ -1011,10 +1017,15 @@ Despues, la fila 53 de la consulta de la seccion 3 tiene que decir `OK`.
 
 **Lo que esto NO hace.**
 
-- `triage_photo_ref` queda vacia hasta que se entregue la foto (otro PR), y
-  esa foto necesita que el bucket privado se cree a mano, como los de las
-  secciones 0.b y 0.b2.
-- `triage_video_ref` no la escribe nada todavia. Esta para cuando haya donde
-  subir el video.
+- `triage_photo_ref` ya la escribe el servidor (24-oct-2026), pero **solo si el
+  bucket privado existe**: la foto va a `job-photos-private`, que Diego crea a
+  mano en Supabase > Storage (seccion 0.b2). Sin el bucket, la reserva se hace
+  igual, la columna queda vacia y en los logs aparece
+  `[create-booking] triage photo upload failed (HTTP 404)`.
+- `triage_video_ref` **no la escribe nada, y por ahora no la va a escribir**. Un
+  video no entra en el cuerpo de un POST, asi que necesitaria una URL de subida
+  firmada y un endpoint anonimo que la entregue - que es justo lo que se
+  descarto. La columna queda lista; la funcion no esta entregada. Que la columna
+  exista no significa que el video funcione.
 - La cola de revision (el estado de la revision, la fecha y la nota de Diego)
   son otras tres columnas, de otro entregable, con su propio script.

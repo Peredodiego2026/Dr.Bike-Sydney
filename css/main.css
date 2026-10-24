@@ -617,6 +617,81 @@ body {
   border-color: var(--blue);
 }
 
+/* The photo at the end of the panel. The input is hidden and the button is the
+   control: a display:none input cannot be focused, so the keyboard lands on a
+   button it can see instead of on a field it cannot.
+
+   Its own rule rather than reusing .triage__q, which carries the same spacing:
+   a test counts .triage__q to know the panel is drawing THIS service's
+   questions and nobody else's, and the photo is not one of them. */
+.triage__photo {
+  margin-top: var(--space-4);
+}
+.triage__photo-file {
+  display: none;
+}
+.triage__photo-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  margin-top: var(--space-2);
+  padding: 0 16px;
+  background: var(--blue-lt);
+  border: 1.5px solid var(--blue);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue-dark-text);
+  cursor: pointer;
+}
+/* Hidden until there is a photo, so the panel never carries an empty frame. */
+.triage__photo-shot {
+  display: none;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+.triage__photo-shot.is-on {
+  display: flex;
+}
+.triage__photo-img {
+  display: block;
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.triage__photo-drop {
+  min-height: 44px;
+  padding: 0 14px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+}
+/* Only the two failures the client can do something about, in the same shape as
+   .triage__note above. Empty it takes no room at all: it is never a frame
+   sitting there waiting for bad news. */
+.triage__photo-msg {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--amber-ink);
+  background: var(--amber-lt);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-top: var(--space-2);
+}
+.triage__photo-msg:empty {
+  display: none;
+}
+
 /* ── Desktop overrides ──────────────────────────────────────────────────────── */
 @media (min-width: 768px) {
   .bottom-nav {

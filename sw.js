@@ -250,7 +250,12 @@
 // el Admin lee las respuestas). Se importa sin ?v=, asi que este numero es lo
 // unico que entrega la version nueva - con la vieja en cache el export no
 // existe, y de ahi la guarda typeof en js/admin.js.
-const CACHE_STATIC = 'drbike-static-v150';
+// v151: la foto del triage. js/i18n-es.js y js/i18n-zh.js cambiaron (la copy de
+// la foto: el boton, el por que, y los dos avisos de cuando no se puede
+// mandar). Se importan sin ?v=, asi que este numero es lo unico que los renueva.
+// Las dos tareas salieron en ramas paralelas y se juntaron aca: v150 nunca se
+// desplego sola, asi que v151 es la que llega al navegador con las dos cosas.
+const CACHE_STATIC = 'drbike-static-v151';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

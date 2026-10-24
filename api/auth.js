@@ -48,6 +48,7 @@ import {
   signPhotoMessages,
   createJobPhotoUpload,
   thumbPathOf,
+  triagePhotoRef,
 } from './_job-photos.js';
 import {
   photoSource,
@@ -1143,6 +1144,101 @@ export function sanitizeTriage(raw) {
   return Object.keys(out).length ? out : null;
 }
 
+// ── The triage photo ─────────────────────────────────────────────────────────
+// The photo the client takes of their own bike while booking, so the mechanic
+// can see which part he needs before he loads the van. OPTIONAL by design (the
+// owner decided that), which makes the rule here absolute: a photo must never
+// be able to turn over a booking or a charge. Every failure below ends in a
+// console.warn and a return, after the row already exists.
+//
+// It arrives as base64 IN THE BODY, not through a signed upload URL. The URL
+// shape would need an ANONYMOUS endpoint handing out upload URLs - anyone could
+// ask for thousands and fill the storage with orphans nothing sweeps - and a
+// photo written to a staging folder whose move then failed would sit where
+// jobPhotoPath() refuses to sign it: photo stored, booking fine, and Diego
+// unable to see it with nothing saying why. The base64 shape is already in
+// production in this repo for an anonymous client: the review photo in
+// handleClientReview, same bucket, same service key.
+//
+// NEVER the public bucket when the private one is missing. The mechanic flow
+// falls back there because that behaviour predates the private bucket; here
+// there is nothing to preserve, and a triage photo can show the client's house
+// or their street.
+const TRIAGE_PHOTO_MAX_BYTES = 3_000_000;
+const TRIAGE_PHOTO_DATA_URL = /^data:image\/[a-z0-9.+-]+;base64,/i;
+const TRIAGE_PHOTO_BARE_BASE64 = /^[A-Za-z0-9+/\s]+={0,2}$/;
+
+// The decoded bytes, or null with a reason in the log. The client already caps
+// the size before sending, but the client can lie, so the cap is checked again
+// here on what actually decoded.
+function triagePhotoBuffer(raw) {
+  // No photo is the normal case - nothing to report.
+  if (raw === null || raw === undefined || raw === '') return null;
+  if (typeof raw !== 'string' || !raw.trim()) {
+    console.warn('[create-booking] triage photo ignored: not a string');
+    return null;
+  }
+  const value = raw.trim();
+  const body = TRIAGE_PHOTO_DATA_URL.test(value)
+    ? value.slice(value.indexOf(',') + 1)
+    : TRIAGE_PHOTO_BARE_BASE64.test(value)
+      ? value
+      : null;
+  if (body === null) {
+    console.warn('[create-booking] triage photo ignored: not an image payload');
+    return null;
+  }
+  const buffer = Buffer.from(body, 'base64');
+  if (!buffer.length) {
+    console.warn('[create-booking] triage photo ignored: decoded to nothing');
+    return null;
+  }
+  if (buffer.length > TRIAGE_PHOTO_MAX_BYTES) {
+    console.warn(
+      `[create-booking] triage photo ignored: ${buffer.length} bytes is over the ${TRIAGE_PHOTO_MAX_BYTES} cap`
+    );
+    return null;
+  }
+  return buffer;
+}
+
+// Uploads it and, only if that worked, stores the REFERENCE on the row. The
+// extension and the content type are fixed, never taken from what was sent
+// (the rule JOB_PHOTO_TYPES and js/mechanic.js safeImageUpload already follow,
+// docs/PENDIENTES.md 104).
+async function storeTriagePhoto(sb, bookingId, raw, serviceKey) {
+  const buffer = triagePhotoBuffer(raw);
+  if (!buffer) return;
+  const ref = triagePhotoRef(bookingId);
+  // The round trip is the property that matters: what is stored has to be
+  // signable for THIS booking, or the photo is invisible in Admin.
+  const path = ref && jobPhotoPath(ref, bookingId);
+  if (!path) {
+    console.warn(`[create-booking] triage photo ignored: no signable path for ${bookingId}`);
+    return;
+  }
+  const up = await fetch(`${SUPABASE_URL}/storage/v1/object/${JOB_PHOTO_BUCKET}/${path}`, {
+    method: 'POST',
+    headers: {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      'Content-Type': 'image/jpeg',
+      'x-upsert': 'true',
+    },
+    body: buffer,
+  });
+  if (!up.ok) {
+    console.warn(
+      `[create-booking] triage photo upload failed (HTTP ${up.status}) - the booking is ` +
+        `unaffected and the photo is lost. On a 404 the ${JOB_PHOTO_BUCKET} bucket does not ` +
+        `exist yet: create it, private, as docs/RUNBOOK-SQL.md 0.b2 says.`
+    );
+    return;
+  }
+  const { error } = await sb.from('bookings').update({ triage_photo_ref: ref }).eq('id', bookingId);
+  if (error) console.warn('[create-booking] could not store the triage photo ref:', error.message);
+}
+
 // ── Server-authoritative booking creation ────────────────────────────────────
 // Price comes from the DB (never the client). Payment is verified with Stripe
 // before a non-admin booking is created. The admin test account bypasses payment.
@@ -1173,6 +1269,9 @@ export async function handleCreateBooking(req, res) {
     // The booking triage: { question_id: answer }. Untrusted - see
     // sanitizeTriage. Stored by step 5c, NOT in `row`.
     triage,
+    // The client's photo of their own bike, as base64. Untrusted and optional -
+    // see "The triage photo" above. Uploaded by step 5d, NOT in `row`.
+    triage_photo,
   } = req.body;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   if (!scheduled_date || !scheduled_time)
@@ -1722,6 +1821,17 @@ export async function handleCreateBooking(req, res) {
     }
   } catch (e) {
     console.error('[create-booking] triage step failed:', e.message);
+  }
+
+  // 5d. The client's photo of their bike, if they took one. The same shape as
+  // 5c and for the same reasons - after the row exists, in its own try, so the
+  // worst it can cost is the photo - plus one of its own: it is an upload to
+  // Storage, which can fail in more ways than an UPDATE (no bucket, no network,
+  // a body Storage refuses). See "The triage photo" above.
+  try {
+    await storeTriagePhoto(sb, booking.id, triage_photo, SERVICE_KEY);
+  } catch (e) {
+    console.warn('[create-booking] triage photo step failed:', e.message);
   }
 
   // 6. Discount/gift code (server-authoritative): atomic consume via RPC -

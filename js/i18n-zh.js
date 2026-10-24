@@ -1759,4 +1759,14 @@ export default {
   'Help us bring the right part': '帮助我们带上合适的零件',
   'Optional. Skip anything you are not sure about.': '可选填。不确定的可以跳过。',
   'The bar tape we fit comes in black.': '我们安装的车把带为黑色。',
+  // La foto del triage. 'Remove photo' ya esta mas arriba (la resena lo usa de
+  // aria-label) y una clave repetida hace fallar scripts/i18n-check.mjs.
+  'Add a photo of your bike': '添加一张您自行车的照片',
+  'It is how the mechanic knows which part to load in the van before he drives out.':
+    '这样技师出车前就知道该带上哪个零件。',
+  'Take a photo': '拍一张照片',
+  'That photo is too big to send. Your booking is not affected.':
+    '这张照片太大，无法发送。您的预约不受影响。',
+  'We could not read that photo. Your booking is not affected.':
+    '我们无法读取这张照片。您的预约不受影响。',
 };

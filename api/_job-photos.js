@@ -56,6 +56,24 @@ export function newJobPhotoPath(bookingId, kind, ext, now = Date.now()) {
     : `jobs/${bookingId}/${kind}_${now}.${e}`;
 }
 
+// Where the photo the CLIENT takes while booking goes (the triage, step 1 of
+// the wizard - docs/superpowers/specs/2026-10-22-triage-reserva-design.md).
+//
+// The same `jobs/<booking>/` folder as the job's own photos, on purpose: this
+// has to round-trip through jobPhotoPath() below, which is the only thing that
+// decides whether a reference may be signed. A photo parked anywhere else - a
+// draft folder keyed on the booking token, say - is stored and then invisible,
+// because jobPhotoPath accepts only `jobs` and `chat`, and nothing would say
+// so. Losing the photo and logging it is a better degradation than keeping one
+// nobody can open.
+//
+// No `_thumb.jpg` next to it: the booking detail shows this single photo, not a
+// grid of tiles (that is Admin > Photos, which is what thumbPathOf is for).
+export function triagePhotoRef(bookingId, now = Date.now()) {
+  if (!SAFE_ID.test(String(bookingId || ''))) return null;
+  return `${JOB_PHOTO_BUCKET}/jobs/${bookingId}/triage_${now}.jpg`;
+}
+
 // The small copy the mechanic app uploads next to each job photo (400px, a few
 // KB), for the Admin > Photos tiles. Supabase was in a grace period for
 // transfer on 03-oct-2026 (docs/PENDIENTES / PR #467): a grid of full photos

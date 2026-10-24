@@ -109,6 +109,13 @@ window.appState = {
   // The optional questions answered under the chosen service (step 1):
   // { question_id: "answer" }. See "The triage" above renderBookService().
   triage: {},
+  // The photo of the bike the client took in step 1, as a data URL. DELIBERATELY
+  // not persisted: saveBookingDraft() destructures the fields it keeps by name,
+  // so adding it there is the only way it could reach localStorage - and a
+  // 400 KB data URL eats the 5 MB quota and breaks the whole draft, which is
+  // what holds a half-built booking together. Accepted consequence: a reload
+  // loses the photo and brings everything else back.
+  triagePhoto: null,
   // Service to auto-select when the wizard opens, as an id OR a name - the
   // landing page CTAs only know the name printed on the card they sit in.
   // Consumed and cleared by renderBookService()'s step 1.
@@ -847,13 +854,49 @@ function renderTriage(service, answers = {}) {
     })
     .join('');
 
+  // The photo, last, after the questions. Optional like all of it, and the one
+  // thing a client can hand over that words cannot: which part, which standard,
+  // which era of the same model.
+  //
+  // The preview is drawn from the STATE, not from the file input: the photo
+  // outlives a re-draw of the panel (coming back from step 2, or switching
+  // service inside the category), so a panel that showed nothing would look
+  // like the photo had been lost and the client would take another.
+  const photo = window.appState?.triagePhoto || '';
+  const shot = `
+      <div class="triage__photo-shot${photo ? ' is-on' : ''}">
+        <img class="triage__photo-img" alt="The photo of your bike"${photo ? ` src="${escapeHtml(photo)}"` : ''}>
+        <button type="button" class="triage__photo-drop">Remove photo</button>
+      </div>`;
+
   return `
     <div class="triage" id="triage-panel" role="group" aria-labelledby="triage-title">
       <div class="triage__title" id="triage-title">Help us bring the right part</div>
       <div class="triage__sub">Optional. Skip anything you are not sure about.</div>
       ${note}
       ${body}
+      <div class="triage__photo" role="group" aria-labelledby="tq-photo" aria-describedby="tq-photo-hint">
+        <div class="triage__ask" id="tq-photo">Add a photo of your bike</div>
+        <div class="triage__hint" id="tq-photo-hint">It is how the mechanic knows which part to load in the van before he drives out.</div>
+        <input type="file" accept="image/*" capture="environment" class="triage__photo-file" id="tq-photo-file">
+        <button type="button" class="triage__photo-btn"><span aria-hidden="true">&#128247;</span> Take a photo</button>
+        ${shot}
+        <div class="triage__photo-msg" role="status"></div>
+      </div>
     </div>`;
+}
+
+// Takes the photo back out of everywhere it is: the state, the preview, and the
+// input (whose `value` has to be cleared, or picking the SAME file again fires
+// no change event and nothing happens).
+function clearTriagePhoto(panel) {
+  window.appState.triagePhoto = null;
+  const input = panel.querySelector('.triage__photo-file');
+  if (input) input.value = '';
+  panel.querySelector('.triage__photo-shot')?.classList.remove('is-on');
+  panel.querySelector('.triage__photo-img')?.removeAttribute('src');
+  const msg = panel.querySelector('.triage__photo-msg');
+  if (msg) msg.textContent = '';
 }
 
 // One listener pair on the panel, not one per chip: the panel is rebuilt every
@@ -864,6 +907,16 @@ function renderTriage(service, answers = {}) {
 // 'triage' step to invent.
 function bindTriage(panel) {
   panel.addEventListener('click', (e) => {
+    // The file input is hidden, so the button is the control a finger and a
+    // keyboard can both reach.
+    if (e.target.closest('.triage__photo-btn')) {
+      panel.querySelector('.triage__photo-file')?.click();
+      return;
+    }
+    if (e.target.closest('.triage__photo-drop')) {
+      clearTriagePhoto(panel);
+      return;
+    }
     const chip = e.target.closest('.triage__chip');
     if (!chip) return;
     const { q, value } = chip.dataset;
@@ -885,6 +938,38 @@ function bindTriage(panel) {
     if (!field) return;
     setTriageAnswer(window.appState, field.dataset.q, field.value);
     saveBookingDraft('service');
+  });
+  // The photo. Nothing here saves the draft: the photo is the one thing in the
+  // triage that must never reach localStorage (see window.appState.triagePhoto).
+  panel.addEventListener('change', async (e) => {
+    if (!e.target.closest('.triage__photo-file')) return;
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const msg = panel.querySelector('.triage__photo-msg');
+    if (msg) msg.textContent = '';
+    try {
+      // 1600/0.8, not the 1920/0.82 default: this is to recognise a part, not
+      // to keep a gallery.
+      const dataUrl = await compressImageToBase64(file, 1600, 0.8);
+      // A hard ceiling BEFORE it travels. Vercel refuses an over-sized body
+      // before the handler even runs, so a huge photo cannot be allowed to
+      // leave: it would take the booking down with it. 3,000,000 characters of
+      // base64 is roughly 2.2 MB of JPEG.
+      if (dataUrl.length > 3_000_000) {
+        clearTriagePhoto(panel);
+        if (msg) msg.textContent = 'That photo is too big to send. Your booking is not affected.';
+        return;
+      }
+      window.appState.triagePhoto = dataUrl;
+      panel.querySelector('.triage__photo-img')?.setAttribute('src', dataUrl);
+      panel.querySelector('.triage__photo-shot')?.classList.add('is-on');
+    } catch (err) {
+      // A HEIC the canvas cannot read, a file that is not really an image. The
+      // triage stays usable and the booking is untouched.
+      clearTriagePhoto(panel);
+      if (msg) msg.textContent = 'We could not read that photo. Your booking is not affected.';
+      console.warn('[triage] photo not usable:', err?.message || err);
+    }
   });
 }
 
@@ -2699,6 +2784,10 @@ async function renderPayment() {
         // Optional answers from step 1. Re-filtered here against the service
         // that is actually being booked; the server clamps them again.
         triage: askedAnswers(service, window.appState.triage),
+        // The photo of the bike, as base64, in this same body - there is no
+        // separate upload. The server writes it into the booking's own folder
+        // and drops it on any failure; see "The triage photo" in api/auth.js.
+        triage_photo: window.appState.triagePhoto || null,
         payment_intent_id: realPI,
         // The row this booking already has. The server updates it instead of
         // inserting, so the slot is never released between the hold and the
@@ -2725,6 +2814,9 @@ async function renderPayment() {
     // stays picked for "book again"), so without this the next booking would
     // carry them.
     window.appState.triage = {};
+    // Same for the photo, and worse: it would hang a 400 KB body off a booking
+    // nobody attached it to.
+    window.appState.triagePhoto = null;
     // The charge has a booking attached, so it must stop standing in for the
     // next one. Released here and not on leaving the screen: while the booking
     // does not exist yet, this is the only record that the client already paid.

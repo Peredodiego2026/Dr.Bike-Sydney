@@ -73,6 +73,7 @@ function boot(stored = {}, globals = {}) {
     'function setTriageAnswer(',
     'function renderTriage(',
     'function bindTriage(',
+    'function clearTriagePhoto(',
     'function showTriage(',
   ]) {
     vm.runInContext(sliceFn(head), ctx);
@@ -95,6 +96,7 @@ function boot(stored = {}, globals = {}) {
     state: ctx.window.appState,
     renderTriage: get('renderTriage'),
     bindTriage: get('bindTriage'),
+    clearTriagePhoto: get('clearTriagePhoto'),
     showTriage: get('showTriage'),
     applyServiceChange: get('applyServiceChange'),
     setTriageAnswer: get('setTriageAnswer'),
@@ -175,7 +177,11 @@ describe('renderTriage: what the customer sees under the card', () => {
       { name: 'Standard Service', category: 'Scheduled services' },
       { notes: hostile }
     );
-    expect(html).not.toContain('<img');
+    // `not.toContain('<img')` until the photo block arrived: the panel now has
+    // an <img> of its own (the preview), so the assertion is the hostile tag
+    // itself, not the tag name. The words "img" and "onerror" are still in
+    // there - as inert text, which is the whole point.
+    expect(html).not.toContain('<img src=x');
     expect(html).toContain('&quot;&gt;&lt;img');
   });
 
@@ -500,9 +506,21 @@ class FakeEl {
   }
   // A real event: it starts at this element and bubbles through every ancestor,
   // which is how one listener on the panel hears a tap on any chip inside it.
+  // What each listener returned comes back, so a test can await an async
+  // handler (the photo one compresses the file) instead of racing it.
   fire(type) {
     const event = { type, target: this };
-    for (let n = this; n; n = n.parent) for (const fn of n.listeners[type] || []) fn(event);
+    const results = [];
+    for (let n = this; n; n = n.parent)
+      for (const fn of n.listeners[type] || []) results.push(fn(event));
+    return results;
+  }
+  // What `input.click()` does to a file input in a browser: opens the picker.
+  // Counted rather than stubbed, because "the visible button opens the hidden
+  // input" is the only thing standing between the client and no photo at all.
+  click() {
+    this.clicks = (this.clicks || 0) + 1;
+    return this.fire('click');
   }
 }
 
@@ -554,7 +572,7 @@ function step1(services) {
 // `document` is given to the code on purpose: if anything in the triage reached
 // for Continue by id, it would find the real element, and the test would see
 // the write instead of a ReferenceError.
-function world(services) {
+function world(services, globals = {}) {
   const dom = step1(services);
   const app = boot(
     {},
@@ -563,6 +581,7 @@ function world(services) {
         getElementById: (id) => dom.screen.querySelector(`#${id}`),
         querySelector: (sel) => dom.screen.querySelector(sel),
       },
+      ...globals,
     }
   );
   return { ...app, ...dom };
@@ -570,8 +589,8 @@ function world(services) {
 
 // bindTriage on its own: the real markup, parsed, inserted under its card,
 // bound - no showTriage involved.
-function bound(svc = pads, answers = {}) {
-  const w = world([svc]);
+function bound(svc = pads, answers = {}, globals = {}) {
+  const w = world([svc], globals);
   w.state.service = svc;
   w.state.triage = answers;
   const card = w.card(svc);
@@ -961,6 +980,263 @@ describe('showTriage: unfolding the questions under a card', () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// The photo
+// ---------------------------------------------------------------------------
+// Optional like the rest of the triage, and the one thing a client can hand
+// over that words cannot: which part, which standard, which era of the same
+// model. The rule above everything else here (the owner's, 22-oct): a photo may
+// never turn over a booking or a charge. If anything on its way fails - the
+// browser, the compression, the size - the photo is what is lost, and nothing
+// else moves.
+//
+// compressImageToBase64 needs an <img> and a <canvas>, which this fake DOM does
+// not have, so it is the one double in this section - the browser, as
+// everywhere else in this file. What is under test is what the triage does with
+// what it returns.
+const DATA_URL = `data:image/jpeg;base64,${'A'.repeat(64)}`;
+const photoFile = { name: 'bike.jpg', type: 'image/jpeg' };
+
+function compressor() {
+  const box = { calls: [], next: () => DATA_URL };
+  box.fn = (file, maxPx, quality) => {
+    box.calls.push({ maxPx, quality });
+    return Promise.resolve().then(() => box.next(file));
+  };
+  return box;
+}
+
+function withPhoto(svc = pads, answers = {}) {
+  const box = compressor();
+  const w = bound(svc, answers, { compressImageToBase64: box.fn });
+  const pick = (sel) => w.panel.querySelector(sel);
+  return {
+    ...w,
+    compressor: box,
+    file: () => pick('.triage__photo-file'),
+    shot: () => pick('.triage__photo-shot'),
+    img: () => pick('.triage__photo-img'),
+    msg: () => pick('.triage__photo-msg'),
+    takeBtn: () => pick('.triage__photo-btn'),
+    dropBtn: () => pick('.triage__photo-drop'),
+    // The customer picking a file: the real change event on the real input,
+    // awaited, because the handler compresses before it records anything.
+    choose: async (file = photoFile) => {
+      const input = pick('.triage__photo-file');
+      input.files = [file];
+      await Promise.all(input.fire('change'));
+    },
+  };
+}
+const shown = (w) => w.shot().classList.contains('is-on');
+
+describe('the photo: taking it', () => {
+  it('the panel ends with a way to take one, and says what it is FOR', () => {
+    const html = boot().renderTriage(pads);
+    expect(html).toContain('type="file"');
+    expect(html).toContain('accept="image/*"');
+    // The camera, not the gallery, on a phone.
+    expect(html).toContain('capture="environment"');
+    // The selling point of the business, not an attachment: the copy has to say
+    // the mechanic brings the right part.
+    expect(html).toMatch(/part/i);
+    // After the questions, at the end of the panel.
+    expect(html.indexOf('triage__photo')).toBeGreaterThan(html.lastIndexOf('triage__chips'));
+  });
+
+  it('a service that asks nothing shows no photo control either', () => {
+    // renderTriage returns '' for Emergency Service, so this needs no special
+    // case anywhere - it is worth a test precisely because it is free.
+    expect(boot().renderTriage({ name: 'Emergency Service', category: 'Scheduled services' })).toBe(
+      ''
+    );
+  });
+
+  it('the file input is hidden and the visible button is what opens it', () => {
+    const w = withPhoto();
+    expect(w.file(), 'the input is in the panel').toBeTruthy();
+    expect(w.file().clicks ?? 0).toBe(0);
+    tap(w.takeBtn());
+    expect(w.file().clicks, 'the button opened the picker').toBe(1);
+  });
+
+  it('a chosen photo lands in appState, compressed for identifying a part', async () => {
+    const w = withPhoto();
+    await w.choose();
+    expect(w.state.triagePhoto).toBe(DATA_URL);
+    // 1600/0.8, not the 1920/0.82 default: this is to recognise a part, not a
+    // gallery.
+    expect(w.compressor.calls).toEqual([{ maxPx: 1600, quality: 0.8 }]);
+  });
+
+  it('the preview shows it, and Remove takes it out of everything', async () => {
+    const w = withPhoto();
+    expect(shown(w), 'nothing shown before there is a photo').toBe(false);
+    await w.choose();
+    expect(shown(w)).toBe(true);
+    expect(w.img().getAttribute('src')).toBe(DATA_URL);
+
+    tap(w.dropBtn());
+    expect(w.state.triagePhoto).toBeNull();
+    expect(shown(w)).toBe(false);
+    expect(w.img().hasAttribute('src'), 'the preview is empty again').toBe(false);
+    expect(w.file().value, 'and the same file can be chosen again').toBe('');
+  });
+
+  it('choosing another photo replaces the first one', async () => {
+    const w = withPhoto();
+    await w.choose();
+    const second = `data:image/jpeg;base64,${'B'.repeat(64)}`;
+    w.compressor.next = () => second;
+    await w.choose({ name: 'other.jpg' });
+    expect(w.state.triagePhoto).toBe(second);
+    expect(w.img().getAttribute('src')).toBe(second);
+  });
+
+  it('a re-drawn panel still shows the photo that is still attached', async () => {
+    // Coming back from step 2, or switching service inside the category. The
+    // photo is in appState, so a preview drawn from the input alone would look
+    // like it had been lost and the customer would take another.
+    const w = withPhoto();
+    await w.choose();
+    w.showTriage(w.card(pads), pads);
+    const panel = w.panels()[0];
+    expect(panel.querySelector('.triage__photo-img').getAttribute('src')).toBe(DATA_URL);
+    expect(panel.querySelector('.triage__photo-shot').classList.contains('is-on')).toBe(true);
+    // And it is live: Remove on the new panel works.
+    tap(panel.querySelector('.triage__photo-drop'));
+    expect(w.state.triagePhoto).toBeNull();
+  });
+});
+
+describe('the photo: when it cannot be sent', () => {
+  it('one too big to send is dropped before it travels, and said so', async () => {
+    // Vercel refuses an over-sized body BEFORE the handler runs, so a huge
+    // photo cannot be allowed to leave: it would take the booking with it.
+    const w = withPhoto();
+    w.compressor.next = () => `data:image/jpeg;base64,${'A'.repeat(3_100_000)}`;
+    await w.choose();
+    expect(w.state.triagePhoto ?? null).toBeNull();
+    expect(w.msg().textContent, 'the customer is told').toMatch(/too big/i);
+    expect(shown(w)).toBe(false);
+  });
+
+  it('a big one that still fits does travel', async () => {
+    const w = withPhoto();
+    const big = `data:image/jpeg;base64,${'A'.repeat(2_000_000)}`;
+    w.compressor.next = () => big;
+    await w.choose();
+    expect(w.state.triagePhoto).toBe(big);
+  });
+
+  it('one the browser cannot read is reported, and the answers stay', async () => {
+    const w = withPhoto();
+    tap(chipFor(w.panel, 'brand', 'Shimano'));
+    w.compressor.next = () => {
+      throw new Error('canvas said no');
+    };
+    await w.choose({ name: 'from-an-iphone.HEIC' });
+    expect(w.state.triagePhoto ?? null).toBeNull();
+    expect(w.msg().textContent).toMatch(/could not read/i);
+    expect(w.state.triage, 'the triage is still usable').toEqual({ brand: 'Shimano' });
+  });
+
+  it('a photo that works clears the complaint about the one before it', async () => {
+    const w = withPhoto();
+    w.compressor.next = () => {
+      throw new Error('canvas said no');
+    };
+    await w.choose();
+    expect(w.msg().textContent).not.toBe('');
+    w.compressor.next = () => DATA_URL;
+    await w.choose();
+    expect(w.msg().textContent).toBe('');
+    expect(w.state.triagePhoto).toBe(DATA_URL);
+  });
+
+  it('nothing in the photo path touches Continue: not a photo, not a failure', async () => {
+    const w = withPhoto();
+    expect(w.cont.disabled).toBe(false);
+    await w.choose();
+    tap(w.dropBtn());
+    w.compressor.next = () => {
+      throw new Error('canvas said no');
+    };
+    await w.choose();
+    w.compressor.next = () => `data:image/jpeg;base64,${'A'.repeat(3_100_000)}`;
+    await w.choose();
+    expect(w.cont.disabled, 'still enabled after every failure').toBe(false);
+    expect(w.cont.writes, 'Continue was never written to').toEqual([]);
+  });
+
+  it('the code that handles the photo never names Continue', () => {
+    for (const head of ['function bindTriage(', 'function clearTriagePhoto(']) {
+      const fn = sliceFn(head);
+      expect(fn, head).not.toContain('s1-continue');
+      expect(fn, head).not.toContain('disabled');
+    }
+  });
+});
+
+describe('the photo and the draft', () => {
+  it('the draft in localStorage NEVER carries the photo', async () => {
+    // A 400 KB data URL eats the 5 MB quota and breaks the whole draft, which
+    // is what holds a half-built booking together. The accepted consequence:
+    // reloading the page loses the photo and brings everything else back.
+    const w = withPhoto();
+    await w.choose();
+    expect(w.store.has('drbike-booking-draft'), 'a photo writes no draft at all').toBe(false);
+
+    tap(chipFor(w.panel, 'brand', 'Shimano')); // this is what writes the draft
+    const raw = w.store.get('drbike-booking-draft');
+    expect(JSON.parse(raw).triage).toEqual({ brand: 'Shimano' });
+    expect('triagePhoto' in JSON.parse(raw)).toBe(false);
+    expect(raw).not.toContain('base64');
+    expect(raw.length, 'nothing photo-sized is in there').toBeLessThan(2000);
+  });
+
+  it('a reload brings the rest of the draft back, without the photo', async () => {
+    const w = withPhoto();
+    await w.choose();
+    typeInto(fieldFor(w.panel, 'brake_model'), 'SLX M7100');
+    const reloaded = boot(Object.fromEntries(w.store));
+    expect(reloaded.state.triage).toEqual({ brake_model: 'SLX M7100' });
+    expect(reloaded.state.triagePhoto ?? null).toBeNull();
+  });
+
+  it('the photo is not one of the fields saveBookingDraft persists', () => {
+    // It destructures by name, so a new appState field is not persisted by
+    // accident - and this is the test that keeps it that way.
+    expect(sliceFn('function saveBookingDraft(')).not.toContain('triagePhoto');
+  });
+
+  it('appState starts with no photo', () => {
+    expect(boot().state.triagePhoto ?? null).toBeNull();
+  });
+});
+
+describe('the photo survives a change of service', () => {
+  it('inside the category and outside it: a photo is of the bike, not of a question', async () => {
+    // applyServiceChange drops the answers when the category changes, because
+    // an answer belongs to its question. A photo does not.
+    const w = withPhoto();
+    await w.choose();
+    tap(chipFor(w.panel, 'brand', 'Shimano'));
+
+    w.applyServiceChange(w.state, bleed); // same category
+    expect(w.state.triage).toEqual({ brand: 'Shimano' });
+    expect(w.state.triagePhoto).toBe(DATA_URL);
+
+    w.applyServiceChange(w.state, chain); // another category
+    expect(w.state.triage, 'the answers go').toEqual({});
+    expect(w.state.triagePhoto, 'the photo stays').toBe(DATA_URL);
+  });
+
+  it('applyServiceChange does not mention the photo at all', () => {
+    expect(sliceFn('function applyServiceChange(')).not.toContain('triagePhoto');
+  });
+});
+
 // The two callers that tap a card on the customer's behalf. Before the triage a
 // tap navigated away, so scrolling the card "into view" afterwards was
 // harmless. Now the tap unfolds a panel and the card handler scrolls it to the
@@ -1042,11 +1318,28 @@ describe('wired into the wizard', () => {
     );
   });
 
+  it('the request carries the photo too, or nothing was built', () => {
+    const at = src.indexOf('async function finalizeBooking(');
+    const call = src.indexOf("role: 'create-booking'", at);
+    expect(call, 'finalizeBooking no longer creates the booking').toBeGreaterThan(at);
+    expect(src.slice(call, call + 1400)).toMatch(
+      /triage_photo:\s*window\.appState\.triagePhoto\s*\|\|\s*null/
+    );
+  });
+
   it('a finished booking does not leave its answers for the next one', () => {
     const at = src.indexOf('async function finalizeBooking(');
     const afterCall = src.indexOf('clearBookingDraft();', at);
     expect(afterCall, 'finalizeBooking no longer clears the draft').toBeGreaterThan(at);
     expect(src.slice(afterCall, afterCall + 300)).toMatch(/window\.appState\.triage\s*=\s*\{\}/);
+  });
+
+  it('...nor its photo', () => {
+    const at = src.indexOf('async function finalizeBooking(');
+    const afterCall = src.indexOf('clearBookingDraft();', at);
+    expect(src.slice(afterCall, afterCall + 500)).toMatch(
+      /window\.appState\.triagePhoto\s*=\s*null/
+    );
   });
 
   it('every way of choosing a service goes through applyServiceChange', () => {
@@ -1098,6 +1391,23 @@ describe('wired into the wizard', () => {
       expect(zh[text], `zh: ${text}`).toBeTruthy();
     }
   });
+
+  it('the photo copy exists in Spanish and Chinese, including the failures', () => {
+    // The two messages are written with textContent, which the per-screen
+    // MutationObserver re-translates - so they need their entries like any
+    // other string, and scripts/i18n-check.mjs reads that shape.
+    for (const text of [
+      'Add a photo of your bike',
+      'Take a photo',
+      'Remove photo',
+      'That photo is too big to send. Your booking is not affected.',
+      'We could not read that photo. Your booking is not affected.',
+    ]) {
+      expect(src, `"${text}" is not in js/app.js`).toContain(text);
+      expect(es[text], `es: ${text}`).toBeTruthy();
+      expect(zh[text], `zh: ${text}`).toBeTruthy();
+    }
+  });
 });
 
 describe('the stylesheet', () => {
@@ -1130,6 +1440,20 @@ describe('the stylesheet', () => {
     const body = ruleOf('.triage__input');
     expect(body).toMatch(/min-height:\s*44px/);
     expect(body).toMatch(/font-size:\s*16px/);
+  });
+
+  it('both photo buttons are 44px touch targets by their own rules', () => {
+    expect(ruleOf('.triage__photo-btn')).toMatch(/min-height:\s*44px/);
+    expect(ruleOf('.triage__photo-drop')).toMatch(/min-height:\s*44px/);
+  });
+
+  it('the preview takes no room until there is a photo, and the input is hidden', () => {
+    expect(ruleOf('.triage__photo-shot')).toMatch(/display:\s*none/);
+    expect(ruleOf('.triage__photo-shot.is-on')).toMatch(/display:\s*flex/);
+    // A display:none input cannot be focused, so the keyboard lands on the
+    // button instead of on a field nobody can see.
+    expect(ruleOf('.triage__photo-file')).toMatch(/display:\s*none/);
+    expect(ruleOf('.triage__photo-msg:empty')).toMatch(/display:\s*none/);
   });
 
   it('ruleOf returns the rule asked for, not its neighbour', () => {
