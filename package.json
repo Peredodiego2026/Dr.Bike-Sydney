@@ -44,6 +44,7 @@
     "icons:check": "node scripts/icons-check.mjs",
     "color:check": "node scripts/color-check.mjs",
     "services:check": "node scripts/services-sync-check.mjs",
+    "prices:sync": "node scripts/prices-sync.mjs",
     "rls:check": "node scripts/rls-check.mjs",
     "a11y:check": "node scripts/a11y-check.mjs",
     "consent:gate": "node scripts/consent-gate.mjs",

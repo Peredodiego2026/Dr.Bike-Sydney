@@ -226,7 +226,7 @@ const COPY = {
       ],
       [
         'How much does a bike service cost in {name}?',
-        'Our Tune-Up starts at $119 and includes the visit & diagnosis fee. Full pricing is listed above. No hidden charges.',
+        'Our Tune-Up starts at {tuneUpPrice} and includes the visit & diagnosis fee. Full pricing is listed above. No hidden charges.',
       ],
     ],
     ctaH2: 'Ready to book in {name}?',
@@ -300,7 +300,7 @@ const COPY = {
       ],
       [
         '¿Cuánto cuesta un servicio de bicicleta en {name}?',
-        'El Ajuste arranca en $119 e incluye la tarifa de visita a domicilio. Los precios completos están más arriba. Sin cargos ocultos.',
+        'El Ajuste arranca en {tuneUpPrice} e incluye la tarifa de visita a domicilio. Los precios completos están más arriba. Sin cargos ocultos.',
       ],
     ],
     ctaH2: '¿Listo para reservar en {name}?',
@@ -368,7 +368,7 @@ const COPY = {
       ],
       [
         '在 {name} 做一次保养要多少钱？',
-        '基础保养 $119 起，已包含上门服务费。完整价格见上方，没有隐藏费用。',
+        '基础保养 {tuneUpPrice} 起，已包含上门服务费。完整价格见上方，没有隐藏费用。',
       ],
     ],
     ctaH2: '准备在 {name} 预订了吗？',
@@ -384,8 +384,14 @@ const COPY = {
   },
 };
 
+// {tuneUpPrice} is PRICES[0] - live from Supabase, like the cards - so the FAQ
+// cannot keep quoting a price the table no longer has. It was typed text until
+// the +$10 of 24-oct-2026 had to change it by hand in all three languages.
 const fill = (text, sub) =>
-  String(text).replaceAll('{name}', sub.name).replaceAll('{areas}', sub.areas);
+  String(text)
+    .replaceAll('{name}', sub.name)
+    .replaceAll('{areas}', sub.areas)
+    .replaceAll('{tuneUpPrice}', PRICES[0]);
 
 // [textColor, bg, stroke, borderColor] - stroke feeds the <svg stroke="">, a raw
 // SVG attribute that cannot resolve a CSS var(), so it always stays hex. The
@@ -482,7 +488,9 @@ function page(sub, lang) {
     },
     telephone: '+61433963250',
     url,
-    priceRange: '$119-$379',
+    // Cheapest to dearest of the four services the page advertises - the same
+    // definition scripts/services-sync-check.mjs holds it to.
+    priceRange: `$${Math.min(...PRICE_NUMBERS)}-$${Math.max(...PRICE_NUMBERS)}`,
     openingHours: 'Mo-Su 08:00-17:00',
     areaServed: { '@type': 'City', name: `${sub.name}, Sydney` },
   });
@@ -839,6 +847,7 @@ const onDisk = (file) =>
 // ── Write ───────────────────────────────────────────────────────────────────
 // Resolved once, so all 15 pages and every Service schema quote the same number.
 const PRICES = CHECK ? committedPrices() : await livePrices();
+const PRICE_NUMBERS = PRICES.map((p) => Number(p.replace(/^\$/, '')));
 let written = 0;
 let changed = 0;
 const drifted = [];
@@ -852,14 +861,15 @@ for (const [code, meta] of Object.entries(LANGS)) {
   for (const sub of SUBURBS) {
     const file = path.join(dir, `${sub.slug}.html`);
     const html = page(sub, code);
-    if (onDisk(file) !== html) {
-      lastmod.set(`${SITE}${meta.prefix}/${sub.slug}`, TODAY);
-      changed++;
-      drifted.push(path.relative(ROOT, file).replaceAll('\\', '/'));
-    }
-    if (CHECK) continue;
-    fs.writeFileSync(file, html);
     written++;
+    if (onDisk(file) === html) continue;
+    lastmod.set(`${SITE}${meta.prefix}/${sub.slug}`, TODAY);
+    changed++;
+    drifted.push(path.relative(ROOT, file).replaceAll('\\', '/'));
+    // Only pages whose content changed are rewritten: rewriting an unchanged
+    // CRLF checkout with LF makes git list it as modified when it is not
+    // (npm run prices:sync runs this after every price change).
+    if (!CHECK) fs.writeFileSync(file, html);
   }
   if (!CHECK) console.log(`${code}: ${SUBURBS.length} pages -> ${path.relative(ROOT, dir) || '.'}/`);
 }
@@ -883,9 +893,9 @@ if (CHECK) {
 }
 console.log(`content changed: ${changed} of ${written} pages`);
 
-fs.writeFileSync(SITEMAP_PATH, sitemap());
+if (onDisk(SITEMAP_PATH) !== sitemap()) fs.writeFileSync(SITEMAP_PATH, sitemap());
 console.log(
   `sitemap.xml: ${STATIC_PAGES.length + (SUBURBS.length + BLOG_SLUGS.length + TRANSLATED_STATIC_PAGES.length) * 3} urls ` +
     `(${SUBURBS.length} suburbs + ${BLOG_SLUGS.length} blog posts + ${TRANSLATED_STATIC_PAGES.length} translated pages, x 3 languages)`
 );
-console.log(`done: ${written} pages written`);
+console.log(`done: ${changed} of ${written} pages rewritten`);
