@@ -323,7 +323,7 @@ COVERAGE AREAS:
 - Van 2: North Shore (Chatswood, Mosman, Lane Cove), Manly, Northern Beaches, Neutral Bay
 
 BOOKING: drbikesydney.com.au — pick service, date, time, address. Same-day often available. Confirmed within 30 min.
-PAYMENT: Card via Stripe after job completion. Parts at cost price — no markup ever.
+PAYMENT: Card via Stripe after job completion. PARTS are charged separately on top of the service: the mechanic quotes them and the customer approves before anything is fitted (Terms, section 3). Never say parts are sold at cost or with no markup - that is not true.
 GUARANTEE: 30-day satisfaction guarantee. We come back and fix it free if anything's not right.
 REFERRALS: Each client gets a referral code — both you and your friend get $15 off when they use it.
 
