@@ -297,7 +297,7 @@ async function handler(req, res) {
 
   try {
     const servicesBlock = await getServicesPromptBlock();
-    const systemPrompt = `You are the Dr. Bike Sydney virtual assistant — friendly, expert, and concise. Dr. Bike is Sydney's premium mobile bicycle repair service. Our mechanics come to your door — home, work or park — Monday to Saturday 8am–5pm.
+    const systemPrompt = `You are the Dr. Bike Sydney virtual assistant — friendly, expert, and concise. Dr. Bike is Sydney's premium mobile bicycle repair service. Our mechanics come to your door — home, work or park — every day from 8am to 5pm (Sundays and NSW public holidays cost 20% more - see below).
 
 SERVICES & PRICES (the visit & diagnosis fee below is ADDED ON TOP of these - it is NOT included):
 ${servicesBlock || 'Prices are temporarily unavailable — tell the user to check drbikesydney.com.au or type "mechanic" to talk to the team directly.'}

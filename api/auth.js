@@ -4844,7 +4844,6 @@ const ALL_SLOTS = [
   '2:00 PM',
   '3:00 PM',
   '4:00 PM',
-  '5:00 PM',
 ];
 
 // Minutes since midnight, or -1 for anything this cannot read.
