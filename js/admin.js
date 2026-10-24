@@ -3389,6 +3389,37 @@ const triageLabelsReady = import('./triage-questions.js')
     console.error('[admin] could not load the triage questions, showing ids:', e.message)
   );
 
+// The photo the customer took while booking is stored as a REFERENCE, not a
+// URL (api/_job-photos.js, triagePhotoRef), so the detail asks the server to
+// sign it: the same endpoint and the same checks as the chat photos
+// (signAdminChatPhotos below), which already grant an admin every booking.
+// ONE reference, so no batching - this is not a copy of that loop of twenty.
+//
+// Null when the server refuses or signs nothing; the caller turns that into
+// words. A network failure is deliberately NOT caught here: openBookingDetail
+// owns the promise that the modal opens either way, and a second catch would
+// only hide the failure from the one place that has to survive it.
+async function signTriagePhoto(bookingId, ref) {
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+  const r = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      role: 'photo-sign',
+      booking_id: bookingId,
+      refs: [ref],
+      access_token: session?.access_token,
+    }),
+  });
+  if (!r.ok) {
+    console.warn('[admin] could not sign the triage photo: HTTP ' + r.status);
+    return null;
+  }
+  return (await r.json())?.urls?.[0] || null;
+}
+
 // Calendar chips only ever loaded a date-range slice of bookings (this
 // month's, this week's), so a booking clicked from the calendar is not
 // reliably in `allBookings` (the Bookings-page cache). Look there first -
@@ -3409,7 +3440,24 @@ async function openBookingDetail(id) {
     b = data;
   }
   await triageLabelsReady;
-  renderBookingDetail(b);
+  // The signed URL expires in an hour, so the photo is signed here, on every
+  // open, and cached nowhere. Signing is the only step in this function that
+  // can fail, and the detail is how Diego confirms, cancels and reassigns a
+  // booking: it opens either way, with the answers and without the photo.
+  // `photo` stays null when there is no photo at all - which draws nothing -
+  // and becomes { url: null } when there is one that could not be signed,
+  // which is words. A photo never takes the modal down with it.
+  let photo = null;
+  if (b.triage_photo_ref) {
+    let url = null;
+    try {
+      url = await signTriagePhoto(b.id, b.triage_photo_ref);
+    } catch (e) {
+      console.error('[admin] could not sign the triage photo:', e.message);
+    }
+    photo = { url };
+  }
+  renderBookingDetail(b, photo);
   document.getElementById('booking-detail-modal').style.display = 'flex';
 }
 
@@ -3433,7 +3481,7 @@ function closeBookingDetail() {
 // the app): escaping is the job of whoever renders. Every answer and every
 // label goes through esc(), and an id the catalogue does not know is its own
 // label, so that is escaped too.
-function renderTriageBlock(triage) {
+function renderTriageBlock(triage, photo) {
   const answers = new Map();
   if (triage && typeof triage === 'object' && !Array.isArray(triage)) {
     for (const [id, value] of Object.entries(triage)) {
@@ -3441,7 +3489,31 @@ function renderTriageBlock(triage) {
       if (typeof text === 'string' && text.trim() !== '') answers.set(id, text.trim());
     }
   }
+  // `photo` is already signed (openBookingDetail): null when the booking has
+  // no photo, { url } when it has one, with a null url when it could not be
+  // signed. Those are three different things on screen, not two. Nothing is
+  // drawn for a photo that does not exist - no empty frame, no "no photo", no
+  // gap - and one that failed to sign is words, like signAdminChatPhotos, and
+  // never an <img> with a src that 404s. The URL comes from the server, so it
+  // goes through esc() like any other datum.
+  const photoHtml = !photo
+    ? ''
+    : photo.url
+      ? `<figure class="triage-photo">
+          <a class="triage-photo-link" href="${esc(photo.url)}" target="_blank" rel="noopener"><img class="triage-photo-img" src="${esc(photo.url)}" alt="The photo the customer sent"></a>
+          <figcaption class="triage-photo-cap">Customer photo - click to open it full size</figcaption>
+        </figure>`
+      : '<div class="triage-photo-missing">Photo unavailable</div>';
   if (!answers.size) {
+    // The questions are all optional, so a customer can answer none of them
+    // and send the photo - which is when the photo is worth most. That is not
+    // the empty state: the photo is the whole reason it was asked for.
+    if (photoHtml)
+      return `<section class="triage-block" aria-label="Triage">
+        <div class="triage-head">Triage</div>
+        <div class="triage-skipped">The customer skipped the questions and sent a photo instead.</div>
+        ${photoHtml}
+      </section>`;
     return `<section class="triage-block triage-empty" aria-label="Triage">
         <div class="triage-head">Triage</div>
         <div class="triage-empty-title">No triage</div>
@@ -3458,10 +3530,11 @@ function renderTriageBlock(triage) {
           )
           .join('')}
       </dl>
+      ${photoHtml}
     </section>`;
 }
 
-function renderBookingDetail(b) {
+function renderBookingDetail(b, photo) {
   const name = b.client_name || b.profiles?.full_name || b.client_email?.split('@')[0] || 'Client';
   const st = b.status || 'pending';
   const isPending = st === 'pending';
@@ -3490,7 +3563,7 @@ function renderBookingDetail(b) {
 
   document.getElementById('bkd-body').innerHTML = `
     ${row('Service', esc(b.service_name || '—'))}
-    ${renderTriageBlock(b.triage)}
+    ${renderTriageBlock(b.triage, photo)}
     ${row('Date', date)}
     ${row('Time', esc(b.scheduled_time || '—'))}
     ${row('Address', esc(b.address || '—'))}

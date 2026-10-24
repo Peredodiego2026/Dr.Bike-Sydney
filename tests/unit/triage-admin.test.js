@@ -34,6 +34,13 @@ const read = (p) => fs.readFileSync(new URL(p, root), 'utf8').split('\r\n').join
 const admin = read('js/admin.js');
 const adminCss = read('css/admin.css');
 
+// The photo the customer took while booking. The row stores a REFERENCE, never
+// a URL, and the detail signs it for an hour every time it opens
+// (api/_job-photos.js, api/auth.js handlePhotoSign).
+const PHOTO_REF = 'job-photos-private/jobs/b1/triage_1700000000.jpg';
+const PHOTO_URL =
+  'https://db.supabase.co/storage/v1/object/sign/job-photos-private/jobs/b1/triage_1700000000.jpg?token=jwt';
+
 // A top-level function: from its head to the closing brace at column 0.
 function sliceFn(head) {
   const start = admin.indexOf(head);
@@ -55,7 +62,9 @@ function loadRenderer(extra = {}) {
   vm.runInContext(sliceFn('function esc(') + '\n' + sliceFn('function renderTriageBlock('), ctx);
   return ctx;
 }
-const renderTriageBlock = (triage) => loadRenderer().renderTriageBlock(triage);
+// `photo` is what openBookingDetail hands in: null when the booking has no
+// photo at all, { url } when it has one - with a null url when signing failed.
+const renderTriageBlock = (triage, photo) => loadRenderer().renderTriageBlock(triage, photo);
 
 // The module-load block as it ships: the two identity fallbacks and the
 // import() that replaces them, from `let triageLabelFor` to the blank line
@@ -72,14 +81,23 @@ function moduleLoadBlock() {
   return block;
 }
 
-// Runs `block` (the module load) and then the four real functions the detail
+// Runs `block` (the module load) and then the five real functions the detail
 // needs, all in one context, and opens the detail of a booking whose answers
-// are `triage`. Returns the page it wrote into and what reached console.error.
-async function openDetailWith(block, triage) {
+// are `triage`. Returns the page it wrote into and what was logged.
+//
+// `extra.booking` adds fields to the booking (triage_photo_ref); anything else
+// in `extra` overrides a sandbox global - `fetch` and `sb`, which is how the
+// signing round trip is driven without a network.
+async function openDetailWith(block, triage, extra = {}) {
+  const { booking = {}, ...sandboxExtra } = extra;
   const els = {};
   const errors = [];
+  const warnings = [];
   const sandbox = {
-    console: { error: (...a) => errors.push(a.join(' ')) },
+    console: {
+      error: (...a) => errors.push(a.join(' ')),
+      warn: (...a) => warnings.push(a.join(' ')),
+    },
     document: {
       getElementById: (id) => (els[id] ||= { innerHTML: '', textContent: '', style: {} }),
     },
@@ -93,12 +111,16 @@ async function openDetailWith(block, triage) {
         scheduled_time: '09:30',
         van_number: 1,
         triage,
+        ...booking,
       },
     ],
     BKD_ST_CLASS: {},
     anBookingRevenue: () => 0,
     vanColor: () => 'red',
     showToast: () => {},
+    sb: { auth: { getSession: async () => ({ data: { session: { access_token: 'tok' } } }) } },
+    fetch: async () => ({ ok: true, json: async () => ({ urls: [PHOTO_URL] }) }),
+    ...sandboxExtra,
   };
   vm.createContext(sandbox);
   // `let`/`const` at the top of a vm script land in the context's lexical
@@ -110,13 +132,23 @@ async function openDetailWith(block, triage) {
       sliceFn('function esc('),
       sliceFn('function renderTriageBlock('),
       sliceFn('function renderBookingDetail('),
+      sliceFn('async function signTriagePhoto('),
       sliceFn('async function openBookingDetail('),
     ].join('\n'),
     sandbox
   );
   await vm.runInContext("openBookingDetail('b1')", sandbox);
-  return { els, errors };
+  return { els, errors, warnings };
 }
+
+// The module load with the catalogue already in hand, so a test about the
+// photo is not also a test about a failed import: the real import() rejects
+// inside a vm without --experimental-vm-modules, which is its own test above.
+const labelsLoaded = () =>
+  moduleLoadBlock().replace(
+    "import('./triage-questions.js')",
+    'Promise.resolve({ labelFor, sortAnswerIds })'
+  );
 
 describe('renderTriageBlock - what the customer answered', () => {
   it('shows each answer under its question, not under its id', () => {
@@ -215,7 +247,9 @@ describe('renderTriageBlock - a booking with no triage', () => {
   }
 
   it('renders the same empty state for all of them, and it is a block of its own', () => {
-    const [first, ...rest] = Object.values(empties).map(renderTriageBlock);
+    // Called one by one, not `.map(renderTriageBlock)`: map would hand the
+    // index in as the photo and every one after the first would differ.
+    const [first, ...rest] = Object.values(empties).map((v) => renderTriageBlock(v));
     for (const html of rest) expect(html).toBe(first);
     // Not an empty string: a heading and a line of its own is what makes the
     // gap read as "nothing to report" rather than "something failed to load".
@@ -325,6 +359,217 @@ describe('the booking detail shows the triage', () => {
     const html = detail({ ...base, triage: { notes: '<img src=x onerror=alert(1)>' } });
     expect(html).not.toContain('<img');
   });
+});
+
+describe('renderTriageBlock - the photo the customer sent', () => {
+  // The whole reason Diego asked for the photo: "me tienen que llegar a algun
+  // lugar en orden con la orden del cliente". Saved and invisible is nothing.
+  it('shows the photo next to the answers, as a link that opens it', () => {
+    const html = renderTriageBlock({ brand: 'Shimano' }, { url: PHOTO_URL });
+    expect(html).toContain(labelFor('brand'));
+    expect(html).toContain('Shimano');
+    expect(html).toContain('<img');
+    expect(html).toContain(PHOTO_URL);
+    expect(html).toMatch(/target="_blank"/);
+    expect(html).toMatch(/rel="noopener"/);
+    // No inline handlers anywhere in this project.
+    expect(html).not.toMatch(/on[a-z]+\s*=\s*"/);
+  });
+
+  it('shows the photo and says the questions were skipped, instead of "No triage"', () => {
+    // The case the code got wrong: the triage is all optional, so a customer
+    // can answer nothing and send the photo - which is exactly when the photo
+    // is worth most. That booking used to read "No triage" and the photo was
+    // invisible.
+    for (const triage of [null, undefined, {}, { notes: '  ' }]) {
+      const html = renderTriageBlock(triage, { url: PHOTO_URL });
+      expect(html, JSON.stringify(triage)).toContain('<img');
+      expect(html, JSON.stringify(triage)).toContain(PHOTO_URL);
+      expect(html, JSON.stringify(triage)).not.toContain('No triage');
+      expect(html, JSON.stringify(triage)).not.toContain('triage-empty');
+      expect(html.toLowerCase(), JSON.stringify(triage)).toContain('skipped');
+    }
+  });
+
+  it('announces nothing at all when there is no photo', () => {
+    // No empty frame, no "no photo", no gap. What does not exist is not
+    // announced - so not even the word, which is what a stray class or a
+    // placeholder would leak.
+    for (const photo of [null, undefined]) {
+      const answered = renderTriageBlock({ brand: 'Shimano' }, photo);
+      expect(answered).toContain('Shimano');
+      expect(answered).not.toContain('<img');
+      expect(answered.toLowerCase()).not.toContain('photo');
+
+      const empty = renderTriageBlock({}, photo);
+      expect(empty).toContain('No triage');
+      expect(empty).not.toContain('<img');
+      expect(empty.toLowerCase()).not.toContain('photo');
+    }
+  });
+
+  it('is words and never a broken image when the signing came back null', () => {
+    // Bucket deleted, network down, a reference that belongs to another
+    // booking: the server answers null. signAdminChatPhotos already decided
+    // this ("Photo unavailable") and this follows it.
+    const html = renderTriageBlock({ brand: 'Shimano' }, { url: null });
+    expect(html).toContain('Photo unavailable');
+    expect(html).toContain('Shimano');
+    expect(html).not.toContain('<img');
+    expect(html).not.toMatch(/\bsrc\s*=/);
+    expect(html).not.toMatch(/\bhref\s*=/);
+  });
+
+  it('is words too when there are no answers either', () => {
+    const html = renderTriageBlock({}, { url: null });
+    expect(html).toContain('Photo unavailable');
+    expect(html).not.toContain('<img');
+    expect(html).not.toContain('No triage');
+    expect(html).not.toMatch(/undefined|null|NaN|\[object/);
+  });
+
+  it('escapes the signed URL: it is data from the server, not markup', () => {
+    const html = renderTriageBlock(
+      { brand: 'Shimano' },
+      { url: `https://x.co/p.jpg?a=1&b=2"><script>alert('x')</script>` }
+    );
+    expect(html).not.toContain('<script');
+    // The quote that would have closed href="..." and opened an attribute of
+    // its own. ('"><' on its own is in the markup: `rel="noopener"><img`.)
+    expect(html).not.toContain('b=2"');
+    expect(html).toContain('&amp;b=2');
+    expect(html).toContain('&quot;&gt;&lt;script&gt;');
+  });
+});
+
+describe('the booking detail signs the photo when it opens', () => {
+  it('asks /api/auth for the one reference, with the admin session', async () => {
+    const calls = [];
+    const { els, errors, warnings } = await openDetailWith(
+      labelsLoaded(),
+      { brand: 'Shimano' },
+      {
+        labelFor,
+        sortAnswerIds,
+        booking: { triage_photo_ref: PHOTO_REF },
+        fetch: async (url, init) => {
+          calls.push({ url, body: JSON.parse(init.body) });
+          return { ok: true, json: async () => ({ urls: [PHOTO_URL] }) };
+        },
+      }
+    );
+
+    // One reference, so one call and no batching: not a copy of the chat's
+    // loop of twenty.
+    expect(calls.length).toBe(1);
+    expect(calls[0].url).toBe('/api/auth');
+    expect(calls[0].body).toEqual({
+      role: 'photo-sign',
+      booking_id: 'b1',
+      refs: [PHOTO_REF],
+      access_token: 'tok',
+    });
+
+    const html = els['bkd-body'].innerHTML;
+    expect(html).toContain(PHOTO_URL);
+    expect(html).toContain(labelFor('brand'));
+    expect(html).toContain('Shimano');
+    expect(els['booking-detail-modal'].style.display).toBe('flex');
+    expect(errors).toEqual([]);
+    expect(warnings).toEqual([]);
+  });
+
+  it('shows the photo of a booking whose customer answered nothing', async () => {
+    const { els } = await openDetailWith(
+      labelsLoaded(),
+      {},
+      { labelFor, sortAnswerIds, booking: { triage_photo_ref: PHOTO_REF } }
+    );
+    const html = els['bkd-body'].innerHTML;
+    expect(html).toContain(PHOTO_URL);
+    expect(html).not.toContain('No triage');
+    // ...and the rest of the booking is still there.
+    expect(html).toContain('Brake Pad Install');
+  });
+
+  it('asks for nothing when the booking has no photo', async () => {
+    let called = 0;
+    const { els } = await openDetailWith(
+      labelsLoaded(),
+      { brand: 'Shimano' },
+      {
+        labelFor,
+        sortAnswerIds,
+        fetch: async () => {
+          called++;
+          return { ok: true, json: async () => ({ urls: [PHOTO_URL] }) };
+        },
+      }
+    );
+    expect(called, 'signed a photo that does not exist').toBe(0);
+    expect(els['bkd-body'].innerHTML.toLowerCase()).not.toContain('photo');
+  });
+
+  it('opens the detail anyway when signing throws, and logs it', async () => {
+    // The detail is how Diego confirms, cancels and reassigns. A photo never
+    // takes that away from him.
+    const { els, errors } = await openDetailWith(
+      labelsLoaded(),
+      { brand: 'Shimano', notes: 'Rides daily' },
+      {
+        labelFor,
+        sortAnswerIds,
+        booking: { triage_photo_ref: PHOTO_REF },
+        fetch: async () => {
+          throw new Error('network down');
+        },
+      }
+    );
+
+    expect(els['booking-detail-modal'].style.display, 'the modal stayed closed').toBe('flex');
+    const html = els['bkd-body'].innerHTML;
+    expect(html).toContain('Shimano');
+    expect(html).toContain('Rides daily');
+    expect(html).toContain('Brake Pad Install');
+    expect(html).not.toContain('<img');
+    expect(errors.join('\n')).toContain('network down');
+  });
+
+  it('degrades to words when the server refuses to sign, and logs it', async () => {
+    const { els, warnings } = await openDetailWith(
+      labelsLoaded(),
+      { brand: 'Shimano' },
+      {
+        labelFor,
+        sortAnswerIds,
+        booking: { triage_photo_ref: PHOTO_REF },
+        fetch: async () => ({ ok: false, status: 403, json: async () => ({}) }),
+      }
+    );
+    const html = els['bkd-body'].innerHTML;
+    expect(html).toContain('Photo unavailable');
+    expect(html).not.toContain('<img');
+    expect(html).toContain('Shimano');
+    expect(els['booking-detail-modal'].style.display).toBe('flex');
+    expect(warnings.join('\n')).toContain('403');
+  });
+
+  it('degrades to words when the server signs nothing', async () => {
+    const { els } = await openDetailWith(
+      labelsLoaded(),
+      { brand: 'Shimano' },
+      {
+        labelFor,
+        sortAnswerIds,
+        booking: { triage_photo_ref: PHOTO_REF },
+        fetch: async () => ({ ok: true, json: async () => ({ urls: [null] }) }),
+      }
+    );
+    const html = els['bkd-body'].innerHTML;
+    expect(html).toContain('Photo unavailable');
+    expect(html).not.toContain('<img');
+  });
+
 });
 
 describe('the labels are loaded before the detail opens', () => {

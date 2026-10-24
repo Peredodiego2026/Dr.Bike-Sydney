@@ -3435,3 +3435,50 @@ body {
   line-height: 1.4;
   color: var(--mgray);
 }
+/* The customer answered nothing and sent the photo: the questions are all
+   optional, so this is a real booking, not an empty one. Same weight as the
+   question labels - the photo below is the content here. */
+.triage-skipped {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--mgray);
+}
+/* The photo the customer sent. The signed URL lasts an hour, so this is a
+   thumbnail that LINKS to the full photo rather than something to zoom in
+   place. contain, not cover: the point of the photo is the model and the wear,
+   and cropping is what would hide them. */
+.triage-photo {
+  margin: 10px 0 0;
+}
+.triage-photo-link {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+}
+.triage-photo-link:hover {
+  border-color: var(--blue);
+}
+.triage-photo-img {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  background: var(--border-lt);
+}
+.triage-photo-cap {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: var(--mgray);
+}
+/* A photo that could not be signed: words, never an <img> with a src that
+   404s. The same decision signAdminChatPhotos already made for the chat. */
+.triage-photo-missing {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mgray);
+}
