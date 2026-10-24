@@ -1482,6 +1482,9 @@ async function loadFinance() {
         .join('')
     : '<tr><td colspan="7"><div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:10px"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--border)" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><div style="font-size:15px;font-weight:600;color:var(--mgray)">No transactions yet</div><div style="font-size:13px;color:var(--mgray);opacity:0.7">Completed jobs will appear here</div></div></td></tr>';
 
+  const partsSold = finPartsSold(jobs);
+  renderFinanceParts(partsSold, periodStr);
+
   // Store for export
   window._finData = {
     jobs,
@@ -1503,10 +1506,93 @@ async function loadFinance() {
     // it had checked. See exportBAS().
     expenses: exp,
     expensesAvailable: _expenses.available !== false,
+    partsSold,
     periodStr,
     dateFrom,
     dateTo,
   };
+}
+
+// Parts fitted on the period's completed jobs, from each job's own snapshot:
+// what the client was charged (parts_charged.items, at the price the mechanic
+// showed on the phone) against what those parts cost (parts_cost_actual,
+// priced from parts_inventory at completion). A job that charged parts but
+// has no cost recorded cannot have a margin - it is counted apart, never as a
+// $0 cost, which would read as pure profit.
+function finPartsSold(jobs) {
+  const out = { charged: 0, cost: 0, units: 0, jobs: 0, uncosted: 0, uncostedCharged: 0 };
+  for (const b of jobs) {
+    const items = Array.isArray(b.parts_charged?.items) ? b.parts_charged.items : [];
+    let charged = 0;
+    let units = 0;
+    for (const p of items) {
+      const qty = Number(p?.qty) || 0;
+      if (qty <= 0) continue;
+      units += qty;
+      charged += Number(p?.total) || qty * (Number(p?.unit_price) || 0);
+    }
+    const hasCost = b.parts_cost_actual !== null && b.parts_cost_actual !== undefined;
+    const cost = hasCost ? Number(b.parts_cost_actual) || 0 : 0;
+    if (!units && !cost) continue;
+    out.jobs++;
+    out.units += units;
+    if (hasCost) {
+      out.charged += charged;
+      out.cost += cost;
+    } else {
+      out.uncosted++;
+      out.uncostedCharged += charged;
+    }
+  }
+  out.margin = out.charged - out.cost;
+  out.totalCharged = out.charged + out.uncostedCharged;
+  return out;
+}
+
+// Finance > Parts & stock. The sold half comes from the jobs already loaded;
+// the shelf half is read now, and if that read fails only that half says so.
+// Stock is not a cost of the period: a part becomes a cost when it is fitted.
+async function renderFinanceParts(s, periodStr) {
+  const soldBox = document.getElementById('fin-parts-sold');
+  const stockBox = document.getElementById('fin-parts-stock');
+  if (!soldBox || !stockBox) return;
+  const sub = document.getElementById('fin-parts-sub');
+  if (sub) sub.textContent = `${periodStr} · fitted on completed jobs, and on the shelf today`;
+  const signed = (n) => (n < 0 ? '–' : '') + anMoney(Math.abs(n));
+  const row = (label, val, strong) => `<div class="pl-row${strong ? ' subtotal' : ''}">
+      <span class="pl-label${strong ? ' dark' : ''}">${esc(label)}</span>
+      <span style="font-weight:${strong ? 700 : 500};color:var(--navy);font-variant-numeric:tabular-nums">${val}</span>
+    </div>`;
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+  if (!s.jobs) {
+    soldBox.innerHTML = `<div class="fin-parts-h"><b>Sold in jobs</b><span>Nothing in this period</span></div>
+      <div class="fin-parts-note">No parts were fitted on the jobs completed in this period.</div>`;
+  } else {
+    const pct = s.charged > 0 ? Math.round((s.margin / s.charged) * 100) : null;
+    soldBox.innerHTML = `<div class="fin-parts-h"><b>Sold in jobs</b><span>${plural(s.units, 'part')} in ${plural(s.jobs, 'job')}</span></div>
+      ${row('Charged to clients', anMoney(s.charged))}
+      ${row('What those parts cost', signed(-s.cost))}
+      ${row('Margin on parts', signed(s.margin) + (pct === null ? '' : ` · ${pct}%`), true)}
+      ${s.uncosted ? `<div class="fin-parts-note">Plus ${anMoney(s.uncostedCharged)} charged on ${plural(s.uncosted, 'job')} with no parts cost recorded - left out of the margin.</div>` : ''}
+      ${s.totalCharged > 0 ? `<div class="fin-parts-note warn">The ${anMoney(s.totalCharged)} of parts is not in Revenue, the P&amp;L or the BAS above - those only add the service and the visit fee.</div>` : ''}`;
+  }
+
+  stockBox.innerHTML = `<div class="fin-parts-h"><b>On the shelf now</b><span>Loading...</span></div>`;
+  let parts;
+  try {
+    parts = await photosApi('admin-inventory-list');
+  } catch (e) {
+    stockBox.innerHTML = `<div class="fin-parts-h"><b>On the shelf now</b></div>
+      <div class="fin-parts-note warn">Could not read the stock: ${esc(e.message)}</div>`;
+    return;
+  }
+  const v = invStockValuation(parts || []);
+  stockBox.innerHTML = `<div class="fin-parts-h"><b>On the shelf now</b><span>${plural(v.units, 'unit')} across ${plural((parts || []).length, 'part')}</span></div>
+    ${row('At cost - what you own', anMoney(v.cost))}
+    ${row('At client price', anMoney(v.sell))}
+    ${row('Margin still to make', anMoney(v.margin), true)}
+    <div class="fin-parts-note">Buying stock is not a cost of the period: a part becomes a cost when it is fitted on a job.</div>`;
 }
 
 // One cell of a CSV, quoted and disarmed.
@@ -1551,6 +1637,10 @@ function exportFinanceCSV() {
     ['Net Revenue', d.netRevenue, '', '', '', '', ''],
     ['Net Profit', d.netProfit, '', '', '', '', ''],
     ['Margin', d.margin + '%', '', '', '', '', ''],
+    // Not part of the revenue above - see renderFinanceParts().
+    ['Parts charged to clients (not in revenue)', d.partsSold.totalCharged, '', '', '', '', ''],
+    ['Parts cost (jobs with a recorded cost)', d.partsSold.cost, '', '', '', '', ''],
+    ['Parts margin (jobs with a recorded cost)', d.partsSold.margin, '', '', '', '', ''],
   ];
   const csv = rows.map(csvRow).join('\n');
   const blob = new Blob([csv], { type: 'text/csv' });
@@ -8487,6 +8577,24 @@ function renderInventoryMonth(s) {
   sub.textContent = `${s.units_used} part${s.units_used === 1 ? '' : 's'} in ${s.jobs_with_parts} job${s.jobs_with_parts === 1 ? '' : 's'} · at cost`;
 }
 
+// What is on the shelf, valued three ways - the Inventory KPIs and Finance's
+// Parts & stock card both read it from here. Every unit counts, inactive parts
+// included (they are still in the van). Client price and the margin in it only
+// cover parts that have a client price.
+function invStockValuation(parts) {
+  const priced = parts.filter((p) => p.sell_price !== null && p.sell_price !== undefined);
+  return {
+    cost: parts.reduce((s, p) => s + (Number(p.stock) || 0) * (Number(p.cost_price) || 0), 0),
+    sell: priced.reduce((s, p) => s + (Number(p.stock) || 0) * Number(p.sell_price), 0),
+    margin: priced.reduce(
+      (s, p) => s + (Number(p.stock) || 0) * (Number(p.sell_price) - (Number(p.cost_price) || 0)),
+      0
+    ),
+    units: parts.reduce((s, p) => s + (Number(p.stock) || 0), 0),
+    priced: priced.length,
+  };
+}
+
 function renderInventory() {
   const tbody = document.getElementById('inv-tbody');
   if (!tbody) return;
@@ -8500,23 +8608,15 @@ function renderInventory() {
   const activeParts = inventoryData.filter(isActive);
   const totalParts = activeParts.length;
   const lowStock = activeParts.filter((p) => p.stock <= p.min_stock).length;
-  // Value counts every unit on the shelf, inactive parts included.
-  const stockValue = inventoryData.reduce((s, p) => s + p.stock * (p.cost_price || 0), 0);
-  // At client price and the margin in it - only parts that have a client price.
-  const priced = inventoryData.filter((p) => p.sell_price !== null && p.sell_price !== undefined);
-  const sellValue = priced.reduce((s, p) => s + p.stock * Number(p.sell_price), 0);
-  const margin = priced.reduce(
-    (s, p) => s + p.stock * (Number(p.sell_price) - Number(p.cost_price || 0)),
-    0
-  );
+  const v = invStockValuation(inventoryData);
 
   document.getElementById('inv-total-parts').textContent = totalParts;
   document.getElementById('inv-low-stock').textContent = lowStock;
-  document.getElementById('inv-stock-value').textContent = anMoney(stockValue);
+  document.getElementById('inv-stock-value').textContent = anMoney(v.cost);
   const stockSub = document.getElementById('inv-stock-sub');
   if (stockSub)
-    stockSub.textContent = priced.length
-      ? `at cost · ${anMoney(sellValue)} at client price · ${anMoney(margin)} margin`
+    stockSub.textContent = v.priced
+      ? `at cost · ${anMoney(v.sell)} at client price · ${anMoney(v.margin)} margin`
       : 'at cost price';
 
   if (!inventoryData.length) {
