@@ -1307,6 +1307,51 @@ body {
   font-size: 15px;
 }
 
+/* Finance > Parts & stock: sold in the period and on the shelf now, side by
+   side; stacked on a phone. */
+.fin-parts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.fin-parts > div + div {
+  border-left: 1px solid var(--border-lt);
+}
+.fin-parts-h {
+  padding: 14px 20px 6px;
+}
+.fin-parts-h b {
+  display: block;
+  font-size: 13px;
+  color: var(--navy);
+}
+.fin-parts-h span {
+  display: block;
+  font-size: 12px;
+  color: var(--mgray);
+  margin-top: 2px;
+}
+.fin-parts-note {
+  margin: 10px 20px 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--mgray);
+}
+.fin-parts-note.warn {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--amber-lt);
+  color: var(--amber-ink);
+}
+@media (max-width: 768px) {
+  .fin-parts {
+    grid-template-columns: 1fr;
+  }
+  .fin-parts > div + div {
+    border-left: none;
+    border-top: 1px solid var(--border-lt);
+  }
+}
+
 /* BAS SUMMARY GRID */
 .bas-grid {
   display: grid;
