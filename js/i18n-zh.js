@@ -582,17 +582,9 @@ export default {
   FAQ: '常见问题',
   'Frequently Asked Questions': '常见问题',
   'What areas do you service?': '你们服务哪些区域？',
-  'We service all suburbs within the Sydney metro area, including the CBD, Inner West, Eastern Suburbs, North Shore, and Western Sydney. Check availability when booking.':
-    '我们覆盖悉尼都会区所有郊区，包括CBD、Inner West、East悉尼东部、North Shore和西悉尼。预订时请查看是否可预约。',
   'What if I need to reschedule?': '如果我需要改期怎么办？',
-  'You can reschedule anytime via your booking confirmation link or by calling us. No cancellation fee if you reschedule more than 2 hours in advance.':
-    '您可以随时通过预订确认链接或致电我们改期。提前2小时以上改期不收取取消费用。',
   'Do you bring spare parts?': '你们会带备用零件吗？',
-  "Yes, our fully-equipped van carries common parts like brake pads, cables, chains, and tubes. For less common parts, we'll source them and return to complete the service.":
-    '是的，我们配备齐全的服务车携带刹车片、线缆、链条、内胎等常用零件。较少见的零件我们会另行采购后返回完成服务。',
   'How long does a service take?': '一次服务需要多长时间？',
-  "A Tune-Up typically takes 45-60 minutes. A Standard Service takes 60-90 minutes. A Standard+ Service can take 2-3 hours. We'll give you an estimated time when you book.":
-    '基础调校通常需要45-60分钟。标准服务需要60-90分钟。标准+服务可能需要2-3小时。预订时我们会告知预计时长。',
   'What payment methods do you accept?': '你们接受哪些支付方式？',
   'We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $35, depending on your suburb) is charged at booking; the remainder is charged on completion.':
     '我们接受所有主流信用卡和借记卡、Apple Pay和Google Pay。预订时收取上门检查费押金（从$35起，视郊区而定），其余金额在服务完成后收取。',
@@ -961,23 +953,15 @@ export default {
   '1 free maintenance service per month (Tune-Up)': '每月1次免费保养服务（基础调校）',
   '10% discount on parts': '零件享9折',
   'Digital bike history log': '数字化车辆记录',
-  'Emergency services, discount on extra services, unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-    '紧急服务、额外服务折扣、无限次上门不含在内。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
   'A regular Tune-Up costs $109. With Basic you save $52/month.':
     '普通基础调校售价$109。使用Basic每月可节省$52。',
   '2 free services per month (any type), visit & diagnosis fee included':
     '每月2次免费服务（任意类型），含上门检查费',
   '15% discount on parts': '零件享85折',
   '1 emergency callout per month': '每月1次紧急上门',
-  'Unlimited visits, discount on services beyond monthly limit. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-    '无限次上门、超出每月限额的服务折扣不含在内。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
-  'Unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-    '无限次上门。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
   '2 services/month = $218 value. With Standard you save $121/month.':
     '每月2次服务价值$218。使用Standard每月可节省$121。',
   '20% discount on parts': '零件享8折',
-  'High-end parts (charged at cost). Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-    '高端零件按成本价收费。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
   'Unlimited services + emergency = $400+ value. With VIP you save $250+/month.':
     '无限次服务+紧急上门 = 价值$400以上。使用VIP每月可节省$250以上。',
   'Get Started - $97/month': '立即开始 - $97/月',
@@ -1006,8 +990,8 @@ export default {
   '1 free minor repair per month (any repair under $70)':
     '每月1次免费小额维修（任何低于$70的维修）',
   '1 free bike wash per month': '每月1次免费洗车',
-  'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $35, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-    '数字化服务记录是Standard/VIP会员专享。不含上门检查费 - 您的覆盖服务仍需支付上门检查费（从$35起，视郊区而定）。完整保养服务（基础调校及以上）不计入免费小额维修额度。备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
+  'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $35, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.':
+    '数字化服务记录是Standard/VIP会员专享。不含上门检查费 - 您的覆盖服务仍需支付上门检查费（从$35起，视郊区而定）。完整保养服务（基础调校及以上）不计入免费小额维修额度。备件或更换零件（如链条、变速器、刹车卡钳、线缆）安装前会先报价，费用另计。',
   'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
     '一次洗车加一次平均小额维修价值约$75。使用Basic（$67/月）在享受其他服务5%折扣之前就已经划算了。',
   '2 free minor repairs per month (any repair under $70)':
@@ -1016,8 +1000,8 @@ export default {
   'Visit & diagnosis included on covered visits': '覆盖服务含上门检查费',
   '1 emergency callout per month (visit & diagnosis fee applies, from $35 depending on your suburb)':
     '每月1次紧急上门（需付上门检查费，从$35起视郊区而定）',
-  'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-    '备件或更换零件（如链条、变速器、刹车卡钳、线缆）按成本价另行收费。',
+  'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.':
+    '备件或更换零件（如链条、变速器、刹车卡钳、线缆）安装前会先报价，费用另计。',
   'A Tune-Up ($119) + a wash ($35) + 2 minor repairs (~$100) = about $254 in free work every month, for $97.':
     '1次基础调校（$119）+ 1次洗车（$35）+ 2次小额维修（约$100）= 每月约$254的免费服务，只需$97。',
   '3 free minor repairs per month (any repair under $70)':
@@ -1083,12 +1067,12 @@ export default {
   // ── FAQ (landing.html specific answers) ───────────────────────────────
   'We service all Sydney metro including Inner West, Eastern Suburbs, CBD, North Shore, Manly, and Northern Beaches.':
     '我们覆盖悉尼都会区所有区域，包括Inner West、Eastern Suburbs、CBD、North Shore、Manly和Northern Beaches。',
-  'You can reschedule or cancel up to 2 hours before your appointment at no charge.':
-    '您可以在预约前2小时内免费改期或取消。',
-  "Yes, we carry common parts in the van, but they are not included in the service price — they're charged separately at cost price with no markup.":
-    '是的，我们车上备有常用零件，但不包含在服务价格内 - 按成本价另行收费，不加价。',
-  'A basic tune-up takes 45-90 minutes. Full services can take 2-3 hours depending on the work required.':
-    '基础调校需要45-90分钟。完整服务根据所需工作可能需要2-3小时。',
+  "You can reschedule or cancel from the link in your booking confirmation, or by calling us. It's free with more than 24 hours' notice; with less, a fee of up to the visit & diagnosis fee may apply.":
+    '您可以通过预订确认中的链接或致电我们来改期或取消。提前24小时以上免费；不足24小时，可能收取最高相当于上门检查费的费用。',
+  "Yes. The van carries common parts like brake pads, cables, chains and tubes, and anything less common we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately.":
+    '是的。车上备有刹车片、线缆、链条和内胎等常用零件，不常见的零件我们会采购后再上门安装。零件不包含在服务价格内 - 技师会在安装前先报价，费用另计。',
+  "A Tune-Up takes about an hour, a Standard Service about 1.5 hours, a Standard+ Service about 2.5 hours and an Ultimate Overhaul about 4 hours. You'll see the estimate when you book.":
+    '基础保养约1小时，标准服务约1.5小时，标准+服务约2.5小时，全面翻新约4小时。预订时会显示预计时间。',
   'We accept all major credit cards, debit cards, Apple Pay, and Google Pay. Payment is taken after service completion.':
     '我们接受所有主流信用卡、借记卡、Apple Pay和Google Pay。服务完成后收取费用。',
   'Still have questions?': '还有疑问？',
