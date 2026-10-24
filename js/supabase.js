@@ -49,11 +49,17 @@ export async function getServices() {
   return data;
 }
 
-export async function getAvailableSlots(date, serviceId) {
+// serviceName is for callers that only have the booking (bookings store the
+// name, not the id): the endpoint needs the service to know how long the job is.
+export async function getAvailableSlots(date, serviceId, serviceName) {
   // No fallback to "all available" here on purpose: a failed check must never
   // let a client see a slot as bookable that we couldn't actually verify -
   // callers must handle the rejection (show retry, not a slot grid).
-  const svcParam = serviceId ? `&serviceId=${encodeURIComponent(serviceId)}` : '';
+  const svcParam = serviceId
+    ? `&serviceId=${encodeURIComponent(serviceId)}`
+    : serviceName
+      ? `&serviceName=${encodeURIComponent(serviceName)}`
+      : '';
   const res = await fetch(
     `/api/auth?role=get-availability&date=${encodeURIComponent(date)}${svcParam}`
   );

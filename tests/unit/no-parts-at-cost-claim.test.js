@@ -15,9 +15,10 @@ import { dirname, join } from 'path';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const read = (p) => readFileSync(join(root, p), 'utf8');
 
-// What a client reads or hears. terms.html is the legal text and states the
-// handling fee, so it is not in this list.
+// What a client reads or hears - the terms included since 25-oct-2026, when
+// Diego asked that they state the listed price, never what a part cost him.
 const SURFACES = [
+  'terms.html',
   'index.html',
   'landing.html',
   'js/landing-inline.js',
@@ -38,7 +39,7 @@ describe('nothing tells a client parts are sold at cost', () => {
   it.each(SURFACES)('%s', (file) => {
     const src = withoutComments(read(file));
     expect(src).not.toMatch(/at cost price|charged separately at cost|charged at cost/i);
-    expect(src).not.toMatch(/precio de costo|按成本/);
+    expect(src).not.toMatch(/precio de costo|按成本|handling fee|cargo razonable|手续费/);
     // "no markup" is only allowed inside the chatbot's instruction NOT to say it.
     const markup = src.match(/[^\n]{0,80}no markup[^\n]{0,20}/gi) || [];
     for (const m of markup) expect(m).toMatch(/Never say/);

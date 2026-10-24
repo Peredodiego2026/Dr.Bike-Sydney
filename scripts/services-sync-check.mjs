@@ -383,7 +383,7 @@ if (priceDrift.length) {
     console.log(`  - ${d.file}: "${d.name}" says $${d.price}, table says $${d.live}`);
   }
   if (priceDrift.length > 12) console.log(`  ...and ${priceDrift.length - 12} more`);
-  console.log('');
+  console.log('\n  fix: npm run prices:sync\n');
 }
 
 // The JSON-LD problems are reported apart from the card ones and worded harder
@@ -405,8 +405,8 @@ if (ldDrift.length) {
     console.log(`  x ${d.file}: "${d.name}" says $${d.price}, table says $${d.live}`);
   }
   if (ldDrift.length > 12) console.log(`  ...and ${ldDrift.length - 12} more`);
-  console.log('\n  fix: regenerate the suburb pages -> npm run suburbs:generate');
-  console.log('       landing.html and index.html are hand-written: edit those by hand.\n');
+  console.log('\n  fix: npm run prices:sync - rewrites the offers on landing.html and');
+  console.log('       index.html and regenerates the suburb pages.\n');
 }
 
 if (rangeDrift.length) {
@@ -415,8 +415,8 @@ if (rangeDrift.length) {
   const r = rangeDrift[0];
   console.log(`  x says $${r.from}-$${r.to}, the headline services are $${r.lo}-$${r.hi}`);
   console.log(`      on ${rangeDrift.length} page(s)`);
-  console.log('      fix: priceRange in scripts/generate-suburb-pages.mjs is hardcoded,');
-  console.log('           unlike the offers. Update it there, then regenerate.\n');
+  console.log('      fix: npm run prices:sync - the generator derives priceRange from');
+  console.log('           the table, so regenerating the suburb pages moves it.\n');
 }
 
 if (ldUnmatched.length) {
