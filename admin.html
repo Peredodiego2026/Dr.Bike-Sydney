@@ -33,7 +33,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css">
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
 <link rel="stylesheet" href="css/variables.css?v=b58e9c267c">
-<link rel="stylesheet" href="css/admin.css?v=66ad3af4ca">
+<link rel="stylesheet" href="css/admin.css?v=f0609f6c83">
 <style>
 @media(max-width:768px){
   .content{padding:12px 10px !important}
@@ -754,6 +754,15 @@
         <div class="card" id="fin-pl">
           <div class="card-hdr"><div><div class="card-title">P&L Summary</div><div class="card-sub" id="fin-pl-period">Loading...</div></div></div>
           <div id="fin-pl-rows"></div>
+        </div>
+      </div>
+
+      <!-- Repuestos: lo vendido en el periodo (margen real por trabajo) y el stock de hoy -->
+      <div class="card" id="fin-parts-card" style="margin-top:16px">
+        <div class="card-hdr"><div><div class="card-title">Parts &amp; stock</div><div class="card-sub" id="fin-parts-sub">Loading...</div></div></div>
+        <div class="fin-parts">
+          <div id="fin-parts-sold"></div>
+          <div id="fin-parts-stock"></div>
         </div>
       </div>
 
@@ -1688,5 +1697,5 @@
 
 
 <script type="module" src="js/shop-import.js?v=bfc77bc7e1"></script>
-<script src="js/admin.js?v=ba4d1ccf8e"></script>
+<script src="js/admin.js?v=fe0e957e6c"></script>
 </body></html>
