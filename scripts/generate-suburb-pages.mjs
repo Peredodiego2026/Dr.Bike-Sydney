@@ -1,6 +1,8 @@
 // scripts/generate-suburb-pages.mjs — generates the suburb landing pages.
 //
-// Run: node scripts/generate-suburb-pages.mjs
+// Run: node scripts/generate-suburb-pages.mjs           (rewrites the pages)
+//      node scripts/generate-suburb-pages.mjs --check   (writes nothing, exits 1
+//                                                        on any difference)
 //
 // Why a generator: the 20 suburb pages were 20 hand-maintained copies of the
 // same 155-line file, differing only in the suburb name and the list of areas.
@@ -807,32 +809,81 @@ ${entries.join('\n')}
 `;
 }
 
+// ── Check mode ──────────────────────────────────────────────────────────────
+// The pages drifted from this script twice - hex instead of tokens (fixed in
+// #285), then consent, copy and links (#517) - each time because a fix went
+// into the pages and not here, and nothing compared the two. --check is that
+// comparison, in npm run check.
+//
+// Offline on purpose: CI has no business calling Supabase, and what drifts is
+// the template, not the prices. So it takes the prices the committed first page
+// shows; every other page is then held to the same numbers.
+const CHECK = process.argv.includes('--check');
+
+function committedPrices() {
+  const file = path.join(ROOT, `${SUBURBS[0].slug}.html`);
+  const html = fs.readFileSync(file, 'utf8');
+  return SERVICE_KEYS.map((key) => {
+    const esc = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const m = new RegExp(`data-service="${esc}"><h3>[^<]*</h3><div class="price">([^<]+)</div>`).exec(html);
+    if (!m) throw new Error(`${path.relative(ROOT, file)} has no price card for "${key}"`);
+    return m[1];
+  });
+}
+
+// CRLF-blind: a Windows checkout with core.autocrlf holds the committed files
+// with \r\n, which is the same file git-wise.
+const onDisk = (file) =>
+  fs.existsSync(file) ? fs.readFileSync(file, 'utf8').replaceAll('\r\n', '\n') : null;
+
 // ── Write ───────────────────────────────────────────────────────────────────
 // Resolved once, so all 15 pages and every Service schema quote the same number.
-const PRICES = await livePrices();
+const PRICES = CHECK ? committedPrices() : await livePrices();
 let written = 0;
 let changed = 0;
+const drifted = [];
+// Compared before the pages: a drifted page moves its own lastmod below, and
+// the sitemap would then be reported for a change nobody made to it. lastmod
+// values themselves always pass - they are read from this same file.
+if (CHECK && onDisk(SITEMAP_PATH) !== sitemap()) drifted.push('sitemap.xml');
 for (const [code, meta] of Object.entries(LANGS)) {
   const dir = code === 'en' ? ROOT : path.join(ROOT, code);
-  fs.mkdirSync(dir, { recursive: true });
+  if (!CHECK) fs.mkdirSync(dir, { recursive: true });
   for (const sub of SUBURBS) {
     const file = path.join(dir, `${sub.slug}.html`);
     const html = page(sub, code);
-    // CRLF-blind: a Windows checkout with core.autocrlf holds the committed
-    // page with \r\n, which is the same page git-wise.
-    const before = fs.existsSync(file) ? fs.readFileSync(file, 'utf8').replaceAll('\r\n', '\n') : null;
-    if (before !== html) {
+    if (onDisk(file) !== html) {
       lastmod.set(`${SITE}${meta.prefix}/${sub.slug}`, TODAY);
       changed++;
+      drifted.push(path.relative(ROOT, file).replaceAll('\\', '/'));
     }
+    if (CHECK) continue;
     fs.writeFileSync(file, html);
     written++;
   }
-  console.log(`${code}: ${SUBURBS.length} pages -> ${path.relative(ROOT, dir) || '.'}/`);
+  if (!CHECK) console.log(`${code}: ${SUBURBS.length} pages -> ${path.relative(ROOT, dir) || '.'}/`);
+}
+
+if (CHECK) {
+  if (drifted.length) {
+    console.error(
+      `\nsuburbs-check: ${drifted.length} file(s) differ from what scripts/generate-suburb-pages.mjs writes\n`
+    );
+    for (const f of drifted) console.error(`  x ${f}`);
+    console.error(
+      '\nA hand edit to these files is undone by the next regeneration. Put the change in the' +
+        '\ngenerator, then run: npm run suburbs:generate\n'
+    );
+    process.exit(1);
+  }
+  console.log(
+    `suburbs-check: OK - ${SUBURBS.length * Object.keys(LANGS).length} suburb pages and sitemap.xml match the generator.`
+  );
+  process.exit(0);
 }
 console.log(`content changed: ${changed} of ${written} pages`);
 
-fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), sitemap());
+fs.writeFileSync(SITEMAP_PATH, sitemap());
 console.log(
   `sitemap.xml: ${STATIC_PAGES.length + (SUBURBS.length + BLOG_SLUGS.length + TRANSLATED_STATIC_PAGES.length) * 3} urls ` +
     `(${SUBURBS.length} suburbs + ${BLOG_SLUGS.length} blog posts + ${TRANSLATED_STATIC_PAGES.length} translated pages, x 3 languages)`

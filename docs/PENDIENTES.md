@@ -5800,8 +5800,12 @@ los vecinos retirados se resuelven leyendo `vercel.json` (no una copia de
 las redirecciones) y el `lastmod` del sitemap ya no se pisa con la fecha
 del dia en cada corrida. Verificado: las 15 paginas y `sitemap.xml` salen
 con el mismo hash de blob que `main`. Es la segunda vez que el generador
-se separa de lo commiteado (la primera, los tokens, mas arriba) - nada lo
-verifica todavia.
+se separa de lo commiteado (la primera, los tokens, mas arriba), asi que
+ahora es un check: `npm run check` corre `generate-suburb-pages.mjs --check`
+(tambien `npm run suburbs:check`), que regenera en memoria sin escribir ni
+llamar a Supabase - toma los precios de la primera pagina commiteada - y
+falla nombrando cada archivo que no coincide. Un `lastmod` editado a mano
+pasa a proposito: se lee de ese mismo archivo.
 ## 30. Parramatta: el paso de la direccion seguia siendo un callejon (25-ago-2026)
 
 Diego probo Parramatta desde el celular y desde la landing. Salia el panel
