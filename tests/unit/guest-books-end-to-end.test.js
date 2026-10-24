@@ -79,10 +79,11 @@ function table(name) {
 vi.mock('stripe', () => ({
   default: class {
     constructor() {
-      // $25 is Terrey Hills' band fee, which is what the address below
+      // $35 is Terrey Hills' band fee (NORTH_NEAR_FEE, $25 before the +$10 of
+      // 24-oct-2026), which is what the address below
       // resolves to with no network at all (api/_coverage.js). A different
       // number here would be refunded as an amount mismatch, correctly.
-      this.paymentIntents = { retrieve: async (id) => ({ id, status: 'succeeded', amount: 2500 }) };
+      this.paymentIntents = { retrieve: async (id) => ({ id, status: 'succeeded', amount: 3500 }) };
       this.checkout = { sessions: { retrieve: async () => ({}) } };
       this.refunds = { create: async () => ({ id: 're_1' }) };
     }

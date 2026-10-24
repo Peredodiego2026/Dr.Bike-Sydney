@@ -163,7 +163,7 @@ const dict = {
       ', ¡todo el equipo de Dr. Bike te desea un feliz cumpleaños! 🚲',
     'Your birthday gift': 'Tu regalo de cumpleaños',
     '&bull; Valid for 7 days from your birthday': '&bull; Válido por 7 días desde tu cumpleaños',
-    '&bull; Applies to any service $109+': '&bull; Aplica a cualquier servicio de $109 o más',
+    '&bull; Applies to any service $119+': '&bull; Aplica a cualquier servicio de $119 o más',
     '&bull; Enter code at checkout': '&bull; Ingresa el código al pagar',
     '&bull; One use per customer': '&bull; Un uso por cliente',
     'Redeem my birthday gift &rarr;': 'Usar mi regalo de cumpleaños &rarr;',
@@ -176,7 +176,8 @@ const dict = {
     // be translated along with the row label.
     'Order received!': '¡Pedido recibido!',
     'Thanks for your order,': 'Gracias por tu pedido,',
-    '. We are ordering your parts now and will email you the tracking number as soon as they ship.': '. Ya estamos pidiendo tus repuestos y te mandaremos el número de seguimiento por correo apenas salgan.',
+    '. We are ordering your parts now and will email you the tracking number as soon as they ship.':
+      '. Ya estamos pidiendo tus repuestos y te mandaremos el número de seguimiento por correo apenas salgan.',
     'Test order &mdash; no money was taken.': 'Pedido de prueba &mdash; no se cobró dinero.',
     'Your order': 'Tu pedido',
     '>Shipping<': '>Envío<',
@@ -185,13 +186,15 @@ const dict = {
     // ── shop_shipped / shop_refunded (api/_shop-admin.js) ─────────────────────
     'Your order is on its way!': '¡Tu pedido va en camino!',
     'Your parts are on their way,': 'Tus repuestos van en camino,',
-    '. Use the tracking number below to follow the parcel.': '. Usa el número de seguimiento de abajo para seguir el paquete.',
+    '. Use the tracking number below to follow the parcel.':
+      '. Usa el número de seguimiento de abajo para seguir el paquete.',
     '>Carrier<': '>Transportista<',
     'Tracking number': 'Número de seguimiento',
     'Track my parcel &rarr;': 'Seguir mi paquete &rarr;',
     'Your refund is on its way': 'Tu reembolso va en camino',
     'We refunded your order,': 'Te reembolsamos el pedido,',
-    '. The money goes back to the card you paid with; banks usually take 5 to 10 business days to show it.': '. El dinero vuelve a la tarjeta con la que pagaste; los bancos suelen tardar de 5 a 10 días hábiles en mostrarlo.',
+    '. The money goes back to the card you paid with; banks usually take 5 to 10 business days to show it.':
+      '. El dinero vuelve a la tarjeta con la que pagaste; los bancos suelen tardar de 5 a 10 días hábiles en mostrarlo.',
     '>Refunded<': '>Reembolsado<',
   },
 
@@ -314,7 +317,7 @@ const dict = {
       '，Dr. Bike 全体团队祝您生日快乐！🚲',
     'Your birthday gift': '您的生日礼物',
     '&bull; Valid for 7 days from your birthday': '&bull; 自生日起 7 天内有效',
-    '&bull; Applies to any service $109+': '&bull; 适用于 $109 及以上的任意服务',
+    '&bull; Applies to any service $119+': '&bull; 适用于 $119 及以上的任意服务',
     '&bull; Enter code at checkout': '&bull; 结算时输入优惠码',
     '&bull; One use per customer': '&bull; 每位客户限用一次',
     'Redeem my birthday gift &rarr;': '领取我的生日礼物 &rarr;',
@@ -323,7 +326,8 @@ const dict = {
 
     'Order received!': '订单已收到！',
     'Thanks for your order,': '感谢您的订单，',
-    '. We are ordering your parts now and will email you the tracking number as soon as they ship.': '。我们正在为您订购配件，发货后会立即通过邮件把物流单号发给您。',
+    '. We are ordering your parts now and will email you the tracking number as soon as they ship.':
+      '。我们正在为您订购配件，发货后会立即通过邮件把物流单号发给您。',
     'Test order &mdash; no money was taken.': '测试订单 &mdash; 未扣款。',
     'Your order': '您的订单',
     '>Shipping<': '>运费<',
@@ -337,7 +341,8 @@ const dict = {
     'Track my parcel &rarr;': '跟踪我的包裹 &rarr;',
     'Your refund is on its way': '您的退款正在处理',
     'We refunded your order,': '我们已为您的订单退款，',
-    '. The money goes back to the card you paid with; banks usually take 5 to 10 business days to show it.': '。款项将退回您付款时使用的银行卡；银行通常需要 5 到 10 个工作日才会显示。',
+    '. The money goes back to the card you paid with; banks usually take 5 to 10 business days to show it.':
+      '。款项将退回您付款时使用的银行卡；银行通常需要 5 到 10 个工作日才会显示。',
     '>Refunded<': '>已退款<',
   },
 };

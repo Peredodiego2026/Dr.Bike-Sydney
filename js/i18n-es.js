@@ -442,8 +442,8 @@ export default {
   'Sent from your website - this address is outside the same-day zone.':
     'Enviado desde su sitio web: esta direccion esta fuera de la zona del mismo dia.',
   'Continue anyway': 'Continuar igual',
-  "The visit & diagnosis fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.":
-    'La visita y diagnóstico (desde $25, según tu suburbio) cubre el viaje del mecánico. Cubrimos la mayoría de las áreas de Sydney.',
+  "The visit & diagnosis fee (from $35, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.":
+    'La visita y diagnóstico (desde $35, según tu suburbio) cubre el viaje del mecánico. Cubrimos la mayoría de las áreas de Sydney.',
   'Continue to Summary': 'Continuar al Resumen',
   // Service Summary / Quote
   'Sunday & public holiday rate': 'Tarifa de domingo y feriado',
@@ -543,8 +543,8 @@ export default {
   // own through the bare 'From' key below, so these two only ever render if
   // the table cannot be reached. 'From $60' was retired with audit 12.6: it
   // was a floor that matched no service and that Admin could not change.
-  'From $17': 'Desde $17',
-  'From $80': 'Desde $80',
+  'From $27': 'Desde $27',
+  'From $90': 'Desde $90',
   From: 'Desde',
   'E-Bike Service': 'Servicio de E-Bike',
   'Bike Assembly': 'Ensamblaje de Bici',
@@ -649,8 +649,8 @@ export default {
   "A Tune-Up typically takes 45-60 minutes. A Standard Service takes 60-90 minutes. A Standard+ Service can take 2-3 hours. We'll give you an estimated time when you book.":
     'Un Ajuste generalmente toma 45-60 minutos. Un Servicio Estándar toma 60-90 minutos. Un Servicio Estándar+ puede tomar 2-3 horas. Te damos un tiempo estimado al reservar.',
   'What payment methods do you accept?': '¿Qué métodos de pago aceptan?',
-  'We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $25, depending on your suburb) is charged at booking; the remainder is charged on completion.':
-    'Aceptamos todas las tarjetas de crédito y débito principales, Apple Pay y Google Pay. Se cobra un depósito por la visita (desde $25, según tu suburbio) al reservar; el resto se cobra al completar el servicio.',
+  'We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $35, depending on your suburb) is charged at booking; the remainder is charged on completion.':
+    'Aceptamos todas las tarjetas de crédito y débito principales, Apple Pay y Google Pay. Se cobra un depósito por la visita (desde $35, según tu suburbio) al reservar; el resto se cobra al completar el servicio.',
   "Still have questions? We're here to help!": '¿Tenés más preguntas? ¡Estamos para ayudarte!',
   'Contact Us': 'Contactanos',
   'Ready to Experience': 'Listo para Experimentar',
@@ -757,8 +757,8 @@ export default {
   // Services intro + "All Services" modal
   'Book a Service →': 'Reservar un Servicio →',
   'All Services': 'Todos los Servicios',
-  'All prices include a visit & diagnosis fee (from $25, depending on your suburb). We come to you.':
-    'Todos los precios incluyen la visita y diagnóstico (desde $25, según tu suburbio). Vamos hasta vos.',
+  'All prices include a visit & diagnosis fee (from $35, depending on your suburb). We come to you.':
+    'Todos los precios incluyen la visita y diagnóstico (desde $35, según tu suburbio). Vamos hasta vos.',
   Essentials: 'Esenciales',
   'Tyres & Wheels': 'Neumáticos y Ruedas',
   'Cables & Accessories': 'Cables y Accesorios',
@@ -803,8 +803,8 @@ export default {
   'Clean, adjust, regrease': 'Limpieza, ajuste, re-engrase',
   'Custom Quote': 'Cotización Personalizada',
   'E-bikes, carbon, vintage, insurance claims': 'E-bikes, carbono, vintage, reclamos de seguro',
-  'All prices include a visit & diagnosis fee (from $25, depending on your suburb). Parts charged separately unless stated.':
-    'Todos los precios incluyen la visita y diagnóstico (desde $25, según tu suburbio). Los repuestos se cobran aparte salvo que se indique lo contrario.',
+  'All prices include a visit & diagnosis fee (from $35, depending on your suburb). Parts charged separately unless stated.':
+    'Todos los precios incluyen la visita y diagnóstico (desde $35, según tu suburbio). Los repuestos se cobran aparte salvo que se indique lo contrario.',
   'Sunday & NSW public holiday bookings +20%. Saturday is normal price.':
     'Reservas de domingo y feriados de NSW +20%. El sábado tiene precio normal.',
 
@@ -1073,46 +1073,46 @@ export default {
   'Get Started -': 'Comenzar -',
 
   // ── Membership redesign 2026-07-22 (3 free-quota categories) ─────────
-  '1 free minor repair (under $60) + 1 free bike wash per month':
-    '1 reparación menor gratis (menos de $60) + 1 lavado gratis por mes',
+  '1 free minor repair (under $70) + 1 free bike wash per month':
+    '1 reparación menor gratis (menos de $70) + 1 lavado gratis por mes',
   '5% off extra services': '5% de descuento en servicios extra',
   '10% off extra services': '10% de descuento en servicios extra',
-  'Visit & diagnosis applies (from $25, depending on your suburb)':
-    'Se cobra la visita y diagnóstico (desde $25, según tu suburbio)',
+  'Visit & diagnosis applies (from $35, depending on your suburb)':
+    'Se cobra la visita y diagnóstico (desde $35, según tu suburbio)',
   'Priority scheduling (72hs)': 'Turnos prioritarios (72hs)',
-  '2 free minor repairs (under $60) + 1 free bike wash + 1 free Tune-Up per month':
-    '2 reparaciones menores gratis (menos de $60) + 1 lavado gratis + 1 Ajuste gratis por mes',
+  '2 free minor repairs (under $70) + 1 free bike wash + 1 free Tune-Up per month':
+    '2 reparaciones menores gratis (menos de $70) + 1 lavado gratis + 1 Ajuste gratis por mes',
   'Visit & diagnosis included': 'Visita y diagnóstico incluida',
   '1 emergency callout per month (visit & diagnosis fee applies)':
     '1 visita de emergencia por mes (se cobra la visita y diagnóstico)',
-  '3 free minor repairs (under $60) + 2 free bike washes + 1 free Tune-Up per month':
-    '3 reparaciones menores gratis (menos de $60) + 2 lavados gratis + 1 Ajuste gratis por mes',
+  '3 free minor repairs (under $70) + 2 free bike washes + 1 free Tune-Up per month':
+    '3 reparaciones menores gratis (menos de $70) + 2 lavados gratis + 1 Ajuste gratis por mes',
   '15% off extra services, plus 5% more': '15% de descuento en servicios extra, más 5% adicional',
   '1 emergency callout per month (visit & diagnosis fee waived in your zone)':
     '1 visita de emergencia por mes (visita y diagnóstico gratis dentro de tu zona)',
-  '1 free minor repair per month (any repair under $60)':
-    '1 reparación menor gratis por mes (cualquier arreglo de menos de $60)',
+  '1 free minor repair per month (any repair under $70)':
+    '1 reparación menor gratis por mes (cualquier arreglo de menos de $70)',
   '1 free bike wash per month': '1 lavado de bici gratis por mes',
-  'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $25, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-    'El historial digital de servicios es un beneficio Standard/VIP. La visita y diagnóstico no está incluida - se cobra igual la visita y diagnóstico (desde $25, según tu suburbio) en tus visitas cubiertas. Las mantenciones completas (Ajuste en adelante) no forman parte de la cuota de reparaciones menores gratis. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
+  'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $35, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
+    'El historial digital de servicios es un beneficio Standard/VIP. La visita y diagnóstico no está incluida - se cobra igual la visita y diagnóstico (desde $35, según tu suburbio) en tus visitas cubiertas. Las mantenciones completas (Ajuste en adelante) no forman parte de la cuota de reparaciones menores gratis. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
   'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
     'Un lavado más una reparación menor promedio vale unos $75. Con Basic ($67/mes) ya salís ganando, antes del 5% de descuento en todo lo demás.',
-  '2 free minor repairs per month (any repair under $60)':
-    '2 reparaciones menores gratis por mes (cualquier arreglo de menos de $60)',
+  '2 free minor repairs per month (any repair under $70)':
+    '2 reparaciones menores gratis por mes (cualquier arreglo de menos de $70)',
   '1 free Tune-Up per month': '1 Ajuste gratis por mes',
   'Visit & diagnosis included on covered visits':
     'Visita y diagnóstico incluida en las visitas cubiertas',
-  '1 emergency callout per month (visit & diagnosis fee applies, from $25 depending on your suburb)':
-    '1 visita de emergencia por mes (se cobra la visita y diagnóstico, desde $25 según tu suburbio)',
+  '1 emergency callout per month (visit & diagnosis fee applies, from $35 depending on your suburb)':
+    '1 visita de emergencia por mes (se cobra la visita y diagnóstico, desde $35 según tu suburbio)',
   'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
     'Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
-  'A Tune-Up ($109) + a wash ($35) + 2 minor repairs (~$80) = about $224 in free work every month, for $97.':
-    'Un Ajuste ($109) + un lavado ($35) + 2 reparaciones menores (~$80) = unos $224 en trabajo gratis cada mes, por $97.',
-  '3 free minor repairs per month (any repair under $60)':
-    '3 reparaciones menores gratis por mes (cualquier arreglo de menos de $60)',
+  'A Tune-Up ($119) + a wash ($35) + 2 minor repairs (~$100) = about $254 in free work every month, for $97.':
+    'Un Ajuste ($119) + un lavado ($35) + 2 reparaciones menores (~$100) = unos $254 en trabajo gratis cada mes, por $97.',
+  '3 free minor repairs per month (any repair under $70)':
+    '3 reparaciones menores gratis por mes (cualquier arreglo de menos de $70)',
   '2 free bike washes per month': '2 lavados de bici gratis por mes',
-  'A Tune-Up ($109) + 2 washes ($70) + 3 minor repairs (~$120) = about $299 in free work every month, for $197.':
-    'Un Ajuste ($109) + 2 lavados ($70) + 3 reparaciones menores (~$120) = unos $299 en trabajo gratis cada mes, por $197.',
+  'A Tune-Up ($119) + 2 washes ($70) + 3 minor repairs (~$150) = about $339 in free work every month, for $197.':
+    'Un Ajuste ($119) + 2 lavados ($70) + 3 reparaciones menores (~$150) = unos $339 en trabajo gratis cada mes, por $197.',
 
   // ── Gift card success alert ──────────────────────────────────────────
   '🎁 Gift card purchased! It has been emailed to the recipient with their unique code.':

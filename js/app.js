@@ -1311,7 +1311,7 @@ async function renderBookService() {
           <div style="font-size:13px;color:var(--color-text);line-height:1.5;margin-bottom:12px">It's outside our same-day zone, so there's no fixed price to show you - but we do still come. Book as usual and the last step asks for a price instead of a card: no charge, and the mechanic replies to you personally.</div>
           <a id="s3-coverage-wa" href="https://wa.me/61433963250" target="_blank" rel="noopener" style="display:block;text-align:center;background:var(--wa);color:var(--white);padding:12px;border-radius:10px;font-size:13px;font-weight:700;text-decoration:none;min-height:44px;box-sizing:border-box">💬 Ask on WhatsApp</a>
         </div>
-        <div style="font-size:13px;color:var(--gray);padding:0 4px;line-height:1.6">The visit & diagnosis fee (from $25, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.</div>
+        <div style="font-size:13px;color:var(--gray);padding:0 4px;line-height:1.6">The visit & diagnosis fee (from $35, depending on your suburb) covers the mechanic's trip. Most areas in Sydney are covered.</div>
       </div>
       <div class="sticky-bottom">
         <button class="btn btn--primary btn--full" id="s3-continue">Continue to Summary</button>

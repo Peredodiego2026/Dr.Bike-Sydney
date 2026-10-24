@@ -432,7 +432,7 @@ async function handler(req, res) {
           <div style="background:#F8FAFC;border-radius:12px;padding:16px;margin-bottom:24px">
             <p style="font-size:12px;color:#475569;margin:0;line-height:1.8">
               &bull; Valid for 7 days from your birthday<br>
-              &bull; Applies to any service $109+<br>
+              &bull; Applies to any service $119+<br>
               &bull; One use per customer<br>
               &bull; Enter code at checkout
             </p>
@@ -464,7 +464,8 @@ async function handler(req, res) {
               <tr><td style="padding:0 0 8px;color:${MUTED};font-size:13px">Your order</td><td style="padding:0 0 8px;font-weight:600;color:${INK};font-size:13px;text-align:right">#${orderRef}</td></tr>
               ${shopItems
                 .map(
-                  (i) => `<tr><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};color:${INK}">${i.qty} &times; ${i.name}${i.variant ? `<br><span style="color:${MUTED};font-size:12px">${i.variant}</span>` : ''}</td><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};font-weight:600;color:${INK};text-align:right;vertical-align:top">$${i.lineTotal.toFixed(2)}</td></tr>`
+                  (i) =>
+                    `<tr><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};color:${INK}">${i.qty} &times; ${i.name}${i.variant ? `<br><span style="color:${MUTED};font-size:12px">${i.variant}</span>` : ''}</td><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};font-weight:600;color:${INK};text-align:right;vertical-align:top">$${i.lineTotal.toFixed(2)}</td></tr>`
                 )
                 .join('')}
               ${shopShipping > 0 ? `<tr><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};color:${MUTED}">Shipping</td><td style="padding:8px 0;font-size:13px;border-top:1px solid ${RULE};font-weight:600;color:${INK};text-align:right">$${shopShipping.toFixed(2)}</td></tr>` : ''}
