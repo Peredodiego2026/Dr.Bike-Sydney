@@ -481,8 +481,21 @@ async function loadTimeSlots(screen, date, serviceId) {
     });
     return;
   }
-  grid.innerHTML = slots.map((s) => createTimeSlot(s.time, s.available, false)).join('');
-  grid.querySelectorAll('.time-slot:not([disabled])').forEach((btn) => {
+  grid.innerHTML = slots.map((s) => createTimeSlot(s.time, s.available, false, s.reason)).join('');
+  // A job of more than an hour cannot start at 4pm or later (Diego,
+  // 25-oct-2026). That hour is shown unavailable but still answers a tap,
+  // with the reason, instead of just not working.
+  grid.querySelectorAll('.time-slot[data-reason="long-service"]').forEach((btn) => {
+    btn.addEventListener('click', () =>
+      showToast(
+        translateValue(
+          'This service is only available until 3pm due to the complexity of the job.'
+        ),
+        'error'
+      )
+    );
+  });
+  grid.querySelectorAll('.time-slot:not([disabled]):not([data-reason])').forEach((btn) => {
     btn.addEventListener('click', () => {
       grid.querySelectorAll('.time-slot').forEach((s) => s.classList.remove('selected'));
       btn.classList.add('selected');
@@ -5256,8 +5269,9 @@ async function renderMyBookings() {
               timeSel.disabled = true;
               timeSel.innerHTML = '<option>Loading available times...</option>';
               try {
-                const slots = await getAvailableSlots(date);
+                const slots = await getAvailableSlots(date, null, booking.service_name);
                 const anyAvailable = slots.some((s) => s.available);
+                const longCutoff = slots.some((s) => s.reason === 'long-service');
                 // The option VALUE is the 24h time the endpoint validates
                 // (`client-reschedule` rejects anything but HH:MM); the label
                 // stays the 12-hour slot name the client already sees in the
@@ -5267,10 +5281,20 @@ async function renderMyBookings() {
                   .map((s) => {
                     const value = toDbTime(s.time);
                     const isCurrent = sameTime(s.time, booking.scheduled_time);
-                    return `<option value="${escapeHtml(value || '')}" ${!s.available ? 'disabled' : ''} ${isCurrent && s.available ? 'selected' : ''}>${escapeHtml(toDisplayTime(s.time) || s.time)}${!s.available ? translateValue(' - unavailable') : ''}</option>`;
+                    const why =
+                      s.reason === 'long-service'
+                        ? translateValue(' - only until 3pm')
+                        : translateValue(' - unavailable');
+                    return `<option value="${escapeHtml(value || '')}" ${!s.available ? 'disabled' : ''} ${isCurrent && s.available ? 'selected' : ''}>${escapeHtml(toDisplayTime(s.time) || s.time)}${!s.available ? why : ''}</option>`;
                   })
                   .join('');
                 timeSel.disabled = !anyAvailable;
+                if (longCutoff && anyAvailable) {
+                  errEl.textContent = translateValue(
+                    'This service is only available until 3pm due to the complexity of the job.'
+                  );
+                  errEl.style.display = 'block';
+                }
                 if (!anyAvailable) {
                   errEl.textContent = 'No times available that day - try another date.';
                   errEl.style.display = 'block';

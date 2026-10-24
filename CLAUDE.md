@@ -154,6 +154,11 @@ mobile->index.html, desktop->landing.html. Full one-page routing was not retried
 - Prices live in Supabase's `services` table (name, price, category) - do not hardcode
   a price list here, it drifts constantly. To check current prices, query it live or
   see Admin > Services & Prices. js/live-prices.js and api/chat.js read it the same way.
+- **Changing a price or the visit fee, or adding/removing/renaming a service:
+  follow the `drbike-prices` skill** (`.claude/skills/drbike-prices/SKILL.md`).
+  SQL first, then `npm run prices:sync`, which rewrites the cards, structured
+  data and suburb pages and lists every other line still quoting the old amount.
+  The +$10 of 24-oct-2026 was 56 files by hand before it existed.
 - The mobile call-out fee is zone-based (from $25, per suburb in `callout_zones`),
   NOT a flat $20 - see the Payments section above
 - Phone: 0433 963 250 / +61433963250

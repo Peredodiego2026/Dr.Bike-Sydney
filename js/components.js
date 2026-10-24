@@ -117,9 +117,14 @@ export function createServiceCard(service) {
 }
 
 // ── Time Slot ─────────────────────────────────────────────────────────────────
-export function createTimeSlot(time, available = true, isSelected = false) {
+// `reason` comes from the availability endpoint. A slot closed for a reason the
+// client should hear (a job too long to start that late) stays tappable, so the
+// tap can say why - see the 'long-service' handler in js/app.js renderTimes.
+export function createTimeSlot(time, available = true, isSelected = false, reason = null) {
+  const explain = !available && reason ? ` data-reason="${reason}"` : '';
+  const off = available ? '' : explain ? 'aria-disabled="true"' : 'disabled aria-disabled="true"';
   return `
-<button class="time-slot${available ? '' : ' time-slot--unavailable'}${isSelected ? ' selected' : ''}" ${available ? '' : 'disabled aria-disabled="true"'} data-time="${time}" type="button">
+<button class="time-slot${available ? '' : ' time-slot--unavailable'}${isSelected ? ' selected' : ''}" ${off}${explain} data-time="${time}" type="button">
   ${time}
 </button>`;
 }

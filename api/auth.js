@@ -1426,6 +1426,23 @@ export async function handleCreateBooking(req, res) {
     svc = r.data;
   }
   if (!svc) return res.status(400).json({ error: 'Unknown service' });
+  // 2b. A job of more than an hour cannot start at 4pm or later. Before any
+  // charge: the hold runs this first, so normally no card has been touched.
+  if (isLongServiceTooLate(svc.duration_max, scheduled_time)) {
+    if (payment_intent_id) {
+      try {
+        await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
+          payment_intent: payment_intent_id,
+        });
+      } catch (e) {
+        console.error('[create-booking] long-service refund failed:', e.message);
+      }
+    }
+    return res.status(409).json({
+      error: LONG_SERVICE_MESSAGE + (payment_intent_id ? ' Your payment has been refunded.' : ''),
+      code: 'long-service-cutoff',
+    });
+  }
   // Sunday/NSW public holiday surcharge (+20%, confirmed with Diego) - applied
   // to both components so the itemized quote stays honest line-by-line rather
   // than a mystery lump surcharge.
@@ -3536,7 +3553,13 @@ async function handleApplyReferral(req, res) {
 // closed that hole for NEW bookings via handleCreateBooking, but moving an
 // EXISTING one was never wired to it) - a reschedule could land a booking
 // on a slot the admin had specifically blocked, same gap, different door.
-async function rescheduleBookingCore(SERVICE_KEY, bk, scheduled_date, scheduled_time) {
+async function rescheduleBookingCore(
+  SERVICE_KEY,
+  bk,
+  scheduled_date,
+  scheduled_time,
+  { byClient = false } = {}
+) {
   if (!['pending', 'confirmed'].includes(bk.status))
     return { ok: false, status: 400, error: 'Booking cannot be rescheduled' };
 
@@ -3558,6 +3581,8 @@ async function rescheduleBookingCore(SERVICE_KEY, bk, scheduled_date, scheduled_
     : null;
 
   const neededMin = (svcData?.[0]?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
+  if (byClient && isLongServiceTooLate(svcData?.[0]?.duration_max, scheduled_time))
+    return { ok: false, status: 409, error: LONG_SERVICE_MESSAGE, code: 'long-service-cutoff' };
   const blockResp = await fetch(
     `${SUPABASE_URL}/rest/v1/availability?select=time_slot,available,van_number&date=eq.${encodeURIComponent(scheduled_date)}`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
@@ -3646,8 +3671,10 @@ async function handleClientReschedule(req, res) {
   const bk = bkData[0];
   if (bk.client_id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
-  const result = await rescheduleBookingCore(SERVICE_KEY, bk, scheduled_date, scheduled_time);
-  if (!result.ok) return res.status(result.status).json({ error: result.error });
+  const result = await rescheduleBookingCore(SERVICE_KEY, bk, scheduled_date, scheduled_time, {
+    byClient: true,
+  });
+  if (!result.ok) return res.status(result.status).json({ error: result.error, code: result.code });
   return res.status(200).json({ ok: true });
 }
 
@@ -5145,6 +5172,21 @@ export function slotToMinutes(slot) {
   return -1;
 }
 
+// Long jobs finish by closing time (Diego, 25-oct-2026): a service of MORE than
+// an hour cannot be booked by a client to start at 4pm or later - its last start
+// is 3pm. A Tune-Up (60 min) still can. The hour is not hidden: it is shown as
+// unavailable with this reason, so the client is told why when they tap it.
+// Enforced again in handleCreateBooking and on a client's reschedule; the admin
+// is not bound by it.
+export const LONG_SERVICE_MINUTES = 60;
+export const LONG_SERVICE_LAST_START_MIN = 15 * 60;
+export const LONG_SERVICE_MESSAGE =
+  'This service is only available until 3pm due to the complexity of the job.';
+export function isLongServiceTooLate(durationMax, time) {
+  if (!(Number(durationMax) > LONG_SERVICE_MINUTES)) return false;
+  return slotToMinutes(time) > LONG_SERVICE_LAST_START_MIN;
+}
+
 // A van is occupied for longer than the slot it was booked in - long services can
 // run for hours. Every booking blocks its van for (service duration + this buffer),
 // so the next job always has a realistic gap instead of stacking back-to-back.
@@ -5232,10 +5274,13 @@ export function computeAvailableSlots({
   blockIntervals,
   isToday,
   nowMin,
+  longService = false,
 }) {
   const blocks = blockIntervals || [];
   return allSlots.map((time) => {
     const slotMin = slotToMinutes(time);
+    if (longService && slotMin > LONG_SERVICE_LAST_START_MIN)
+      return { time, available: false, reason: 'long-service' };
     const slotEnd = slotMin + neededMin;
     const clashes = (intervals, van) =>
       intervals.some((iv) => iv.van === van && slotMin < iv.end && iv.start < slotEnd);
@@ -5247,7 +5292,7 @@ export function computeAvailableSlots({
   });
 }
 
-async function handleGetAvailability(req, res) {
+export async function handleGetAvailability(req, res) {
   // Read-only query, no body - the client (js/supabase.js getAvailableSlots)
   // has always sent a plain GET with ?date= in the query string. guard()
   // defaults to requiring POST when no method is given, which made every
@@ -5257,6 +5302,9 @@ async function handleGetAvailability(req, res) {
   if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date))
     return res.status(400).json({ error: 'date required (YYYY-MM-DD)' });
   const serviceId = req.query?.serviceId || null;
+  // A client's reschedule only has the booking, and bookings store the service
+  // NAME - without it this endpoint cannot know the job is long.
+  const serviceName = req.query?.serviceName || null;
 
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -5287,7 +5335,9 @@ async function handleGetAvailability(req, res) {
   for (const s of services || []) {
     if (s.name) durationByService[s.name] = s.duration_max || DEFAULT_SERVICE_DURATION_MIN;
   }
-  const requestedService = (services || []).find((s) => String(s.id) === String(serviceId));
+  const requestedService =
+    (services || []).find((s) => String(s.id) === String(serviceId)) ||
+    (serviceName ? (services || []).find((s) => s.name === serviceName) : undefined);
   const neededMin =
     (requestedService?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
 
@@ -5317,6 +5367,7 @@ async function handleGetAvailability(req, res) {
     blockIntervals,
     isToday,
     nowMin,
+    longService: Number(requestedService?.duration_max) > LONG_SERVICE_MINUTES,
   });
 
   // Inside the closed window nothing is on offer, whatever the calendar and

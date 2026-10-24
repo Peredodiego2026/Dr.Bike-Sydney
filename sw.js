@@ -241,18 +241,18 @@
 // v134: "Photo unavailable", para una foto del chat que no se pudo firmar.
 // v135: la casilla "puede mostrar esta foto en su sitio web" de la resena, y
 // js/supabase.js manda la respuesta (photo_web_ok).
-// v152: el triage de la reserva. Esta rama venia en v151 y main llego a v151
-// por su cuenta mientras tanto: dos contenidos distintos bajo el mismo nombre
-// de cache es un navegador que ya tiene el de main y nunca recibe estos
-// archivos. Por eso v152 y no v151. js/i18n-es.js y js/i18n-zh.js cambiaron (las
+// v153: el triage de la reserva. js/i18n-es.js y js/i18n-zh.js cambiaron (las
 // preguntas, el encabezado del panel y la copy de la foto) y
 // js/triage-questions.js es nuevo y gano despues un export (sortAnswerIds, el
 // orden en que el Admin lee las respuestas). Los tres se importan sin ?v=, asi
 // que este numero es lo unico que los entrega - y con el catalogo viejo en
 // cache ese export no existe, de ahi la guarda typeof en js/admin.js.
-// La rama paso por v148..v151 mientras se construia; ninguna de esas se
-// desplego, asi que llega una sola: esta.
-const CACHE_STATIC = 'drbike-static-v152';
+// El numero se movio tres veces (v151, v152, v153) porque main llego al mismo
+// valor mientras esta rama estaba abierta, las dos veces. Dos contenidos
+// distintos bajo un mismo nombre de cache es un navegador que ya tiene el de
+// main y nunca recibe estos archivos: el bug que este numero existe para
+// evitar. Si main vuelve a alcanzarlo antes del merge, sube otra vez.
+const CACHE_STATIC = 'drbike-static-v153';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
