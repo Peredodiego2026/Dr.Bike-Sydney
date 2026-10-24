@@ -637,17 +637,9 @@ export default {
   FAQ: 'PREGUNTAS FRECUENTES',
   'Frequently Asked Questions': 'Preguntas Frecuentes',
   'What areas do you service?': '¿Qué zonas cubren?',
-  'We service all suburbs within the Sydney metro area, including the CBD, Inner West, Eastern Suburbs, North Shore, and Western Sydney. Check availability when booking.':
-    'Cubrimos todos los suburbios del área metropolitana de Sydney, incluyendo el CBD, Inner West, Eastern Suburbs, North Shore y Western Sydney. Verificá disponibilidad al reservar.',
   'What if I need to reschedule?': '¿Qué pasa si necesito reprogramar?',
-  'You can reschedule anytime via your booking confirmation link or by calling us. No cancellation fee if you reschedule more than 2 hours in advance.':
-    'Podés reprogramar en cualquier momento con el link de confirmación de tu reserva o llamándonos. Sin cargo por cancelación si reprogramás con más de 2 horas de anticipación.',
   'Do you bring spare parts?': '¿Llevan repuestos?',
-  "Yes, our fully-equipped van carries common parts like brake pads, cables, chains, and tubes. For less common parts, we'll source them and return to complete the service.":
-    'Sí, nuestra van completamente equipada lleva repuestos comunes como pastillas de freno, cables, cadenas y cámaras. Para repuestos menos comunes, los conseguimos y volvemos para completar el servicio.',
   'How long does a service take?': '¿Cuánto dura un servicio?',
-  "A Tune-Up typically takes 45-60 minutes. A Standard Service takes 60-90 minutes. A Standard+ Service can take 2-3 hours. We'll give you an estimated time when you book.":
-    'Un Ajuste generalmente toma 45-60 minutos. Un Servicio Estándar toma 60-90 minutos. Un Servicio Estándar+ puede tomar 2-3 horas. Te damos un tiempo estimado al reservar.',
   'What payment methods do you accept?': '¿Qué métodos de pago aceptan?',
   'We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $35, depending on your suburb) is charged at booking; the remainder is charged on completion.':
     'Aceptamos todas las tarjetas de crédito y débito principales, Apple Pay y Google Pay. Se cobra un depósito por la visita (desde $35, según tu suburbio) al reservar; el resto se cobra al completar el servicio.',
@@ -1047,23 +1039,15 @@ export default {
     '1 servicio de mantenimiento gratis por mes (Ajuste)',
   '10% discount on parts': '10% de descuento en repuestos',
   'Digital bike history log': 'Historial digital de la bici',
-  'Emergency services, discount on extra services, unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-    'Servicios de emergencia, descuento en servicios extra, visitas ilimitadas. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
   'A regular Tune-Up costs $109. With Basic you save $52/month.':
     'Un Ajuste normal cuesta $109. Con Basic ahorrás $52/mes.',
   '2 free services per month (any type), visit & diagnosis fee included':
     '2 servicios gratis por mes (cualquier tipo), visita y diagnóstico incluida',
   '15% discount on parts': '15% de descuento en repuestos',
   '1 emergency callout per month': '1 visita de emergencia por mes',
-  'Unlimited visits, discount on services beyond monthly limit. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-    'Visitas ilimitadas, descuento en servicios más allá del límite mensual. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
-  'Unlimited visits. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-    'Visitas ilimitadas. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
   '2 services/month = $218 value. With Standard you save $121/month.':
     '2 servicios/mes = valor de $218. Con Standard ahorrás $121/mes.',
   '20% discount on parts': '20% de descuento en repuestos',
-  'High-end parts (charged at cost). Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-    'Repuestos de alta gama (se cobran a precio de costo). Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
   'Unlimited services + emergency = $400+ value. With VIP you save $250+/month.':
     'Servicios ilimitados + emergencias = valor de $400+. Con VIP ahorrás $250+/mes.',
   'Get Started - $97/month': 'Comenzar - $97/mes',
@@ -1092,8 +1076,8 @@ export default {
   '1 free minor repair per month (any repair under $70)':
     '1 reparación menor gratis por mes (cualquier arreglo de menos de $70)',
   '1 free bike wash per month': '1 lavado de bici gratis por mes',
-  'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $35, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-    'El historial digital de servicios es un beneficio Standard/VIP. La visita y diagnóstico no está incluida - se cobra igual la visita y diagnóstico (desde $35, según tu suburbio) en tus visitas cubiertas. Las mantenciones completas (Ajuste en adelante) no forman parte de la cuota de reparaciones menores gratis. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
+  'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $35, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.':
+    'El historial digital de servicios es un beneficio Standard/VIP. La visita y diagnóstico no está incluida - se cobra igual la visita y diagnóstico (desde $35, según tu suburbio) en tus visitas cubiertas. Las mantenciones completas (Ajuste en adelante) no forman parte de la cuota de reparaciones menores gratis. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - te los cotizamos antes de colocarlos y se cobran aparte.',
   'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
     'Un lavado más una reparación menor promedio vale unos $75. Con Basic ($67/mes) ya salís ganando, antes del 5% de descuento en todo lo demás.',
   '2 free minor repairs per month (any repair under $70)':
@@ -1103,8 +1087,8 @@ export default {
     'Visita y diagnóstico incluida en las visitas cubiertas',
   '1 emergency callout per month (visit & diagnosis fee applies, from $35 depending on your suburb)':
     '1 visita de emergencia por mes (se cobra la visita y diagnóstico, desde $35 según tu suburbio)',
-  'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - charged separately at cost.':
-    'Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - se cobran aparte a precio de costo.',
+  'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.':
+    'Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - te los cotizamos antes de colocarlos y se cobran aparte.',
   'A Tune-Up ($119) + a wash ($35) + 2 minor repairs (~$100) = about $254 in free work every month, for $97.':
     'Un Ajuste ($119) + un lavado ($35) + 2 reparaciones menores (~$100) = unos $254 en trabajo gratis cada mes, por $97.',
   '3 free minor repairs per month (any repair under $70)':
@@ -1171,12 +1155,12 @@ export default {
   // ── FAQ (landing.html specific answers) ───────────────────────────────
   'We service all Sydney metro including Inner West, Eastern Suburbs, CBD, North Shore, Manly, and Northern Beaches.':
     'Cubrimos toda el área metropolitana de Sydney, incluyendo Inner West, Eastern Suburbs, CBD, North Shore, Manly y Northern Beaches.',
-  'You can reschedule or cancel up to 2 hours before your appointment at no charge.':
-    'Podés reprogramar o cancelar hasta 2 horas antes de tu turno sin cargo.',
-  "Yes, we carry common parts in the van, but they are not included in the service price — they're charged separately at cost price with no markup.":
-    'Sí, llevamos repuestos comunes en la van, pero no están incluidos en el precio del servicio - se cobran aparte a precio de costo sin recargo.',
-  'A basic tune-up takes 45-90 minutes. Full services can take 2-3 hours depending on the work required.':
-    'Un ajuste básico toma 45-90 minutos. Los servicios completos pueden tomar 2-3 horas según el trabajo requerido.',
+  "You can reschedule or cancel from the link in your booking confirmation, or by calling us. It's free with more than 24 hours' notice; with less, a fee of up to the visit & diagnosis fee may apply.":
+    'Podés reprogramar o cancelar desde el enlace de tu confirmación de reserva, o llamándonos. Es gratis con más de 24 horas de aviso; con menos, puede cobrarse hasta el valor de la visita y diagnóstico.',
+  "Yes. The van carries common parts like brake pads, cables, chains and tubes, and anything less common we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately.":
+    'Sí. La van lleva repuestos comunes como pastillas de freno, cables, cadenas y cámaras, y lo menos común lo conseguimos y volvemos a colocarlo. Los repuestos no están incluidos en el precio del servicio - el mecánico te los cotiza antes de colocar nada, y se cobran aparte.',
+  "A Tune-Up takes about an hour, a Standard Service about 1.5 hours, a Standard+ Service about 2.5 hours and an Ultimate Overhaul about 4 hours. You'll see the estimate when you book.":
+    'Un Ajuste lleva cerca de una hora, un Servicio Estándar unas 1,5 horas, un Servicio Estándar+ unas 2,5 horas y una Revisión Completa unas 4 horas. Vas a ver la estimación al reservar.',
   'We accept all major credit cards, debit cards, Apple Pay, and Google Pay. Payment is taken after service completion.':
     'Aceptamos todas las tarjetas de crédito y débito principales, Apple Pay y Google Pay. El pago se cobra al completar el servicio.',
   'Still have questions?': '¿Tenés más preguntas?',
