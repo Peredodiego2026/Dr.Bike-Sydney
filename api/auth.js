@@ -2565,7 +2565,7 @@ async function handleMechanicChecklist(req, res) {
   return res.status(200).json({ ok: true });
 }
 
-async function handleMechanicComplete(req, res) {
+export async function handleMechanicComplete(req, res) {
   const {
     booking_id,
     mechanic_notes,
@@ -2969,6 +2969,31 @@ async function handleMechanicComplete(req, res) {
     'Content-Type': 'application/json',
     Prefer: 'return=minimal',
   };
+  // Where this job's parts cost is kept. The client can read their own bookings
+  // row (policy bookings_select_own), so since 25-oct-2026 the cost goes to
+  // booking_costs, which only the admin can read - Diego: the client must never
+  // learn what a part cost us. Until scripts/add-booking-costs-private.sql runs,
+  // that table does not exist and the old column takes it, so no cost is lost.
+  if (partsCostActual !== null) {
+    const costResp = await fetch(`${SUPABASE_URL}/rest/v1/booking_costs?on_conflict=booking_id`, {
+      method: 'POST',
+      headers: { ...patchHdr, Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({
+        booking_id,
+        parts_cost: partsCostActual,
+        updated_at: payload.completed_at,
+      }),
+    }).catch((e) => {
+      console.warn('[mechanic-complete] booking_costs write threw:', e.message);
+      return null;
+    });
+    if (costResp?.ok) payload.parts_cost_actual = null;
+    else
+      console.warn(
+        '[mechanic-complete] booking_costs not written, cost kept on bookings:',
+        costResp?.status
+      );
+  }
   let updateResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(booking_id)}`,
     { method: 'PATCH', headers: patchHdr, body: JSON.stringify(payload) }
@@ -4166,9 +4191,30 @@ export async function handleAdminInventoryHistory(req, res) {
   });
 }
 
+// A completed job's parts cost: booking_costs first (admin-only, since
+// 25-oct-2026), then the old bookings column for jobs finished before it. null
+// means "not recorded", never 0. PostgREST embeds a one-to-one as an object,
+// older versions as a one-element array - both read the same.
+export function jobPartsCost(b) {
+  const c = Array.isArray(b?.booking_costs) ? b.booking_costs[0] : b?.booking_costs;
+  if (c && c.parts_cost !== null && c.parts_cost !== undefined) return Number(c.parts_cost);
+  const old = b?.parts_cost_actual;
+  return old === null || old === undefined ? null : Number(old);
+}
+
+// This month's completed jobs with their cost. Asks for booking_costs first;
+// a 400 means that table is not there yet (migration not run) and the old
+// column alone is read, same as before.
+async function bookingsWithCost(since, hdr) {
+  const base = `${SUPABASE_URL}/rest/v1/bookings?status=eq.completed&completed_at=gte.${encodeURIComponent(since)}&select=parts_cost_actual`;
+  const r = await fetch(`${base},booking_costs(parts_cost)`, { headers: hdr });
+  if (r.ok || r.status !== 400) return r;
+  return fetch(base, { headers: hdr });
+}
+
 // What went into jobs this month (Sydney's month, not the server's UTC one):
-// units from the ledger (used minus returned), cost from the per-job snapshot
-// bookings.parts_cost_actual - the same number Finance reads.
+// units from the ledger (used minus returned), cost from each job's own snapshot
+// (jobPartsCost) - the same number Finance reads.
 export async function handleAdminInventorySummary(req, res) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
@@ -4181,20 +4227,17 @@ export async function handleAdminInventorySummary(req, res) {
       `${SUPABASE_URL}/rest/v1/stock_movements?select=delta&reason=in.(job_used,job_reverted)&created_at=gte.${encodeURIComponent(since)}`,
       { headers: hdr }
     ),
-    fetch(
-      `${SUPABASE_URL}/rest/v1/bookings?select=parts_cost_actual&status=eq.completed&completed_at=gte.${encodeURIComponent(since)}`,
-      { headers: hdr }
-    ),
+    bookingsWithCost(since, hdr),
   ]);
   if (!mv.ok || !bk.ok) return res.status(500).json({ error: 'Failed to load this month' });
   const units = -((await mv.json()) || []).reduce((s, r) => s + Number(r.delta || 0), 0);
-  const jobs = ((await bk.json()) || []).filter((b) => b.parts_cost_actual !== null);
-  const cost = jobs.reduce((s, b) => s + Number(b.parts_cost_actual || 0), 0);
+  const costs = ((await bk.json()) || []).map(jobPartsCost).filter((c) => c !== null);
+  const cost = costs.reduce((s, c) => s + c, 0);
   return res.status(200).json({
     month_start: monthStart,
     units_used: Math.max(0, units),
     cost_used: Math.round(cost * 100) / 100,
-    jobs_with_parts: jobs.filter((b) => Number(b.parts_cost_actual) > 0).length,
+    jobs_with_parts: costs.filter((c) => c > 0).length,
   });
 }
 

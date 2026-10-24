@@ -1305,12 +1305,24 @@ async function loadFinance() {
   // created_at, exactly like anCompletedInRange() does, so the two screens
   // agree on those too instead of one of them silently dropping them.
   const completedWindow = `and(completed_at.gte.${rangeStart.toISOString()},completed_at.lt.${rangeEndExclusive.toISOString()}),and(completed_at.is.null,created_at.gte.${rangeStart.toISOString()},created_at.lt.${rangeEndExclusive.toISOString()})`;
-  const { data: bookings, error: bookingsError } = await sb
-    .from('bookings')
-    .select('*,profiles(full_name,email)')
-    .eq('status', 'completed')
-    .or(completedWindow)
-    .order('completed_at', { ascending: true });
+  const finQuery = (cols) =>
+    sb
+      .from('bookings')
+      .select(cols)
+      .eq('status', 'completed')
+      .or(completedWindow)
+      .order('completed_at', { ascending: true });
+  // booking_costs holds each job's parts cost where only the admin can read it
+  // (25-oct-2026). Until its migration runs the embed fails, and the read goes
+  // on without it - the old column is still in '*'.
+  let { data: bookings, error: bookingsError } = _bookingCostsMissing
+    ? await finQuery('*,profiles(full_name,email)')
+    : await finQuery('*,profiles(full_name,email),booking_costs(parts_cost)');
+  if (bookingsError && !_bookingCostsMissing) {
+    _bookingCostsMissing = true;
+    ({ data: bookings, error: bookingsError } = await finQuery('*,profiles(full_name,email)'));
+  }
+  bookings = withPrivateCost(bookings);
 
   // A failed query used to render exactly like a month with no work: $0
   // revenue, 0 jobs, an empty P&L and a BAS of zero. Nothing on the screen
@@ -4434,6 +4446,23 @@ function anError(detail) {
 // re-paying for a query that will keep failing until Diego runs the
 // migration - a real, repeated wasted request that review caught.
 let _partsCostColumnMissing = false;
+let _bookingCostsMissing = false;
+
+// Each job's parts cost lives in booking_costs since 25-oct-2026: the client can
+// read their own bookings row, and Diego does not want them ever to see what a
+// part cost him. Older jobs still carry it on bookings.parts_cost_actual.
+// Folded back into parts_cost_actual here so every reader (Finance's parts card,
+// the margins table) keeps reading one field. Mirrors jobPartsCost in api/auth.js.
+function withPrivateCost(rows) {
+  return (rows || []).map((b) => {
+    const c = Array.isArray(b.booking_costs) ? b.booking_costs[0] : b.booking_costs;
+    const cost =
+      c && c.parts_cost !== null && c.parts_cost !== undefined
+        ? Number(c.parts_cost)
+        : b.parts_cost_actual;
+    return { ...b, parts_cost_actual: cost === undefined ? null : cost };
+  });
+}
 
 async function fetchAnalyticsBookings() {
   const baseCols =
@@ -4445,12 +4474,18 @@ async function fetchAnalyticsBookings() {
       .order('created_at', { ascending: false })
       .limit(BOOKINGS_FETCH_CAP);
   if (_partsCostColumnMissing) return query(baseCols);
-  let res = await query(`${baseCols},parts_cost_actual`);
+  let res = _bookingCostsMissing
+    ? { error: true }
+    : await query(`${baseCols},parts_cost_actual,booking_costs(parts_cost)`);
+  if (res.error) {
+    _bookingCostsMissing = true;
+    res = await query(`${baseCols},parts_cost_actual`);
+  }
   if (res.error) {
     _partsCostColumnMissing = true;
     res = await query(baseCols);
   }
-  return res;
+  return res.error ? res : { ...res, data: withPrivateCost(res.data) };
 }
 
 async function loadAnalytics() {
@@ -5785,6 +5820,7 @@ function wireAnalytics() {
       // (network blip, not necessarily the migration) shouldn't need a hard
       // page reload to ever recover in the same session (review finding).
       _partsCostColumnMissing = false;
+      _bookingCostsMissing = false;
       loadAnalytics();
     }
   });

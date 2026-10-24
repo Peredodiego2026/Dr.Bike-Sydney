@@ -28,6 +28,16 @@ consulta responde una sola pregunta - si falta correr un script - y nada mas.
 
 ---
 
+## NUEVO (25-oct-2026): el costo de los repuestos, fuera del alcance del cliente
+
+**Primero mergear el PR, despues correr `scripts/add-booking-costs-private.sql`.**
+Crea `booking_costs` (solo el admin la puede leer), copia ahi el costo de cada
+trabajo y lo saca de `bookings`, que el cliente si puede leer. No se pierde nada:
+copia primero, borra despues y solo donde la copia es identica. Seguro de correr
+dos veces. Verificacion al pie del script: tiene que dar `true | true | 0`.
+
+---
+
 ## NUEVO (25-oct-2026): +$10 a todos los servicios y a la visita
 
 **Hay que correr `scripts/raise-prices-10.sql` una vez, y mergear su PR justo
@@ -491,6 +501,13 @@ with
   -- sola y una a medias no sirve.
   union all select 57, 'add-triage-columns.sql', 'bookings.triage (jsonb) + triage_photo_ref + triage_video_ref',
     (select count(*) = 3 from col where t='bookings' and c in ('triage','triage_photo_ref','triage_video_ref'))
+  -- 58 entro el 2026-10-25: el costo de los repuestos de cada trabajo pasa a
+  -- booking_costs (solo admin). OK = la tabla existe con RLS y ya no queda
+  -- ningun costo en bookings, que el cliente puede leer.
+  union all select 58, 'add-booking-costs-private.sql', 'booking_costs (solo admin) y bookings sin costos visibles al cliente',
+    (exists (select 1 from tbl where t = 'booking_costs')
+     and coalesce((select relrowsecurity from pg_class where oid = to_regclass('public.booking_costs')), false)
+     and not exists (select 1 from public.bookings where parts_cost_actual is not null))
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado

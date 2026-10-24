@@ -26,6 +26,7 @@ let calls = [];
 let movements = [];
 let monthMoves = [];
 let monthBookings = [];
+let bookingCostsTable = true;
 let noteColumn = true;
 
 globalThis.fetch = async (url, init = {}) => {
@@ -41,7 +42,18 @@ globalThis.fetch = async (url, init = {}) => {
     return ok([
       { id: J1, client_name: 'Alice', service_name: 'Tune-Up', scheduled_date: '2026-10-20' },
     ]);
-  if (u.includes('/rest/v1/bookings?select=parts_cost_actual')) return ok(monthBookings);
+  // This month's completed jobs with their cost (bookingsWithCost in api/auth.js):
+  // booking_costs embedded, unless the test says the table is not there yet.
+  if (u.includes('/rest/v1/bookings?status=eq.completed')) {
+    if (u.includes('booking_costs') && !bookingCostsTable)
+      return {
+        ok: false,
+        status: 400,
+        json: async () => ({}),
+        text: async () => 'no relationship',
+      };
+    return ok(monthBookings);
+  }
   if (u.includes('/rest/v1/rpc/adjust_part_stock')) {
     if (body && 'p_note' in body && !noteColumn)
       return {
@@ -72,6 +84,7 @@ beforeEach(() => {
   movements = [];
   monthMoves = [];
   monthBookings = [];
+  bookingCostsTable = true;
   noteColumn = true;
 });
 afterEach(() => vi.useRealTimers());
@@ -142,7 +155,7 @@ describe("this month's usage (role admin-inventory-summary)", () => {
     vi.setSystemTime(new Date('2026-07-15T02:00:00Z'));
     const r = await run(handleAdminInventorySummary, { access_token: 'admin' });
     expect(r.body.month_start).toBe('2026-07-01');
-    const q = calls.find((c) => c.u.includes('bookings?select=parts_cost_actual')).u;
+    const q = calls.find((c) => c.u.includes('bookings?status=eq.completed')).u;
     expect(decodeURIComponent(q)).toContain('completed_at=gte.2026-06-30T14:00:00.000Z');
   });
 
@@ -156,11 +169,36 @@ describe("this month's usage (role admin-inventory-summary)", () => {
     ];
     const r = await run(handleAdminInventorySummary, { access_token: 'admin' });
     expect(r.body).toMatchObject({ units_used: 2, cost_used: 6.5, jobs_with_parts: 2 });
-    const q = calls.find((c) => c.u.includes('bookings?select=parts_cost_actual')).u;
+    const q = calls.find((c) => c.u.includes('bookings?status=eq.completed')).u;
     expect(q).toContain('status=eq.completed');
     expect(calls.find((c) => c.u.includes('stock_movements?select=delta')).u).toContain(
       'reason=in.(job_used,job_reverted)'
     );
+  });
+
+  it('reads the cost from booking_costs, where the client cannot see it', async () => {
+    monthBookings = [
+      { parts_cost_actual: null, booking_costs: { parts_cost: 4 } },
+      { parts_cost_actual: null, booking_costs: [{ parts_cost: 2 }] }, // older PostgREST shape
+      { parts_cost_actual: 3, booking_costs: null }, // finished before the move
+      { parts_cost_actual: null, booking_costs: null }, // no parts recorded
+    ];
+    const r = await run(handleAdminInventorySummary, { access_token: 'admin' });
+    expect(r.body).toMatchObject({ cost_used: 9, jobs_with_parts: 3 });
+    expect(calls.find((c) => c.u.includes('bookings?status=eq.completed')).u).toContain(
+      'booking_costs(parts_cost)'
+    );
+  });
+
+  it('before the migration runs, falls back to the old column alone', async () => {
+    bookingCostsTable = false;
+    monthBookings = [{ parts_cost_actual: 4 }, { parts_cost_actual: 1.5 }];
+    const r = await run(handleAdminInventorySummary, { access_token: 'admin' });
+    expect(r.statusCode).toBe(200);
+    expect(r.body.cost_used).toBe(5.5);
+    const tried = calls.filter((c) => c.u.includes('bookings?status=eq.completed')).map((c) => c.u);
+    expect(tried).toHaveLength(2);
+    expect(tried[1]).not.toContain('booking_costs');
   });
 
   it('is admin-only', async () => {
