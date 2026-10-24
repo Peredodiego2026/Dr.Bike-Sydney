@@ -2209,9 +2209,16 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js');
       // una sola vez al cambiar de controlador es la unica salida limpia; el
       // borrador de reserva vive en localStorage, asi que el cliente vuelve con
       // su "tenes una reserva en curso" intacta.
+//
+// Solo si la pagina YA tenia un worker al cargar. En la primera visita no hay
+// controlador: el worker recien instalado llama a clients.claim() y eso tambien
+// dispara controllerchange, pero esta pagina salio entera de la red y no hay
+// cache viejo que se le borre. Recargar ahi cargaba la pagina dos veces a todo
+// cliente nuevo, un segundo despues de llegar (medido en produccion el 24-oct).
+const swHadController = !!(navigator.serviceWorker && navigator.serviceWorker.controller);
 let swReloaded = false;
 navigator.serviceWorker.addEventListener('controllerchange', function () {
-  if (swReloaded) return;
+  if (!swHadController || swReloaded) return;
   swReloaded = true;
   location.reload();
 });
