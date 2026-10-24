@@ -74,10 +74,12 @@ Visit fee: move `FEE_BANDS` / `PENINSULA_FAR_FEE` / `NORTH_NEAR_FEE` and the tes
 update public.callout_zones set callout_fee = 40 where name = 'Northern Beaches' and callout_fee = 35;
 -- verify
 select name, callout_fee from public.callout_zones order by callout_fee;
-``` **Order matters:** run the SQL, then merge immediately - in between, a booking made with routing down is quoted from the table against the code's bands. `prices:sync` prints a BLOCKER while the two floors disagree.
+```
+**Order matters:** run the SQL, then merge immediately - in between, a booking made with routing down is quoted from the table against the code's bands. `prices:sync` prints a BLOCKER while the two floors disagree.
+
+Blog posts: the es/zh pages are generated. Fix the English post in `blog/` and its entries in the dictionary in `scripts/translate-blog-posts.mjs`, then `npm run blog:translate`.
 
 ## Do not
 
-- Re-run `scripts/translate-blog-posts.mjs` - it no longer reproduces its committed pages. Edit the dictionary entry and the es/zh blog files by hand.
-- Hand-edit suburb pages - change the generator; `npm run check` fails on drift.
+- Hand-edit suburb pages or es/zh blog pages - change the generator (`generate-suburb-pages.mjs`, `translate-blog-posts.mjs`); `npm run check` fails on drift.
 - Quote a price from this file or CLAUDE.md - read the table.

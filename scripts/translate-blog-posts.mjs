@@ -1,6 +1,8 @@
 // scripts/translate-blog-posts.mjs — es/zh versions of the 5 blog posts
 //
-// Run: node scripts/translate-blog-posts.mjs
+// Run: node scripts/translate-blog-posts.mjs           (rewrites the pages)
+//      node scripts/translate-blog-posts.mjs --check   (writes nothing, exits 1
+//                                                       on any difference)
 //
 // Same mechanism as scripts/translate-static-pages.mjs (docs/PENDIENTES.md
 // 4.1): English stays the source, a dictionary does whole-fragment
@@ -765,6 +767,13 @@ const stripAlternates = (html) =>
 // combined is the dead-entry/typo signal, not a key unused by any one post.
 const sharedSeen = { es: new Set(), zh: new Set() };
 
+const CHECK = process.argv.includes('--check');
+// CRLF-blind: a Windows checkout with core.autocrlf holds the committed files
+// with \r\n, which is the same file git-wise.
+const onDisk = (file) =>
+  fs.existsSync(file) ? fs.readFileSync(file, 'utf8').replaceAll('\r\n', '\n') : null;
+const drifted = [];
+
 let written = 0;
 for (const slug of POSTS) {
   const file = `blog/${slug}.html`;
@@ -802,6 +811,11 @@ for (const slug of POSTS) {
     );
     html = html.replace(ogUrlEn, `<meta property="og:url" content="${SITE}${meta.prefix}/blog/${slug}">`);
 
+    // A retired suburb's link is "/" in the English source and stays "/":
+    // /es/ and /zh/ have no page of their own (the catch-all rewrite serves the
+    // English landing there, canonical "/"), and vercel.json 301s
+    // /es/parramatta to "/" as well. 9f3096ac hand-edited these outputs to
+    // "/es/" and "/zh/", which the next run silently undid.
     if (code !== 'en') {
       for (const other of POSTS) html = html.split(`href="/blog/${other}"`).join(`href="${meta.prefix}/blog/${other}"`);
       for (const s of ROOT_SLUGS) html = html.split(`href="/${s}"`).join(`href="${meta.prefix}/${s}"`);
@@ -809,11 +823,16 @@ for (const slug of POSTS) {
     }
 
     const dir = code === 'en' ? path.join(ROOT, 'blog') : path.join(ROOT, code, 'blog');
+    const out = path.join(dir, `${slug}.html`);
+    if (CHECK) {
+      if (onDisk(out) !== html.replaceAll('\r\n', '\n')) drifted.push(path.relative(ROOT, out).replaceAll('\\', '/'));
+      continue;
+    }
     fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, `${slug}.html`), html);
+    fs.writeFileSync(out, html);
     written++;
   }
-  console.log(`${file}: en/es/zh written`);
+  if (!CHECK) console.log(`${file}: en/es/zh written`);
 }
 
 for (const lang of ['es', 'zh']) {
@@ -825,4 +844,18 @@ for (const lang of ['es', 'zh']) {
   }
 }
 
+if (CHECK) {
+  if (drifted.length) {
+    console.error(`\nblog-check: ${drifted.length} file(s) differ from what scripts/translate-blog-posts.mjs writes\n`);
+    for (const f of drifted) console.error(`  x ${f}`);
+    console.error(
+      '\nA hand edit to a translated post is undone by the next run, and an English edit to' +
+        '\nblog/ has to reach es/ and zh/. Put the change in blog/ or in this script, then run:' +
+        '\nnpm run blog:translate\n'
+    );
+    process.exit(1);
+  }
+  console.log(`blog-check: OK - ${POSTS.length * Object.keys(LANGS).length} blog pages match the translator.`);
+  process.exit(0);
+}
 console.log(`done: ${written} files written`);
