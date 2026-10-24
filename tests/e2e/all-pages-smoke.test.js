@@ -52,6 +52,22 @@ const IGNORE_CONSOLE = [
   // Solo esa ruta. Un 404 en turnstile/v0/api.js - el script de verdad -
   // tiene que seguir rompiendo el test.
   /challenges\.cloudflare\.com\/cdn-cgi\/challenge-platform/,
+  // Desde el 15-oct-2026, entre dos corridas programadas y sin ningun deploy
+  // en el medio (mismo commit de main, 10:42 verde y 16:07 rojo, UTC), el
+  // iframe de Turnstile prueba fetch('data:,') y lo bloquea SU PROPIA politica
+  // de seguridad: la que sirve challenges.cloudflare.com para su iframe, con
+  // sus hosts hagen./brunhild. y dnstest.dev. No es la nuestra - la nuestra no
+  // nombra ninguno de esos - y por eso agregar data: a nuestro connect-src no
+  // cambia nada: es otro documento, de otro origen. El mensaje sale del frame
+  // challenges.cloudflare.com/cdn-cgi/challenge-platform/... (medido el 24-oct)
+  // y el widget se dibuja igual en los dos formularios.
+  //
+  // Sigue siendo angosto: si NUESTRA pagina pidiera data:, Chrome nombraria
+  // nuestro connect-src ('self' https://*.supabase.co ...), que no matchea la
+  // primera expresion, y el test cae igual. La segunda sola no alcanza para
+  // tapar eso, porque los dos mensajes salen juntos.
+  /Connecting to 'data:,' violates the following Content Security Policy directive: "connect-src 'self' https:\/\/[a-z0-9-]+\.challenges\.cloudflare\.com /,
+  /^Fetch API cannot load data:,\. Refused to connect because it violates the document's Content Security Policy\.$/,
   /Failed to load resource.*404.*favicon/i,
   // GrowthBook's own CDN bundle (js/landing-modules.js) prints this on
   // landing.html - a styled debug line with a NaN in it. Traced to their
