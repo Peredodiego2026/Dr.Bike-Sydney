@@ -171,6 +171,12 @@ del chat del mecanico. Hasta que exista, la app del mecanico las sigue subiendo
 al bucket publico `job-photos`, igual que siempre: el servidor contesta "no
 hay bucket" y la app cae ahi a proposito (`api/_job-photos.js`).
 
+**Desde el 24-oct-2026 este bucket tambien guarda la foto del triage**: la que
+el cliente saca de su bici en el paso 1 de la reserva, en
+`jobs/<reserva>/triage_<ts>.jpg` (seccion 13). Esa foto **no** cae al bucket
+publico si este no existe: puede mostrar la casa o la calle del cliente, asi
+que se pierde y queda en el log. Un motivo mas para crearlo.
+
 ### Como se crea (30 segundos, no es SQL)
 
 1. Supabase > **Storage** > **New bucket**
@@ -477,13 +483,21 @@ with
   -- no esquema; la unica senal de que se corrio es el precio del Tune-Up.
   union all select 56, 'raise-prices-10.sql', '+$10 a todos los servicios y a cada zona de callout_zones',
     ((select price from public.services where name = 'Tune-Up') >= 119)
+  -- 57 entro el 2026-10-23 con el triage de la reserva: las respuestas que el
+  -- cliente da en el paso 1. Si falta, las reservas siguen funcionando: el
+  -- servidor escribe `triage` en un UPDATE aparte, despues de crearlas, y solo
+  -- llegan sin triage. Cuesta las respuestas, no la reserva (seccion 13). Se
+  -- mira `triage` y tambien las dos de referencias porque la migracion es una
+  -- sola y una a medias no sirve.
+  union all select 57, 'add-triage-columns.sql', 'bookings.triage (jsonb) + triage_photo_ref + triage_video_ref',
+    (select count(*) = 3 from col where t='bookings' and c in ('triage','triage_photo_ref','triage_video_ref'))
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
 from chk order by n;
 ```
 
-**Como se lee el resultado:** 47 filas. Las que digan `OK` ya estan hechas y no
+**Como se lee el resultado:** 52 filas. Las que digan `OK` ya estan hechas y no
 hay que tocarlas. Las que digan `>>> FALTA <<<` se corren siguiendo el orden de
 la seccion 5, saltando las que dieron OK.
 
@@ -1033,3 +1047,71 @@ cosas:
 
 **Ojo con la ruta:** el PIN NO esta en "Mechanic Profile" (esa pantalla es la
 ficha que ve el cliente: foto, bio, rating). Esta en Settings.
+
+---
+
+## 13. `add-triage-columns.sql` (23-oct-2026) - correrlo antes de mergear; olvidarlo no rompe reservas
+
+**Conviene correrla ANTES de mergear el PR que guarda el triage, y hace falta
+correrla para que el triage se guarde.** Pero si se olvida, nadie deja de poder
+reservar: las reservas siguen entrando, solo que sin triage. El codigo que ya
+esta en produccion no la necesita: correrla antes no cambia nada de lo que se ve.
+
+Agrega tres columnas a `bookings`, todas vacias para las reservas que ya
+existen:
+
+| Columna            | Tipo    | Que guarda                                                       |
+| ------------------ | ------- | ---------------------------------------------------------------- |
+| `triage`           | `jsonb` | Lo que el cliente contesto en el paso 1 (marca, modelo, sintoma) |
+| `triage_photo_ref` | `text`  | Referencia a su foto, en el bucket privado. No una URL           |
+| `triage_video_ref` | `text`  | Lo mismo para un video corto de un ruido                         |
+
+**Que pasa si el PR se mergea primero.** Nada que un cliente note.
+`handleCreateBooking` (`api/auth.js`) crea la reserva con los campos de siempre y
+despues, en un `UPDATE` aparte (paso 5c), intenta guardar el triage. Sin la
+columna, PostgREST rechaza ese `UPDATE` ("Could not find the 'triage' column"),
+el servidor lo anota en el log (`[create-booking] could not store triage`) y la
+reserva sigue: se cobra, se confirma, aparece en la agenda. Cuesta una sola
+cosa: **el triage de esa reserva**. Esas respuestas no se guardan en ningun otro
+lado, asi que las reservas que entren hasta que se corra el script quedan sin
+triage para siempre, y el mecanico sale sin saber que pieza llevar. Por eso
+conviene correrlo antes, o el mismo dia.
+
+**Por que esta escrito asi.** El triage va en un `UPDATE` aparte y no dentro de
+la fila que se inserta, igual que las coordenadas (`address_lat` / `address_lng`).
+Si viajara en la misma fila, una columna ausente haria fallar el `INSERT`
+entero - y el `UPDATE` con el que se convierte un hold en reserva, que es la
+misma fila - y nadie podria reservar: el mismo error que dejo a Reset PIN en 500
+para todos (seccion 12). Las migraciones de aca se corren a mano, asi que el
+codigo puede llegar antes que la columna; escribirlo aparte es lo que hace que
+eso salga barato. No lo "simplifiques" metiendolo en la fila:
+`tests/unit/triage-server.test.js` corre el handler contra una base sin la
+columna y falla si la reserva deja de hacerse.
+
+**Como saber si alguna reserva se quedo sin triage.** Buscar
+`could not store triage` en los logs de runtime de Vercel (`/api/auth`). Si sigue
+apareciendo despues de correr el script, es otro error: leer el mensaje que
+acompana.
+
+**Como se corre:** seccion 2, con el contenido de `scripts/add-triage-columns.sql`.
+Es idempotente (`ADD COLUMN IF NOT EXISTS`) y no toca datos: correrlo dos veces
+no hace nada la segunda.
+
+**Como saber que quedo bien:** el archivo termina con un `SELECT` que devuelve una
+fila, `ok = true`. Si dice `false`, falta alguna de las tres o tiene otro tipo.
+Despues, la fila 53 de la consulta de la seccion 3 tiene que decir `OK`.
+
+**Lo que esto NO hace.**
+
+- `triage_photo_ref` ya la escribe el servidor (24-oct-2026), pero **solo si el
+  bucket privado existe**: la foto va a `job-photos-private`, que Diego crea a
+  mano en Supabase > Storage (seccion 0.b2). Sin el bucket, la reserva se hace
+  igual, la columna queda vacia y en los logs aparece
+  `[create-booking] triage photo upload failed (HTTP 404)`.
+- `triage_video_ref` **no la escribe nada, y por ahora no la va a escribir**. Un
+  video no entra en el cuerpo de un POST, asi que necesitaria una URL de subida
+  firmada y un endpoint anonimo que la entregue - que es justo lo que se
+  descarto. La columna queda lista; la funcion no esta entregada. Que la columna
+  exista no significa que el video funcione.
+- La cola de revision (el estado de la revision, la fecha y la nota de Diego)
+  son otras tres columnas, de otro entregable, con su propio script.

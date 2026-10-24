@@ -37,6 +37,7 @@ import { trackingScope, applyTrackingScope } from './_tracking-scope.js';
 import { reviewCredential, reviewGate } from './_review-auth.js';
 import { shortClientName } from './_privacy.js';
 import { auditOrphanPayments } from './_orphan-audit.js';
+import { TRIAGE_QUESTION_IDS } from './_triage-ids.js';
 import {
   JOB_PHOTO_BUCKET,
   JOB_PHOTO_TYPES,
@@ -47,6 +48,7 @@ import {
   signPhotoMessages,
   createJobPhotoUpload,
   thumbPathOf,
+  triagePhotoRef,
 } from './_job-photos.js';
 import {
   photoSource,
@@ -1083,6 +1085,217 @@ async function handleRemoveCard(req, res) {
   return res.status(200).json({ ok: true });
 }
 
+// ── Booking triage ───────────────────────────────────────────────────────────
+// The short questions a client answers while booking, so the mechanic knows
+// whether he has the right part before he drives out (js/triage-questions.js).
+// The client sends them as { question_id: "answer" }.
+//
+// Everything in that body is the client's word, so this keeps only the ids in
+// TRIAGE_QUESTION_IDS (api/_triage-ids.js: a copy of the catalogue, kept equal
+// by tests/unit/triage-ids-sync.test.js, because api/ imports nothing from js/)
+// and only text, clamped on both axes: 200 characters per answer, 4 KB for the
+// whole object. Nothing here is trusted for pricing, access or anything else -
+// it is a note for a person to read.
+//
+// Returns null, not {}, when nothing survives: "no answers" must not look like
+// an answer.
+//
+// Two details that exist because Postgres is stricter than JSON.stringify:
+//   - jsonb refuses a lone surrogate and U+0000. Either one would fail the
+//     triage UPDATE and lose every answer over one emoji cut in half, so
+//     control characters become a space and the string is made well-formed
+//     BEFORE it is clamped, and the clamp counts code points, not UTF-16 units.
+//     Well-formed is done with a regex, not String.prototype.toWellFormed: that
+//     needs Node 20, neither package.json nor vercel.json pins a runtime, and on
+//     an older one it would throw and cost EVERY booking its triage.
+//   - the 4 KB limit is bytes: a Chinese character is 3 of them, and
+//     `zh` is one of the three languages this app speaks.
+const TRIAGE_MAX_ANSWER_CHARS = 200;
+const TRIAGE_MAX_BYTES = 4096;
+// A high surrogate with no low one after it, or a low one with no high one
+// before it. Each becomes U+FFFD, which is what toWellFormed() does.
+const LONE_SURROGATE = /[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g;
+
+export function sanitizeTriage(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const out = {};
+  // Walks the known ids, not the client's keys: an unknown key (or a
+  // `__proto__`) is never even looked at.
+  for (const id of TRIAGE_QUESTION_IDS) {
+    if (!Object.prototype.hasOwnProperty.call(raw, id)) continue;
+    const value = raw[id];
+    if (typeof value !== 'string') continue;
+    const answer = Array.from(
+      value
+        .replace(LONE_SURROGATE, '\uFFFD')
+        .replace(/\p{Cc}/gu, ' ')
+        .trim()
+    )
+      .slice(0, TRIAGE_MAX_ANSWER_CHARS)
+      .join('')
+      .trim();
+    if (!answer) continue;
+    out[id] = answer;
+    if (Buffer.byteLength(JSON.stringify(out)) > TRIAGE_MAX_BYTES) {
+      // Whole answers go, never half of one: what is left is complete.
+      delete out[id];
+      break;
+    }
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+// ── The triage photo ─────────────────────────────────────────────────────────
+// The photo the client takes of their own bike while booking, so the mechanic
+// can see which part he needs before he loads the van. OPTIONAL by design (the
+// owner decided that), which makes the rule here absolute: a photo must never
+// be able to turn over a booking or a charge. Every failure below ends in a
+// console.warn and a return, after the row already exists.
+//
+// It arrives as base64 IN THE BODY, not through a signed upload URL. The URL
+// shape would need an ANONYMOUS endpoint handing out upload URLs - anyone could
+// ask for thousands and fill the storage with orphans nothing sweeps - and a
+// photo written to a staging folder whose move then failed would sit where
+// jobPhotoPath() refuses to sign it: photo stored, booking fine, and Diego
+// unable to see it with nothing saying why. The base64 shape is already in
+// production in this repo for an anonymous client: the review photo in
+// handleClientReview, same bucket, same service key.
+//
+// NEVER the public bucket when the private one is missing. The mechanic flow
+// falls back there because that behaviour predates the private bucket; here
+// there is nothing to preserve, and a triage photo can show the client's house
+// or their street.
+const TRIAGE_PHOTO_MAX_BYTES = 3_000_000;
+const TRIAGE_PHOTO_DATA_URL = /^data:image\/[a-z0-9.+-]+;base64,/i;
+const TRIAGE_PHOTO_BARE_BASE64 = /^[A-Za-z0-9+/\s]+={0,2}$/;
+// Four seconds, the same bound and the same reason as step 5b's only other
+// pre-response network call (`geocodeAddress`'s `timeoutMs = 4000`,
+// api/_eta.js). This upload is awaited BEFORE the booking's 200 goes out, so a
+// Storage that never answers - not one that fails, one that never answers -
+// would hold the response until Vercel kills the function: the customer sees an
+// error after paying, with a booking that does exist, and books again.
+const TRIAGE_PHOTO_UPLOAD_TIMEOUT_MS = 4000;
+
+// Do the decoded bytes start like an image? The stored object is ALWAYS
+// `.jpg` / `image/jpeg` by design (the extension and the content type are
+// fixed, never taken from what was sent), so this is NOT content negotiation:
+// it is a sanity check on the bytes. Without it, the bare-base64 branch takes
+// any string in the base64 alphabet - base64 of HTML with a `<script>` went
+// through and was written as `.jpg`, which ends as a broken `<img>` in Admin.
+// The types are the ones this project already allows for a job photo
+// (JOB_PHOTO_TYPES in api/_job-photos.js): jpeg, png, webp, heic, heif.
+const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+function triagePhotoLooksLikeImage(b) {
+  // JPEG: SOI plus the start of the first marker.
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return true;
+  // PNG signature.
+  if (b.subarray(0, 8).equals(PNG_SIGNATURE)) return true;
+  // WEBP: a RIFF container whose form type is WEBP.
+  if (
+    b.subarray(0, 4).toString('latin1') === 'RIFF' &&
+    b.subarray(8, 12).toString('latin1') === 'WEBP'
+  )
+    return true;
+  // HEIC/HEIF: an ISO-BMFF `ftyp` box. The brand that follows has to be a
+  // still-image one: an MP4 video is the same box with a different brand, and
+  // it would be stored as `.jpg` and show as a broken image too.
+  if (b.subarray(4, 8).toString('latin1') === 'ftyp')
+    return /^(hei|hev|mif|msf)/.test(b.subarray(8, 12).toString('latin1'));
+  return false;
+}
+
+// The decoded bytes, or null with a reason in the log. The client already caps
+// the size before sending, but the client can lie, so the cap is checked again
+// here on what actually decoded.
+function triagePhotoBuffer(raw) {
+  // No photo is the normal case - nothing to report.
+  if (raw === null || raw === undefined || raw === '') return null;
+  if (typeof raw !== 'string' || !raw.trim()) {
+    console.warn('[create-booking] triage photo ignored: not a string');
+    return null;
+  }
+  const value = raw.trim();
+  const body = TRIAGE_PHOTO_DATA_URL.test(value)
+    ? value.slice(value.indexOf(',') + 1)
+    : TRIAGE_PHOTO_BARE_BASE64.test(value)
+      ? value
+      : null;
+  if (body === null) {
+    console.warn('[create-booking] triage photo ignored: not an image payload');
+    return null;
+  }
+  const buffer = Buffer.from(body, 'base64');
+  if (!buffer.length) {
+    console.warn('[create-booking] triage photo ignored: decoded to nothing');
+    return null;
+  }
+  if (buffer.length > TRIAGE_PHOTO_MAX_BYTES) {
+    console.warn(
+      `[create-booking] triage photo ignored: ${buffer.length} bytes is over the ${TRIAGE_PHOTO_MAX_BYTES} cap`
+    );
+    return null;
+  }
+  if (!triagePhotoLooksLikeImage(buffer)) {
+    console.warn('[create-booking] triage photo ignored: the bytes are not an image');
+    return null;
+  }
+  return buffer;
+}
+
+// Uploads it and, only if that worked, stores the REFERENCE on the row. The
+// extension and the content type are fixed, never taken from what was sent
+// (the rule JOB_PHOTO_TYPES and js/mechanic.js safeImageUpload already follow,
+// docs/PENDIENTES.md 104).
+async function storeTriagePhoto(sb, bookingId, raw, serviceKey) {
+  const buffer = triagePhotoBuffer(raw);
+  if (!buffer) return;
+  const ref = triagePhotoRef(bookingId);
+  // The round trip is the property that matters: what is stored has to be
+  // signable for THIS booking, or the photo is invisible in Admin.
+  const path = ref && jobPhotoPath(ref, bookingId);
+  if (!path) {
+    console.warn(`[create-booking] triage photo ignored: no signable path for ${bookingId}`);
+    return;
+  }
+  // The signal releases the request; the race is the bound that decides,
+  // because a promise that never settles at all would hang past any signal.
+  // A rejection lands in step 5d's catch - 200 plus a console.warn - which is
+  // the same place a thrown fetch already lands.
+  let timer;
+  const up = await Promise.race([
+    fetch(`${SUPABASE_URL}/storage/v1/object/${JOB_PHOTO_BUCKET}/${path}`, {
+      method: 'POST',
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        'Content-Type': 'image/jpeg',
+        'x-upsert': 'true',
+      },
+      body: buffer,
+      signal: AbortSignal.timeout(TRIAGE_PHOTO_UPLOAD_TIMEOUT_MS),
+    }).finally(() => clearTimeout(timer)),
+    new Promise((_, reject) => {
+      timer = setTimeout(
+        () =>
+          reject(
+            new Error(`the triage photo upload timed out after ${TRIAGE_PHOTO_UPLOAD_TIMEOUT_MS}ms`)
+          ),
+        TRIAGE_PHOTO_UPLOAD_TIMEOUT_MS
+      );
+    }),
+  ]);
+  if (!up.ok) {
+    console.warn(
+      `[create-booking] triage photo upload failed (HTTP ${up.status}) - the booking is ` +
+        `unaffected and the photo is lost. On a 404 the ${JOB_PHOTO_BUCKET} bucket does not ` +
+        `exist yet: create it, private, as docs/RUNBOOK-SQL.md 0.b2 says.`
+    );
+    return;
+  }
+  const { error } = await sb.from('bookings').update({ triage_photo_ref: ref }).eq('id', bookingId);
+  if (error) console.warn('[create-booking] could not store the triage photo ref:', error.message);
+}
+
 // ── Server-authoritative booking creation ────────────────────────────────────
 // Price comes from the DB (never the client). Payment is verified with Stripe
 // before a non-admin booking is created. The admin test account bypasses payment.
@@ -1110,6 +1323,12 @@ export async function handleCreateBooking(req, res) {
     // instead of inserting a new one. See api/_slot-hold.js for why.
     hold_only,
     hold_booking_id,
+    // The booking triage: { question_id: answer }. Untrusted - see
+    // sanitizeTriage. Stored by step 5c, NOT in `row`.
+    triage,
+    // The client's photo of their own bike, as base64. Untrusted and optional -
+    // see "The triage photo" above. Uploaded by step 5d, NOT in `row`.
+    triage_photo,
   } = req.body;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   if (!scheduled_date || !scheduled_time)
@@ -1649,6 +1868,44 @@ export async function handleCreateBooking(req, res) {
     }
   } catch (e) {
     console.error('[create-booking] geocode step failed:', e.message);
+  }
+
+  // 5c. Store the triage answers. The same reasoning as 5b, and stricter,
+  // because here the cost of getting it wrong is that nobody can book.
+  //
+  // scripts/add-triage-columns.sql is run by hand in the Supabase dashboard,
+  // so this code can reach production before the `triage` column exists. As a
+  // field of `row` that makes PostgREST reject the whole INSERT (and the hold's
+  // UPDATE, which is the same `row`): not one customer could book. As this
+  // separate UPDATE it costs the triage of that booking and nothing else. The
+  // triage must never be able to break a booking - the same rule goes for
+  // anything later that hangs off it.
+  //
+  // Awaited, not fire-and-forget: a serverless function is frozen once it
+  // responds. Written only when something survived sanitising, so a second call
+  // that carries no answers (the payment after a hold) cannot erase the first.
+  try {
+    const answers = sanitizeTriage(triage);
+    if (answers) {
+      const { error: triageErr } = await sb
+        .from('bookings')
+        .update({ triage: answers })
+        .eq('id', booking.id);
+      if (triageErr) console.error('[create-booking] could not store triage:', triageErr.message);
+    }
+  } catch (e) {
+    console.error('[create-booking] triage step failed:', e.message);
+  }
+
+  // 5d. The client's photo of their bike, if they took one. The same shape as
+  // 5c and for the same reasons - after the row exists, in its own try, so the
+  // worst it can cost is the photo - plus one of its own: it is an upload to
+  // Storage, which can fail in more ways than an UPDATE (no bucket, no network,
+  // a body Storage refuses). See "The triage photo" above.
+  try {
+    await storeTriagePhoto(sb, booking.id, triage_photo, SERVICE_KEY);
+  } catch (e) {
+    console.warn('[create-booking] triage photo step failed:', e.message);
   }
 
   // 6. Discount/gift code (server-authoritative): atomic consume via RPC -

@@ -76,6 +76,7 @@ import {
 } from './shop-ui.js';
 import { canSeeShop } from './shop.js';
 import { toDbTime, toDisplayTime, sameTime } from './time-format.js';
+import { questionsFor } from './triage-questions.js';
 import {
   getLang,
   setLang,
@@ -105,6 +106,16 @@ window.appState = {
   bikeId: null,
   trackingToken: null,
   preferredMechanicId: null,
+  // The optional questions answered under the chosen service (step 1):
+  // { question_id: "answer" }. See "The triage" above renderBookService().
+  triage: {},
+  // The photo of the bike the client took in step 1, as a data URL. DELIBERATELY
+  // not persisted: saveBookingDraft() destructures the fields it keeps by name,
+  // so adding it there is the only way it could reach localStorage - and a
+  // 400 KB data URL eats the 5 MB quota and breaks the whole draft, which is
+  // what holds a half-built booking together. Accepted consequence: a reload
+  // loses the photo and brings everything else back.
+  triagePhoto: null,
   // Service to auto-select when the wizard opens, as an id OR a name - the
   // landing page CTAs only know the name printed on the card they sit in.
   // Consumed and cleared by renderBookService()'s step 1.
@@ -148,11 +159,11 @@ function goAfterLogin() {
 
 function saveBookingDraft(step) {
   try {
-    const { service, date, time, location, bikeId } = window.appState;
+    const { service, date, time, location, bikeId, triage } = window.appState;
     if (!service && !date && !time) return; // nothing worth keeping yet
     localStorage.setItem(
       BOOKING_DRAFT_KEY,
-      JSON.stringify({ service, date, time, location, bikeId, step, savedAt: Date.now() })
+      JSON.stringify({ service, date, time, location, bikeId, triage, step, savedAt: Date.now() })
     );
   } catch {}
 }
@@ -198,6 +209,9 @@ function clearBookingDraft() {
   window.appState.time = window.appState.date ? d.time || null : null;
   window.appState.location = d.location || 'Home';
   window.appState.bikeId = d.bikeId || null;
+  // Through askedAnswers, not as-is: localStorage is the one input here that
+  // nothing validated, and it ends up in the request body.
+  window.appState.triage = askedAnswers(d.service, d.triage);
   window.__bookingDraftStep = window.appState.date && window.appState.time ? d.step : null;
 })();
 
@@ -758,6 +772,241 @@ function showEmergencyServiceModal() {
 // resolves, which is the exact thing this is here to stop.
 let _servicesError = null;
 
+// ── The triage ───────────────────────────────────────────────────────────────
+// A few short questions that unfold under the service card the client tapped,
+// so the mechanic knows whether he has the right part BEFORE he drives out
+// (docs/superpowers/specs/2026-10-22-triage-reserva-design.md). Which questions
+// a service asks lives in js/triage-questions.js; this is only how they are
+// drawn, remembered and sent.
+//
+// ALL of it is optional - the owner decided that explicitly. Nothing in this
+// block may disable, hide or otherwise gate the Continue button, and the button
+// is not named anywhere in it on purpose.
+//
+// The answers are { question_id: "text" } in window.appState.triage. The text
+// is the English literal the catalogue defines, because Admin reads it back and
+// the server stores it as it came; only the label drawn on a chip is
+// translated.
+
+// What `service` actually asks, as non-empty text, and nothing else. This is
+// the one gate between the answers a client has typed (or an old draft
+// remembers) and the request body: a stale answer to a question this service
+// does not ask would be stored against a job it was never given for.
+function askedAnswers(service, triage) {
+  if (!service || !triage || typeof triage !== 'object') return {};
+  const asked = new Set(questionsFor(service).map((q) => q.id));
+  const out = {};
+  for (const [id, value] of Object.entries(triage)) {
+    if (asked.has(id) && typeof value === 'string' && value.trim()) out[id] = value.trim();
+  }
+  return out;
+}
+
+// Choosing a service is the ONLY moment the answers can go stale, so it is the
+// only way a service is chosen: the tap and Book Again both come through here.
+// Brand, tyre size and speeds are answers about one kind of job, so another
+// category starts clean; inside a category what is still asked is kept.
+function applyServiceChange(state, svc) {
+  const prev = state.service;
+  state.service = svc;
+  state.triage =
+    prev && svc && prev.category === svc.category ? askedAnswers(svc, state.triage) : {};
+}
+
+// Empty text removes the answer: a field the client cleared is "no answer", not
+// an answer that happens to be empty.
+function setTriageAnswer(state, id, value) {
+  const next = { ...state.triage };
+  const text = typeof value === 'string' ? value.trim() : '';
+  if (text) next[id] = text;
+  else delete next[id];
+  state.triage = next;
+}
+
+// The block that goes under the selected card: flat chips, everything visible at
+// once, no accordion inside (the owner's design). '' when the service asks
+// nothing (Emergency Service), so there is never an empty frame.
+function renderTriage(service, answers = {}) {
+  const questions = questionsFor(service);
+  if (!questions.length) return '';
+
+  // Diego stocks one colour of bar tape, black, so there is nothing to ask: say
+  // it, or the client assumes there is a choice.
+  const note =
+    service?.name === 'Bar Tape Install'
+      ? '<div class="triage__note">The bar tape we fit comes in black.</div>'
+      : '';
+
+  const body = questions
+    .map((q) => {
+      const id = `tq-${q.id}`;
+      const hint = q.hint
+        ? `<div class="triage__hint" id="${id}-hint">${escapeHtml(q.hint)}</div>`
+        : '';
+      const describedBy = q.hint ? ` aria-describedby="${id}-hint"` : '';
+      if (q.free) {
+        return `
+      <div class="triage__q">
+        <label class="triage__ask" for="${id}">${escapeHtml(q.ask)}</label>
+        ${hint}
+        <input type="text" class="triage__input" id="${id}" data-q="${q.id}" maxlength="200" autocomplete="off"${describedBy} value="${escapeHtml(answers[q.id] || '')}">
+      </div>`;
+      }
+      const chips = q.options
+        .map((opt) => {
+          const on = answers[q.id] === opt;
+          return `<button type="button" class="triage__chip${on ? ' is-on' : ''}" data-q="${q.id}" data-value="${escapeHtml(opt)}" aria-pressed="${on}">${escapeHtml(opt)}</button>`;
+        })
+        .join('');
+      return `
+      <div class="triage__q" role="group" aria-labelledby="${id}"${describedBy}>
+        <div class="triage__ask" id="${id}">${escapeHtml(q.ask)}</div>
+        ${hint}
+        <div class="triage__chips">${chips}</div>
+      </div>`;
+    })
+    .join('');
+
+  // The photo, last, after the questions. Optional like all of it, and the one
+  // thing a client can hand over that words cannot: which part, which standard,
+  // which era of the same model.
+  //
+  // The preview is drawn from the STATE, not from the file input: the photo
+  // outlives a re-draw of the panel (coming back from step 2, or switching
+  // service inside the category), so a panel that showed nothing would look
+  // like the photo had been lost and the client would take another.
+  const photo = window.appState?.triagePhoto || '';
+  const shot = `
+      <div class="triage__photo-shot${photo ? ' is-on' : ''}">
+        <img class="triage__photo-img" alt="The photo of your bike"${photo ? ` src="${escapeHtml(photo)}"` : ''}>
+        <button type="button" class="triage__photo-drop">Remove photo</button>
+      </div>`;
+
+  return `
+    <div class="triage" id="triage-panel" role="group" aria-labelledby="triage-title">
+      <div class="triage__title" id="triage-title">Help us bring the right part</div>
+      <div class="triage__sub">Optional. Skip anything you are not sure about.</div>
+      ${note}
+      ${body}
+      <div class="triage__photo" role="group" aria-labelledby="tq-photo" aria-describedby="tq-photo-hint">
+        <div class="triage__ask" id="tq-photo">Add a photo of your bike</div>
+        <div class="triage__hint" id="tq-photo-hint">It is how the mechanic knows which part to load in the van before he drives out.</div>
+        <input type="file" accept="image/*" capture="environment" class="triage__photo-file" id="tq-photo-file">
+        <button type="button" class="triage__photo-btn"><span aria-hidden="true">&#128247;</span> Take a photo</button>
+        ${shot}
+        <div class="triage__photo-msg" role="status"></div>
+      </div>
+    </div>`;
+}
+
+// Takes the photo back out of everywhere it is: the state, the preview, and the
+// input (whose `value` has to be cleared, or picking the SAME file again fires
+// no change event and nothing happens).
+function clearTriagePhoto(panel) {
+  window.appState.triagePhoto = null;
+  const input = panel.querySelector('.triage__photo-file');
+  if (input) input.value = '';
+  panel.querySelector('.triage__photo-shot')?.classList.remove('is-on');
+  panel.querySelector('.triage__photo-img')?.removeAttribute('src');
+  const msg = panel.querySelector('.triage__photo-msg');
+  if (msg) msg.textContent = '';
+}
+
+// One listener pair on the panel, not one per chip: the panel is rebuilt every
+// time a service is picked. The chips are updated in place rather than
+// re-rendered, so a field the client is typing in keeps its focus.
+// Every answer saves the draft as step 'service', which is what the card tap
+// records: the triage is part of step 1, not a step of its own, so there is no
+// 'triage' step to invent.
+function bindTriage(panel) {
+  panel.addEventListener('click', (e) => {
+    // The file input is hidden, so the button is the control a finger and a
+    // keyboard can both reach.
+    if (e.target.closest('.triage__photo-btn')) {
+      panel.querySelector('.triage__photo-file')?.click();
+      return;
+    }
+    if (e.target.closest('.triage__photo-drop')) {
+      clearTriagePhoto(panel);
+      return;
+    }
+    const chip = e.target.closest('.triage__chip');
+    if (!chip) return;
+    const { q, value } = chip.dataset;
+    // Tapping the chosen answer again takes it back.
+    const taken = window.appState.triage?.[q] === value;
+    setTriageAnswer(window.appState, q, taken ? '' : value);
+    chip
+      .closest('.triage__chips')
+      .querySelectorAll('.triage__chip')
+      .forEach((c) => {
+        const on = !taken && c === chip;
+        c.classList.toggle('is-on', on);
+        c.setAttribute('aria-pressed', String(on));
+      });
+    saveBookingDraft('service');
+  });
+  panel.addEventListener('input', (e) => {
+    const field = e.target.closest('.triage__input');
+    if (!field) return;
+    setTriageAnswer(window.appState, field.dataset.q, field.value);
+    saveBookingDraft('service');
+  });
+  // The photo. Nothing here saves the draft: the photo is the one thing in the
+  // triage that must never reach localStorage (see window.appState.triagePhoto).
+  panel.addEventListener('change', async (e) => {
+    if (!e.target.closest('.triage__photo-file')) return;
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const msg = panel.querySelector('.triage__photo-msg');
+    if (msg) msg.textContent = '';
+    try {
+      // 1600/0.8, not the 1920/0.82 default: this is to recognise a part, not
+      // to keep a gallery.
+      const dataUrl = await compressImageToBase64(file, 1600, 0.8);
+      // A hard ceiling BEFORE it travels. Vercel refuses an over-sized body
+      // before the handler even runs, so a huge photo cannot be allowed to
+      // leave: it would take the booking down with it. 3,000,000 characters of
+      // base64 is roughly 2.2 MB of JPEG.
+      if (dataUrl.length > 3_000_000) {
+        clearTriagePhoto(panel);
+        if (msg) msg.textContent = 'That photo is too big to send. Your booking is not affected.';
+        return;
+      }
+      window.appState.triagePhoto = dataUrl;
+      panel.querySelector('.triage__photo-img')?.setAttribute('src', dataUrl);
+      panel.querySelector('.triage__photo-shot')?.classList.add('is-on');
+    } catch (err) {
+      // A HEIC the canvas cannot read, a file that is not really an image. The
+      // triage stays usable and the booking is untouched.
+      clearTriagePhoto(panel);
+      if (msg) msg.textContent = 'We could not read that photo. Your booking is not affected.';
+      console.warn('[triage] photo not usable:', err?.message || err);
+    }
+  });
+}
+
+// Unfolds the questions under `card`. One panel at a time: choosing another
+// service folds the last one. Returns false when there is nothing to unfold, so
+// the caller can carry on exactly as it did before the triage existed.
+function showTriage(card, svc) {
+  const list = card.closest('#step1-services');
+  list?.querySelectorAll('#triage-panel').forEach((p) => p.remove());
+  list?.querySelectorAll('.service-card.has-triage').forEach((c) => {
+    c.classList.remove('has-triage');
+    c.removeAttribute('aria-expanded');
+    c.removeAttribute('aria-controls');
+  });
+  const html = renderTriage(svc, window.appState.triage);
+  if (!html) return false;
+  card.insertAdjacentHTML('afterend', html);
+  card.classList.add('has-triage');
+  card.setAttribute('aria-expanded', 'true');
+  card.setAttribute('aria-controls', 'triage-panel');
+  bindTriage(card.nextElementSibling);
+  return true;
+}
+
 async function renderBookService() {
   const screen = document.querySelector('[data-screen="book-service"]');
   if (!screen) return;
@@ -1003,6 +1252,9 @@ async function renderBookService() {
       if (pre) {
         pre.classList.add('selected');
         continueBtn.disabled = false;
+        // Coming back from step 2 (or resuming a draft): their answers are
+        // still there, so the questions are too.
+        showTriage(pre, window.appState.service);
       }
     }
 
@@ -1021,7 +1273,7 @@ async function renderBookService() {
         screen.querySelectorAll('.service-card').forEach((c) => c.classList.remove('selected'));
         card.classList.add('selected');
         const prev = window.appState.service;
-        window.appState.service = svc;
+        applyServiceChange(window.appState, svc);
         saveBookingDraft('service');
         if (!prev || prev.id !== window.appState.service?.id) {
           window.appState.date = null;
@@ -1035,7 +1287,23 @@ async function renderBookService() {
             ],
           });
         continueBtn.disabled = false;
-        renderStep2();
+        // A tap used to jump straight to step 2 (f0b35985, 2026-06-20). Now the
+        // service's questions unfold under the card and Continue moves on, which
+        // is the whole point of putting them in step 1 and not on a new screen.
+        // A service that asks nothing has nothing to unfold, so it still goes
+        // straight on, exactly as before.
+        if (showTriage(card, svc)) {
+          // Without this the questions land below the fold, behind the Continue
+          // bar, and the client never learns they are there.
+          card.scrollIntoView({
+            block: 'start',
+            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+              ? 'auto'
+              : 'smooth',
+          });
+        } else {
+          renderStep2();
+        }
       });
       card.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') card.click();
@@ -1101,7 +1369,8 @@ async function renderBookService() {
       const card = svc && screen.querySelector(`[data-service-id="${svc.id}"]`);
       // A real click rather than setting the state by hand, so preselection
       // inherits everything a click already does: the Emergency Service
-      // interception, the add_to_cart event and the jump to step 2. A name
+      // interception, the add_to_cart event and the questions unfolding under
+      // the card (a service that asks nothing jumps to step 2 instead). A name
       // that matches nothing just leaves the list open on step 1.
       if (card) card.click();
     }
@@ -2525,6 +2794,13 @@ async function renderPayment() {
         address: location || 'Home',
         bike_id: window.appState.bikeId || null,
         preferred_mechanic_id: window.appState.preferredMechanicId || null,
+        // Optional answers from step 1. Re-filtered here against the service
+        // that is actually being booked; the server clamps them again.
+        triage: askedAnswers(service, window.appState.triage),
+        // The photo of the bike, as base64, in this same body - there is no
+        // separate upload. The server writes it into the booking's own folder
+        // and drops it on any failure; see "The triage photo" in api/auth.js.
+        triage_photo: window.appState.triagePhoto || null,
         payment_intent_id: realPI,
         // The row this booking already has. The server updates it instead of
         // inserting, so the slot is never released between the hold and the
@@ -2547,6 +2823,13 @@ async function renderPayment() {
     // It exists in the database now - the draft has done its job.
     clearBookingDraft();
     window.__bookingDraftStep = null;
+    // The answers were about THIS booking. appState outlives it (the service
+    // stays picked for "book again"), so without this the next booking would
+    // carry them.
+    window.appState.triage = {};
+    // Same for the photo, and worse: it would hang a 400 KB body off a booking
+    // nobody attached it to.
+    window.appState.triagePhoto = null;
     // The charge has a booking attached, so it must stop standing in for the
     // next one. Released here and not on leaving the screen: while the booking
     // does not exist yet, this is the only record that the client already paid.
@@ -4886,7 +5169,7 @@ async function renderMyBookings() {
             btn.disabled = false;
             return;
           }
-          window.appState.service = match;
+          applyServiceChange(window.appState, match);
           window.appState.location = booking.address || 'Home';
           window.appState.bikeId = null;
           window.appState.date = null;
@@ -6596,20 +6879,18 @@ function showDiagResult(screen, data) {
       const card = screen.querySelector(
         `.service-card[data-service-id="${data.recommended_service_id}"]`
       );
-      if (card) {
-        card.click();
-        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
+      // The click does the scrolling: the card's handler brings the questions it
+      // unfolds to the top of the screen. A second scroll from here ('nearest')
+      // would win over it and leave them behind the Continue bar.
+      card?.click();
     });
   }
 }
 
 function autoSelectService(screen, serviceId) {
   const card = screen.querySelector(`.service-card[data-service-id="${serviceId}"]`);
-  if (card) {
-    card.click();
-    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
+  // The click does the scrolling (see showDiagResult above).
+  card?.click();
 }
 
 // Auto-apply pending referral code after login; prompt for a new password

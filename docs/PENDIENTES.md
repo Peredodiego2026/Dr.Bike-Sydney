@@ -12120,3 +12120,104 @@ PDF** - nadie se enteraria. Ahora:
 
 Mas `npm audit fix`: axios (via twilio) 1.18.1 -> 1.20.0 y brace-expansion,
 dos "high" que ya estaban en main. `npm audit`: 0.
+
+## 113. La foto del triage: se saca en el paso 1 y se guarda en la carpeta de su reserva (24-oct-2026)
+
+El triage ya preguntaba marca, modelo y sintoma (seccion 13 de
+`docs/RUNBOOK-SQL.md`). Lo que las palabras no alcanzan a decir es **cual** es
+la pieza: dos frenos del mismo modelo y distinta epoca piden pastillas
+distintas. Ahora el cliente puede sacar una foto de su bici ahi mismo.
+
+### Lo que se construyo
+
+- **Cliente** (`js/app.js`): al final del panel del triage, un boton visible y
+  un `<input type="file" capture="environment">` escondido, vista previa de lo
+  elegido y un boton para sacarla. La foto se comprime en el navegador
+  (`compressImageToBase64`, 1600 px / 0.8 - para identificar una pieza, no para
+  una galeria) y viaja **en el cuerpo del POST** que crea la reserva.
+- **Servidor** (`api/auth.js`, paso 5d de `handleCreateBooking`): acepta solo un
+  `data:image/...;base64,...` o base64 pelado, vuelve a medir el tamano (el
+  cliente puede mentir), sube al bucket privado con extension y tipo **fijos**
+  (`.jpg` / `image/jpeg`, nunca los que diga el archivo - seccion 104) y despues
+  guarda la **referencia** en `triage_photo_ref`.
+- `triagePhotoRef()` en `api/_job-photos.js` devuelve
+  `job-photos-private/jobs/<reserva>/triage_<ts>.jpg`. La propiedad que importa
+  y que fija un test: esa referencia tiene que pasar por `jobPhotoPath()` sin
+  dar null, que es lo que permite firmarla y mostrarla. Una carpeta de paso
+  (`triage/<token>/`) no pasa por ahi: la foto quedaria guardada e **invisible**,
+  sin que nada lo diga.
+
+**La regla que manda sobre todo lo demas**: una foto nunca puede voltear un
+cobro ni una reserva. Si falla el navegador, la compresion, el tamano, el
+bucket, el PUT o la UPDATE, la reserva se crea igual y se cobra igual, y lo
+unico que se pierde es la foto (con un `console.warn`). `Continue` no se
+bloquea ni se esconde en ningun caso. Dos tope duros, uno en cada punta: el
+cliente descarta la foto si pasa de 3.000.000 de caracteres de base64 **antes
+de mandarla**, porque Vercel rechaza un cuerpo grande ANTES de que corra el
+handler y eso si tiraria la reserva; el servidor vuelve a medir los bytes
+decodificados.
+
+Dos decisiones que se ven raras y son a proposito:
+
+- **La foto NO va al borrador.** `saveBookingDraft` desestructura por nombre, y
+  `triagePhoto` no esta en esa lista. Un data URL de 400 KB se come la cuota de
+  5 MB de localStorage y rompe el borrador entero, que es lo que sostiene una
+  reserva a medio hacer. Consecuencia aceptada: si el cliente recarga la pagina
+  pierde la foto y el resto del borrador vuelve intacto.
+- **La foto sobrevive al cambio de servicio.** `applyServiceChange` borra las
+  respuestas al cambiar de categoria porque una respuesta esta atada a su
+  pregunta. Una foto no: es de la bici del cliente.
+- **Nunca al bucket publico.** El flujo del mecanico cae al publico cuando el
+  privado no existe (ese comportamiento ya existia). Aca no: una foto del
+  triage puede mostrar la casa o la calle del cliente, asi que se pierde y se
+  loguea.
+
+### Lo que quedo AFUERA
+
+- **El video. No se entrego.** `scripts/add-triage-columns.sql` crea
+  `triage_video_ref` y **queda en NULL**: un video no entra en el cuerpo de un
+  POST y necesitaria una URL de subida firmada mas un endpoint anonimo que la
+  entregue. Ese endpoint es justo lo que se descarto (cualquiera pide infinitas
+  y llena el storage de huerfanos que nada limpia). Que la columna exista no
+  significa que el video funcione.
+- **Miniatura**: no se genera `_thumb.jpg`. La foto se muestra una sola vez en
+  el detalle de la reserva, no en una grilla - eso es Admin > Photos, que
+  muestra decenas y por eso si usa miniaturas.
+- **Mostrar la foto en el panel de Diego NO quedo afuera**: entro en esta misma
+  rama. El detalle de la reserva firma la referencia cada vez que abre (una hora
+  de validez, nada cacheado) y dice `Photo unavailable` cuando no se pudo
+  firmar; el detalle abre igual en los dos casos.
+
+### Lo que Diego tiene que hacer
+
+1. **Crear el bucket**, si no esta: Supabase > Storage > New bucket, nombre
+   exacto `job-photos-private`, **Public bucket: NO** (seccion 0.b2 del
+   runbook). Sin el, la reserva entra igual y la foto se pierde con
+   `[create-booking] triage photo upload failed (HTTP 404)` en los logs.
+2. **Correr el SQL**, si no se corrio (es el de la seccion 13 del runbook,
+   `scripts/add-triage-columns.sql`, idempotente y sin tocar datos):
+
+```sql
+alter table public.bookings
+  add column if not exists triage jsonb,
+  add column if not exists triage_photo_ref text,
+  add column if not exists triage_video_ref text;
+
+-- Comprobacion: una fila, ok = true.
+select count(*) = 3 as ok
+from information_schema.columns
+where table_schema = 'public'
+  and table_name = 'bookings'
+  and column_name in ('triage', 'triage_photo_ref', 'triage_video_ref');
+```
+
+### Como se prueba
+
+`tests/unit/triage-photo.test.js` corre `handleCreateBooking` de verdad contra
+un Supabase falso y un Storage falso: la reserva sigue siendo 200 cuando el PUT
+falla, cuando Storage no contesta, cuando la foto pasa el tope, cuando lo que
+llega no es una imagen y cuando la columna todavia no existe; y cuando el PUT
+anda, lo que queda en la fila es la referencia (no una URL) y da la vuelta por
+`jobPhotoPath`. `tests/unit/triage-ui.test.js` corre el lado del cliente en un
+vm con un DOM falso: el borrador guardado **no** contiene la foto, cambiar de
+servicio no la borra, y nada del bloque de la foto toca `Continue`.

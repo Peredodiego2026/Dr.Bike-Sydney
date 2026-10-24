@@ -82,7 +82,7 @@ documenta para las tarjetas de marketing:
 > immediately, and on no marketing page ever"
 
 Atado a la categoría, el servicio nuevo hereda las preguntas de su familia el
-mismo día. **9 juegos base + 19 excepciones cubren los 33.**
+mismo día. **9 juegos base + 20 excepciones cubren los 33.**
 
 ### Por qué las preguntas viven en el código y no en la base
 
@@ -126,11 +126,26 @@ son lo que lo hace útil.
 
 Dos entradas, un solo destino.
 
-**Entrada B — eligió un servicio.** Hoy tocar una tarjeta de servicio la
-**selecciona** (`.selected` + habilita `#s1-continue`); no avanza. Por eso el
-triage se despliega dentro de la tarjeta seleccionada, sin pantalla nueva. Es el
-patrón que Diego describió: el QR de un restaurante donde los modificadores
-aparecen debajo del plato elegido.
+**Entrada B — eligió un servicio.** El triage se despliega dentro de la tarjeta
+seleccionada, sin pantalla nueva. Es el patrón que Diego describió: el QR de un
+restaurante donde los modificadores aparecen debajo del plato elegido.
+
+> **Corregido el 24-oct, y hay que decirlo entero.** Este párrafo decía que
+> tocar una tarjeta "selecciona, no avanza". **Era falso**: desde el commit
+> `f0b35985` del 20-jun, un toque salta directo al calendario. Lo verifiqué mal
+> al escribir el spec — leí las primeras líneas del manejador y no llegué al
+> `renderStep2()` del final.
+>
+> Diego aprobó el diseño sobre esa descripción equivocada, así que el costo real
+> no es el que le presenté. Es **un toque más** para todo cliente que reserve un
+> servicio con preguntas: antes tocaba el servicio y caía en el calendario;
+> ahora toca el servicio, se abren las preguntas, y toca Continuar. Los
+> servicios sin preguntas siguen saltando directo.
+>
+> Se lo plantee con las dos salidas el 24-oct y eligió dejarlo así. El argumento
+> que pesó: el que salta directo al calendario sin ver las preguntas tampoco las
+> contesta nunca, y el mecánico vuelve a salir a ciegas — que es el problema que
+> este proyecto vino a resolver.
 
 **Entrada C — "No sé qué tiene mi bici".** Reemplaza el `#diag-block` actual,
 que ya hace el 80% del trabajo. Lo que se agrega: **guardar** el resultado y
@@ -229,11 +244,15 @@ con Diego salvo donde se indica.
 | **Programados**          |     5 | Nada, y está bien. Lleva "saltear" visible                            |
 | **General y armado**     |     2 | Si la pieza la trae el cliente                                        |
 
-### Las 19 excepciones
+### Las 20 excepciones
 
 Contadas una por una sobre el catálogo. Los mockups decían "11" y era un conteo
-mal hecho; el número real es 19, y 14 de los 33 servicios heredan su categoría
+mal hecho; el número real es 20, y 13 de los 33 servicios heredan su categoría
 sin cambios.
+
+_Corregido el 23-oct: esta tabla decía 19 y le faltaba Accessory / Part Install.
+El mockup que vio Diego sí preguntaba qué pieza instalar; el texto no lo
+recogió._
 
 | Servicio                     | Qué cambia                                                                                                        |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
@@ -253,6 +272,7 @@ sin cambios.
 | Air Can Service              | Suma: ¿horquilla o amortiguador trasero?                                                                          |
 | Handlebar / Headset / Saddle | Cada uno con su pregunta propia                                                                                   |
 | Bike Assembly                | Cambia a: ¿viene en caja? ¿están todas las piezas?                                                                |
+| Accessory / Part Install     | Suma primero: ¿qué querés instalar? Portaequipaje, guardabarros, luces, portabidón, pedales u otra                |
 
 ### Cinta de manillar: una sola pregunta menos
 
