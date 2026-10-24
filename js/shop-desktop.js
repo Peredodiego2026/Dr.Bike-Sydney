@@ -170,7 +170,7 @@ function viewHome() {
         <h2 class="sd-workshop__title">Our workshop has wheels</h2>
         <p>There is no shop to drive to. The van carries the tools and the mechanic, and it comes to your door anywhere in Sydney.</p>
         <p>The parts in this shop are the ones our mechanics reach for. Not sure which one fits your bike? Send us a photo on WhatsApp and we tell you.</p>
-        <div class="sd-workshop__hours">Mon - Sun: 8:30AM - 4:00PM</div>
+        <div class="sd-workshop__hours">Mon - Sun: 8:00AM - 5:00PM</div>
       </div>
       <img class="sd-workshop__img" src="images/hero-van.webp" alt="The Dr. Bike Sydney van" loading="lazy">
     </section>

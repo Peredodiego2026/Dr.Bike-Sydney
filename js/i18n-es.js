@@ -677,8 +677,8 @@ export default {
   'About Us': 'Sobre Nosotros',
   'My Account': 'Mi Cuenta',
   'Sydney, NSW': 'Sydney, NSW',
-  'Mon – Sun: 8:30AM – 4:00PM': 'Lun - Dom: 8:30AM - 4:00PM',
-  'Mon - Sun: 8:30AM - 4:00PM': 'Lun - Dom: 8:30AM - 4:00PM',
+  'Mon – Sun: 8:00AM – 5:00PM': 'Lun - Dom: 8:00 - 17:00',
+  'Mon - Sun: 8:00AM - 5:00PM': 'Lun - Dom: 8:00 - 17:00',
   'Healthy bikes, happy riders': 'Bicis sanas, ciclistas felices',
 
   // ── landing.html (desktop) — Navbar ──────────────────────────────────
@@ -834,9 +834,8 @@ export default {
   'Service Type': 'Tipo de Servicio',
   'Preferred date': 'Fecha preferida',
   'Preferred Time': 'Horario Preferido',
-  'Morning (8:30am - 12pm)': 'Mañana (8:30am - 12pm)',
-  'Afternoon (12pm - 4pm)': 'Tarde (12pm - 4pm)',
-  'Evening (4pm - 7pm)': 'Noche (4pm - 7pm)',
+  'Morning (8am - 12pm)': 'Mañana (8:00 - 12:00)',
+  'Afternoon (12pm - 5pm)': 'Tarde (12:00 - 17:00)',
   'Enter your address': 'Ingresá tu dirección',
   'Continue Booking': 'Continuar Reserva',
   '✓ Confirmation in minutes': '✓ Confirmación en minutos',
