@@ -199,9 +199,17 @@ function buildWAMessage(template, data, lang) {
       if (!d.refund) {
         return `⚠️ Cancelación de cliente\n\nDiego, este cliente ha cancelado su servicio, pero no debes reembolsar su dinero. Lo canceló con ${d.hours ?? '—'} horas de anticipación antes del servicio.\n\n👤 ${d.clientName || 'Cliente'}\n🔧 ${d.service || 'Servicio'}\n📅 ${d.date || ''} a las ${d.time || ''}`;
       }
+      // The amount is the zone's visit fee as Stripe refunded it - it was a
+      // fixed "$20" here, which stopped being the fee when zones came in.
+      const amount =
+        Number(d.amount) > 0
+          ? `$${Number(d.amount).toFixed(2).replace(/\.00$/, '')}`
+          : 'la tarifa de visita';
       const status = d.refunded
-        ? `✅ Reembolso de $20 procesado automáticamente. Revisa que todo esté en orden.`
-        : `⚠️ Debía reembolsarse $20 (más de 24h de anticipación) pero no se pudo procesar automáticamente. Revisa manualmente en Stripe.`;
+        ? `✅ Reembolso de ${amount} procesado automáticamente. Revisa que todo esté en orden.`
+        : d.charged === false
+          ? `ℹ️ Esta reserva no tenía cobro de visita, así que no hay nada que reembolsar.`
+          : `⚠️ Debía reembolsarse ${amount} (más de 24h de anticipación) pero no se pudo procesar automáticamente. Revisa manualmente en Stripe.`;
       return `⚠️ Cancelación de cliente\n\n${status}\n\n👤 ${d.clientName || 'Cliente'}\n🔧 ${d.service || 'Servicio'}\n📅 ${d.date || ''} a las ${d.time || ''}\n⏱️ Canceló con ${d.hours ?? '—'} horas de anticipación (más de 24h)`;
     }
     case 'invoice_pdf_failed':
