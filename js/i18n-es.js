@@ -764,6 +764,9 @@ export default {
   'Ultimate Overhaul': 'Revisión Definitiva',
   'Strip & rebuild, all consumables replaced':
     'Desarme y reconstrucción, todos los consumibles reemplazados',
+  // Tambien es el nombre de la fila del catalogo (regla 1 del bloque del final).
+  'Bike Wash': 'Lavado de Bici',
+  'Full bike wash and dry': 'Lavado completo y secado',
   'Flat Tyre Repair': 'Reparación de Pinchazo',
   'Tube replace or patch, remount & inflate': 'Reemplazo o parche de cámara, remontaje e inflado',
   'Tyre Replacement': 'Reemplazo de Neumático',
@@ -1082,8 +1085,8 @@ export default {
   '1 free bike wash per month': '1 lavado de bici gratis por mes',
   'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $35, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.':
     'El historial digital de servicios es un beneficio Standard/VIP. La visita y diagnóstico no está incluida - se cobra igual la visita y diagnóstico (desde $35, según tu suburbio) en tus visitas cubiertas. Las mantenciones completas (Ajuste en adelante) no forman parte de la cuota de reparaciones menores gratis. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - te los cotizamos antes de colocarlos y se cobran aparte.',
-  'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
-    'Un lavado más una reparación menor promedio vale unos $75. Con Basic ($67/mes) ya salís ganando, antes del 5% de descuento en todo lo demás.',
+  'A wash plus an average minor repair is worth around $90. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
+    'Un lavado más una reparación menor promedio vale unos $90. Con Basic ($67/mes) ya salís ganando, antes del 5% de descuento en todo lo demás.',
   '2 free minor repairs per month (any repair under $70)':
     '2 reparaciones menores gratis por mes (cualquier arreglo de menos de $70)',
   '1 free Tune-Up per month': '1 Ajuste gratis por mes',
@@ -1093,13 +1096,13 @@ export default {
     '1 visita de emergencia por mes (se cobra la visita y diagnóstico, desde $35 según tu suburbio)',
   'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.':
     'Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - te los cotizamos antes de colocarlos y se cobran aparte.',
-  'A Tune-Up ($119) + a wash ($35) + 2 minor repairs (~$100) = about $254 in free work every month, for $97.':
-    'Un Ajuste ($119) + un lavado ($35) + 2 reparaciones menores (~$100) = unos $254 en trabajo gratis cada mes, por $97.',
+  'A Tune-Up ($119) + a wash ($50) + 2 minor repairs (~$100) = about $269 in free work every month, for $97.':
+    'Un Ajuste ($119) + un lavado ($50) + 2 reparaciones menores (~$100) = unos $269 en trabajo gratis cada mes, por $97.',
   '3 free minor repairs per month (any repair under $70)':
     '3 reparaciones menores gratis por mes (cualquier arreglo de menos de $70)',
   '2 free bike washes per month': '2 lavados de bici gratis por mes',
-  'A Tune-Up ($119) + 2 washes ($70) + 3 minor repairs (~$150) = about $339 in free work every month, for $197.':
-    'Un Ajuste ($119) + 2 lavados ($70) + 3 reparaciones menores (~$150) = unos $339 en trabajo gratis cada mes, por $197.',
+  'A Tune-Up ($119) + 2 washes ($100) + 3 minor repairs (~$150) = about $369 in free work every month, for $197.':
+    'Un Ajuste ($119) + 2 lavados ($100) + 3 reparaciones menores (~$150) = unos $369 en trabajo gratis cada mes, por $197.',
 
   // ── Gift card success alert ──────────────────────────────────────────
   '🎁 Gift card purchased! It has been emailed to the recipient with their unique code.':
@@ -1562,6 +1565,7 @@ export default {
     'Ajustamos el cambio y la tensión del cable para que entre limpio.',
   'Replace outer and inner cables.': 'Cambiamos los cables y las fundas.',
   'Professional fitting of accessories.': 'Montaje profesional de accesorios.',
+  'Your bike washed and dried.': 'Lavamos y secamos tu bici.',
   'Full assembly of a new boxed bike. Price change depending on the size and kind of bike.':
     'Armamos tu bici nueva desde la caja. El precio cambia según el tamaño y el tipo de bici.',
   'Urgent same-day help. Contact us directly on 0433 963 250 and we quote your repair.':

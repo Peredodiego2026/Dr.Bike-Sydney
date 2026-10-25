@@ -30,7 +30,7 @@ const SITE = 'https://drbikesydney.com.au';
 const TODAY = new Date().toISOString().slice(0, 10);
 // Cache-buster for the scripts these pages load. Bump it when js/live-prices.js
 // changes: unlike the SPA, these pages are not covered by the service worker.
-const ASSET_VERSION = '20260726';
+const ASSET_VERSION = '20261025';
 
 // Suburb names and area lists are proper nouns: identical in all 3 languages.
 //

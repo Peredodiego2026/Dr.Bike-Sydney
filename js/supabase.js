@@ -39,9 +39,13 @@ function withDeadline(promise, label) {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 // Rejects rather than returning something plausible - same contract as
 // getAvailableSlots below, and for the same reason.
+// Only services Admin has not hidden (`active` false). Hidden is not deleted:
+// the row, its price and every booking that names it stay, and ticking it
+// visible again brings it back here. NULL counts as visible - the column
+// predates the switch.
 export async function getServices() {
   const { data, error } = await withDeadline(
-    sb.from('services').select('*').order('price'),
+    sb.from('services').select('*').not('active', 'is', false).order('price'),
     'services'
   );
   if (error) throw new Error(error.message || 'services fetch failed');

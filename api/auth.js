@@ -766,14 +766,24 @@ export async function handleRequestQuote(req, res) {
   // sends window.appState.service.id).
   let svc = null;
   if (service_id) {
-    const r = await sb.from('services').select('name,price').eq('id', service_id).maybeSingle();
+    const r = await sb
+      .from('services')
+      .select('name,price,active')
+      .eq('id', service_id)
+      .maybeSingle();
     svc = r.data;
   }
   if (!svc && service_name) {
-    const r = await sb.from('services').select('name,price').eq('name', service_name).maybeSingle();
+    const r = await sb
+      .from('services')
+      .select('name,price,active')
+      .eq('name', service_name)
+      .maybeSingle();
     svc = r.data;
   }
   if (!svc) return res.status(400).json({ error: 'Unknown service' });
+  if (isServiceHidden(svc))
+    return res.status(409).json({ error: SERVICE_HIDDEN_MESSAGE, code: 'service-hidden' });
   // Recomputed, not taken from the body: js/app.js works out the same figure
   // with applySurcharge() before showing it, so a legitimate enquiry lands on
   // the identical number and a tampered one is simply ignored.
@@ -887,7 +897,7 @@ async function handleZonePrice(req, res) {
 // This does the exact same price derivation handleCreateBooking uses, minus
 // creating anything, so "what will I pay" and "what did they pay" can never
 // drift apart.
-async function handleGetPrice(req, res) {
+export async function handleGetPrice(req, res) {
   const { access_token, service_id, service_name, scheduled_date, address } = req.body || {};
   if (!access_token) return res.status(401).json({ error: 'Sign in required' });
   if (!scheduled_date) return res.status(400).json({ error: 'scheduled_date required' });
@@ -902,14 +912,24 @@ async function handleGetPrice(req, res) {
 
   let svc = null;
   if (service_id) {
-    const r = await sb.from('services').select('name,price').eq('id', service_id).maybeSingle();
+    const r = await sb
+      .from('services')
+      .select('name,price,active')
+      .eq('id', service_id)
+      .maybeSingle();
     svc = r.data;
   }
   if (!svc && service_name) {
-    const r = await sb.from('services').select('name,price').eq('name', service_name).maybeSingle();
+    const r = await sb
+      .from('services')
+      .select('name,price,active')
+      .eq('name', service_name)
+      .maybeSingle();
     svc = r.data;
   }
   if (!svc) return res.status(400).json({ error: 'Unknown service' });
+  if (isServiceHidden(svc))
+    return res.status(409).json({ error: SERVICE_HIDDEN_MESSAGE, code: 'service-hidden' });
   const baseServicePrice = applySurcharge(Number(svc.price), scheduled_date);
 
   // Same resolution handleCreateBooking will verify against. An address with
@@ -1412,7 +1432,7 @@ export async function handleCreateBooking(req, res) {
   if (service_id) {
     const r = await sb
       .from('services')
-      .select('id,name,price,duration_max')
+      .select('id,name,price,duration_max,active')
       .eq('id', service_id)
       .maybeSingle();
     svc = r.data;
@@ -1420,12 +1440,30 @@ export async function handleCreateBooking(req, res) {
   if (!svc && service_name) {
     const r = await sb
       .from('services')
-      .select('id,name,price,duration_max')
+      .select('id,name,price,duration_max,active')
       .eq('name', service_name)
       .maybeSingle();
     svc = r.data;
   }
   if (!svc) return res.status(400).json({ error: 'Unknown service' });
+  // 2a. Hidden in Admin. The hold runs this before any charge; a card can only
+  // have been charged if the service was hidden in the minute between the two,
+  // and then the money goes back - same as the long-service rule below.
+  if (isServiceHidden(svc)) {
+    if (payment_intent_id) {
+      try {
+        await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
+          payment_intent: payment_intent_id,
+        });
+      } catch (e) {
+        console.error('[create-booking] hidden-service refund failed:', e.message);
+      }
+    }
+    return res.status(409).json({
+      error: SERVICE_HIDDEN_MESSAGE + (payment_intent_id ? ' Your payment has been refunded.' : ''),
+      code: 'service-hidden',
+    });
+  }
   // 2b. A job of more than an hour cannot start at 4pm or later. Before any
   // charge: the hold runs this first, so normally no card has been touched.
   if (isLongServiceTooLate(svc.duration_max, scheduled_time)) {
@@ -5335,6 +5373,17 @@ export function isLongServiceTooLate(durationMax, time) {
   return slotToMinutes(time) > LONG_SERVICE_LAST_START_MIN;
 }
 
+// A service hidden in Admin (`active` false, Diego 25-oct-2026) cannot be newly
+// booked, priced or enquired about. The wizard stops listing it; this is the
+// same rule for a page that was already open when it was hidden. Bookings made
+// before stay as they are: reschedule, reassign and the calendar look the
+// service up by name and still find it. NULL is visible - the column predates
+// the switch.
+export const SERVICE_HIDDEN_MESSAGE = 'This service is no longer offered. Please pick another one.';
+export function isServiceHidden(svc) {
+  return svc?.active === false;
+}
+
 // A van is occupied for longer than the slot it was booked in - long services can
 // run for hours. Every booking blocks its van for (service duration + this buffer),
 // so the next job always has a realistic gap instead of stacking back-to-back.
@@ -6381,9 +6430,18 @@ async function handleAdminDeleteCalendarEvent(req, res) {
   return res.status(200).json({ ok });
 }
 
-async function handleAdminServicesSave(req, res) {
-  const { access_token, id, name, category, price, duration_min, duration_max, description } =
-    req.body;
+export async function handleAdminServicesSave(req, res) {
+  const {
+    access_token,
+    id,
+    name,
+    category,
+    price,
+    duration_min,
+    duration_max,
+    description,
+    active,
+  } = req.body;
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const auth = await verifyAdminSession(access_token, SERVICE_KEY);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
@@ -6402,6 +6460,11 @@ async function handleAdminServicesSave(req, res) {
     duration_max: duration_max === '' || duration_max === null ? null : parseInt(duration_max),
     description: description ? String(description).trim() : null,
   };
+  // Hidden, not deleted (isServiceHidden). Only written when the form sent it,
+  // so a save from an admin.js still cached without the checkbox cannot flip
+  // a hidden service back on - and a new service starts visible.
+  if (typeof active === 'boolean') payload.active = active;
+  else if (!id) payload.active = true;
 
   const { data, error } = id
     ? await auth.sb.from('services').update(payload).eq('id', id).select().maybeSingle()
