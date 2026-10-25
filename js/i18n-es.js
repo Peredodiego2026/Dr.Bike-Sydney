@@ -1164,8 +1164,8 @@ export default {
     'Cubrimos toda el área metropolitana de Sydney, incluyendo Inner West, Eastern Suburbs, CBD, North Shore, Manly y Northern Beaches.',
   "You can reschedule or cancel from the link in your booking confirmation, or by calling us. It's free with more than 24 hours' notice; with less, a fee of up to the visit & diagnosis fee may apply.":
     'Podés reprogramar o cancelar desde el enlace de tu confirmación de reserva, o llamándonos. Es gratis con más de 24 horas de aviso; con menos, puede cobrarse hasta el valor de la visita y diagnóstico.',
-  "Yes. The van carries common parts like brake pads, cables, chains and tubes, and anything less common we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately.":
-    'Sí. La van lleva repuestos comunes como pastillas de freno, cables, cadenas y cámaras, y lo menos común lo conseguimos y volvemos a colocarlo. Los repuestos no están incluidos en el precio del servicio - el mecánico te los cotiza antes de colocar nada, y se cobran aparte.',
+  "Yes. The van carries inner tubes in the common sizes, and any other part your bike needs we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately.":
+    'Sí. La van lleva cámaras de aire en las medidas más comunes, y cualquier otro repuesto que necesite tu bici lo conseguimos y volvemos a colocarlo. Los repuestos no están incluidos en el precio del servicio - el mecánico te los cotiza antes de colocar nada, y se cobran aparte.',
   "A Tune-Up takes about an hour, a Standard Service about 1.5 hours, a Standard+ Service about 2.5 hours and an Ultimate Overhaul about 4 hours. You'll see the estimate when you book.":
     'Un Ajuste lleva cerca de una hora, un Servicio Estándar unas 1,5 horas, un Servicio Estándar+ unas 2,5 horas y una Revisión Completa unas 4 horas. Vas a ver la estimación al reservar.',
   'We accept all major credit cards, debit cards, Apple Pay, and Google Pay. Payment is taken after service completion.':
@@ -1920,4 +1920,19 @@ export default {
     'Esa foto es demasiado grande para enviarla. Tu reserva no se ve afectada.',
   'We could not read that photo. Your booking is not affected.':
     'No pudimos leer esa foto. Tu reserva no se ve afectada.',
+  // The parts price list (js/parts-prices.js), 25-oct-2026.
+  'Parts prices': 'Precios de repuestos',
+  'Final prices, fitted by your mechanic.': 'Precios finales, colocados por tu mecánico.',
+  'Search parts': 'Buscar repuestos',
+  'Your mechanic shows you the part and its price before fitting it - nothing goes on without your OK.':
+    'Tu mecánico te muestra el repuesto y su precio antes de colocarlo: no se instala nada sin tu OK.',
+  'No parts match your search.': 'Ningún repuesto coincide con tu búsqueda.',
+  'Loading prices...': 'Cargando precios...',
+  'The price list could not be loaded right now. Your mechanic will still show you every price before fitting anything.':
+    'No pudimos cargar la lista de precios ahora. Igual tu mecánico te mostrará cada precio antes de colocar nada.',
+  'Parts are quoted on the spot - your mechanic tells you the price before fitting anything.':
+    'Los repuestos se cotizan en el momento: tu mecánico te dice el precio antes de colocar nada.',
+  'Parts are extra if your bike needs any - you approve each one first.':
+    'Los repuestos van aparte si tu bici los necesita: apruebas cada uno antes.',
+  'See parts prices': 'Ver precios de repuestos',
 };

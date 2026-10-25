@@ -5115,6 +5115,33 @@ async function handlePublicBookingList(req, res) {
 
 // Public, aggregated roster for the landing page: every mechanic who has
 // completed at least one job, with their average rating and client reviews.
+// The parts price list anyone can see - the landing, the app, the booking
+// summary and the terms all open it. Name, category and the client price, and
+// nothing else: what Diego paid for a part never leaves the database ("el
+// cliente nunca debe saber cuanto me costo", 25-oct-2026). parts_inventory
+// itself stays closed to the anon key; only this select reaches it.
+export async function handlePartsPrices(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const hdr = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
+  const base = `${SUPABASE_URL}/rest/v1/parts_inventory?select=name,category,sell_price&sell_price=gt.0&order=category.asc,name.asc`;
+  // Same fallback as the mechanic's list: until the `active` column exists the
+  // filter is a 400, and then nothing can be inactive.
+  let resp = await fetch(`${base}&active=is.true`, { headers: hdr });
+  if (resp.status === 400) resp = await fetch(base, { headers: hdr });
+  if (!resp.ok) return res.status(502).json({ error: 'The parts price list is unavailable' });
+  const rows = await resp.json().catch(() => []);
+  res.setHeader('Cache-Control', 'public, max-age=300');
+  return res.status(200).json(
+    (Array.isArray(rows) ? rows : [])
+      .filter((r) => r?.name && Number(r.sell_price) > 0)
+      .map((r) => ({
+        name: String(r.name),
+        category: String(r.category || 'General'),
+        price: Number(r.sell_price),
+      }))
+  );
+}
+
 async function handlePublicMechanics(req, res) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const hdrs = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
@@ -7230,6 +7257,7 @@ async function handler(req, res) {
           role === 'hold-slot' ||
           role === 'check-coverage' ||
           role === 'closed-until' ||
+          role === 'parts-prices' ||
           // Analytics is one authenticated admin changing a date filter, not a
           // login attempt - the default 5/min locks the screen out on the third
           // range change.
@@ -7258,6 +7286,7 @@ async function handler(req, res) {
   if (role === 'track-route') return handleTrackRoute(req, res);
   if (role === 'public-booking-list') return handlePublicBookingList(req, res);
   if (role === 'public-mechanics') return handlePublicMechanics(req, res);
+  if (role === 'parts-prices') return handlePartsPrices(req, res);
   if (role === 'consume-code') return handleConsumeCode(req, res);
   if (role === 'client-review') return handleClientReview(req, res);
   if (role === 'mechanic-update-status') return handleMechanicUpdateStatus(req, res);
