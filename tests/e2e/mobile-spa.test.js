@@ -11,7 +11,7 @@
 //
 // Run: npm run test:e2e -- mobile-spa
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 
 const goto = (page, path) => page.goto(path, { waitUntil: 'domcontentloaded' });
 const reload = (page) => page.reload({ waitUntil: 'domcontentloaded' });

@@ -12,7 +12,7 @@
 // overlay IS visible - it has size, it is painted, it is not display:none. The
 // only question that finds this bug is the one a finger asks: if I tap the
 // middle of this button, what receives the tap?
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 
 const goto = (page, path) => page.goto(path, { waitUntil: 'domcontentloaded' });
 

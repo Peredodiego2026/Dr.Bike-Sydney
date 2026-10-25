@@ -4,7 +4,7 @@
 // only answers "does the page load clean".
 // Run: npx playwright test tests/e2e/all-pages-smoke.test.js --project="Desktop Chrome"
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 
 const SUBURBS = [
   'bondi', 'cbd', 'chatswood', 'eastern-suburbs', 'hills-district', 'hornsby',
@@ -29,11 +29,15 @@ const CORE_PAGES = [
   '/applepay.html', '/claims.html',
 ];
 
-const PAGES = [
-  ...CORE_PAGES,
+// The 75 suburb and blog pages are static marketing: one pass a day is enough
+// to know they load. The 6-hourly run (SMOKE_SCOPE=core, set by
+// .github/workflows/e2e-smoke.yml) checks the 12 pages the business runs on.
+// Every run is real traffic against the live Supabase - see ./fixtures.js.
+const MARKETING_PAGES = [
   ...LANGS.flatMap((l) => SUBURBS.map((s) => `/${l}${s}`)),
   ...LANGS.flatMap((l) => BLOG_POSTS.map((b) => `/${l}blog/${b}`)),
 ];
+const PAGES = process.env.SMOKE_SCOPE === 'core' ? CORE_PAGES : [...CORE_PAGES, ...MARKETING_PAGES];
 
 // Known-benign console noise, not app bugs - excluded so a real regression
 // doesn't get lost in expected third-party chatter.
