@@ -107,15 +107,60 @@ describe('a job with no completion charge recorded: worked out like the phone do
   });
 });
 
+describe('a gift card is money the client already paid, not a discount', () => {
+  // $119 service paid entirely with a $119 gift card: the phone charged $0 at
+  // completion, discount_applied = 119, gift_applied = 119. Before 25-oct-2026
+  // this job was a $35 sale (visit only) - the $119 was in no figure at all.
+  it('a finished job paid with a gift card still counts the service', () => {
+    const b = {
+      service_price: 119,
+      callout_fee: 35,
+      discount_applied: 119,
+      gift_applied: 119,
+      final_charge_amount: 0,
+    };
+    expect(anBookingRevenue(b)).toBe(154);
+  });
+
+  it('a gift card plus a promo-style credit: only the gift card comes back in', () => {
+    // $159 service, $50 gift card + $20 referral credit -> phone charged $89
+    const b = {
+      service_price: 159,
+      callout_fee: 55,
+      discount_applied: 70,
+      gift_applied: 50,
+      final_charge_amount: 89,
+    };
+    expect(anBookingRevenue(b)).toBe(55 + 89 + 50);
+  });
+
+  it('the same with no completion charge recorded', () => {
+    const b = {
+      service_price: 159,
+      callout_fee: 55,
+      discount_applied: 70,
+      gift_applied: 50,
+      final_charge_amount: null,
+    };
+    expect(anBookingRevenue(b)).toBe(55 + (159 - 70) + 50);
+  });
+
+  it('no gift card, nothing changes', () => {
+    expect(
+      anBookingRevenue({ service_price: 119, callout_fee: 35, final_charge_amount: 119 })
+    ).toBe(154);
+  });
+});
+
 describe('every query that feeds it asks for the columns it needs', () => {
   it('Analytics', () => {
     const cols = src.match(/const baseCols =\s*'([^']+)'/)[1];
-    for (const c of ['final_charge_amount', 'discount_applied', 'parts_charged'])
+    for (const c of ['final_charge_amount', 'discount_applied', 'gift_applied', 'parts_charged'])
       expect(cols).toContain(c);
   });
   it('the 7-day mechanic stats', () => {
     const q = src.match(/async function loadMechStats[\s\S]*?\.select\(\s*'([^']+)'/)[1];
-    for (const c of ['final_charge_amount', 'discount_applied', 'parts_charged'])
+    for (const c of ['final_charge_amount', 'discount_applied', 'gift_applied', 'parts_charged'])
       expect(q).toContain(c);
   });
 });

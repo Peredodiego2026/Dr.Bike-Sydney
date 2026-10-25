@@ -28,6 +28,16 @@ consulta responde una sola pregunta - si falta correr un script - y nada mas.
 
 ---
 
+## NUEVO (25-oct-2026): una gift card usada cuenta como venta
+
+**Correr `scripts/add-gift-applied.sql` primero y mergear su PR despues.**
+Agrega `bookings.gift_applied` (la parte de una reserva que se pago con gift card)
+y la completa para las reservas que ya usaron una. Finanzas la suma a la
+facturacion y al BAS. Seguro de correr dos veces. Verificacion al pie del
+script: tiene que dar `true | 0`.
+
+---
+
 ## NUEVO (25-oct-2026): el costo de los repuestos, fuera del alcance del cliente
 
 **Primero mergear el PR, despues correr `scripts/add-booking-costs-private.sql`.**
@@ -508,6 +518,10 @@ with
     (exists (select 1 from tbl where t = 'booking_costs')
      and coalesce((select relrowsecurity from pg_class where oid = to_regclass('public.booking_costs')), false)
      and not exists (select 1 from public.bookings where parts_cost_actual is not null))
+  -- 59 entro el 2026-10-25: la parte de una reserva pagada con gift card, para
+  -- que cuente como venta (Finanzas la suma; antes quedaba como descuento).
+  union all select 59, 'add-gift-applied.sql', 'bookings.gift_applied (una gift card usada es venta)',
+    (exists (select 1 from col where t='bookings' and c='gift_applied'))
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado

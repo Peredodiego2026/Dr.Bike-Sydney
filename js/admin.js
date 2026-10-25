@@ -4108,7 +4108,7 @@ async function loadMechStats(vanNum) {
   const { data } = await sb
     .from('bookings')
     .select(
-      'service_price,callout_fee,final_charge_amount,discount_applied,parts_charged,client_rating,completed_at,scheduled_date,status'
+      'service_price,callout_fee,final_charge_amount,discount_applied,gift_applied,parts_charged,client_rating,completed_at,scheduled_date,status'
     )
     .eq('van_number', vanNum)
     .eq('status', 'completed')
@@ -4564,10 +4564,16 @@ function anCompletedInRange(all, from, to) {
 // (not finished yet, or finished before the column existed) is worked out from
 // the same pieces the phone uses (api/_completion-notify.js
 // calcCompletionTotals). Self-contained on purpose: tests lift it from source.
+//
+// A gift card is the one discount that is not a discount: the client paid for
+// it when they bought the card, and the sale is this job. gift_applied (the
+// part of discount_applied that came off a GIFT- code) goes back in, so a job
+// paid with a gift card still counts in revenue and the BAS (25-oct-2026).
 function anBookingRevenue(b) {
   const callout = Number(b.callout_fee) || 0;
+  const gift = Number(b.gift_applied) || 0;
   if (b.final_charge_amount !== null && b.final_charge_amount !== undefined) {
-    return callout + (Number(b.final_charge_amount) || 0);
+    return callout + (Number(b.final_charge_amount) || 0) + gift;
   }
   const items = Array.isArray(b.parts_charged?.items) ? b.parts_charged.items : [];
   const parts = items.reduce((s, p) => {
@@ -4576,7 +4582,7 @@ function anBookingRevenue(b) {
   }, 0);
   const service = Math.max(0, (Number(b.service_price) || 0) - (Number(b.discount_applied) || 0));
   const completionDiscount = Number(b.parts_charged?.discount_amount) || 0;
-  return callout + Math.max(0, service + parts - completionDiscount);
+  return callout + Math.max(0, service + parts - completionDiscount) + gift;
 }
 function anRevenueOf(rows) {
   return rows.reduce((s, b) => s + anBookingRevenue(b), 0);
@@ -4635,7 +4641,7 @@ function withPrivateCost(rows) {
 
 async function fetchAnalyticsBookings() {
   const baseCols =
-    'id,client_id,client_name,client_email,service_name,service_price,callout_fee,final_charge_amount,discount_applied,parts_charged,suburb,address,status,scheduled_date,created_at,completed_at,mechanic_accepted_at,time_to_book_seconds,utm_source,utm_medium,utm_campaign,profiles(full_name,email)';
+    'id,client_id,client_name,client_email,service_name,service_price,callout_fee,final_charge_amount,discount_applied,gift_applied,parts_charged,suburb,address,status,scheduled_date,created_at,completed_at,mechanic_accepted_at,time_to_book_seconds,utm_source,utm_medium,utm_campaign,profiles(full_name,email)';
   const query = (cols) =>
     sb
       .from('bookings')
