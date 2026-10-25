@@ -75,8 +75,21 @@ function tVal(s) {
   try { return window.__trackI18n.translateValue(s); } catch { return s; }
 }
 
-const stColors={pending:'pending',confirmed:'confirmed',enroute:'enroute',completed:'completed'};
-const stLabels={pending:'⏳ Pending confirmation',confirmed:'✅ Confirmed',enroute:'🚐 Mechanic on the way!',completed:'✅ Service completed'};
+const stColors={pending:'pending',confirmed:'confirmed',enroute:'enroute',in_progress:'enroute',completed:'completed'};
+const stLabels={pending:'⏳ Pending confirmation',confirmed:'✅ Confirmed',enroute:'🚐 Mechanic on the way!',in_progress:'🔧 Service in progress',completed:'✅ Service completed'};
+// The arrival writes 'inprogress', and older rows say 'arrived'; this page only
+// knew 'in_progress', so once the mechanic arrived the client saw a raw
+// "inprogress", no "has arrived" card and no live updates. One name for all
+// three (api/auth.js IN_PROGRESS_STATUSES).
+const normStatus = (s) => (s === 'inprogress' || s === 'arrived' ? 'in_progress' : s);
+// "17:10" in Sydney - the finish the server worked out from when the mechanic
+// started plus the service's longest duration. 24-hour like the rest of this
+// page, and not language-dependent: this renders before js/i18n.js is ready,
+// so the words beside it are a separate text node the page translates later.
+function finishClock(iso){
+  try { return new Intl.DateTimeFormat('en-GB',{hour:'2-digit',minute:'2-digit',hourCycle:'h23',timeZone:'Australia/Sydney'}).format(new Date(iso)); }
+  catch { return ''; }
+}
 
 async function init(){
   const params = new URLSearchParams(window.location.search);
@@ -120,6 +133,8 @@ async function init(){
     document.getElementById('track-retry')?.addEventListener('click', () => window.location.reload());
     return;
   }
+  bkg.status = normStatus(bkg.status);
+  const finishAt = bkg.status==='in_progress' && bkg.estimated_finish_at ? finishClock(bkg.estimated_finish_at) : '';
 
   const date = new Date(bkg.scheduled_date+'T00:00:00').toLocaleDateString(tLoc(),{weekday:'long',day:'numeric',month:'long'});
   const statusClass = stColors[bkg.status]||'pending';
@@ -195,6 +210,7 @@ async function init(){
      <div class="card" style="background:var(--green-lt);border-color:#6EE7B7">
        <div style="font-size:24px;margin-bottom:8px">🚐</div>
        <div style="font-size:14px;font-weight:700;color:var(--green-ink)">${bkg.status==='enroute'?'Your mechanic is on the way!':'Your mechanic has arrived!'}</div>
+       ${finishAt?`<div id="track-finish" style="font-size:15px;font-weight:700;color:var(--navy);margin-top:8px"><span>Should be done around</span> <span style="white-space:nowrap">${escHtml(finishAt)}</span></div>`:''}
        <div style="font-size:12px;color:var(--green-text);margin-top:4px">This page updates automatically</div>
      </div>`:''}
 
@@ -303,7 +319,7 @@ async function init(){
         if(!resp.ok) throw new Error('HTTP ' + resp.status);
         failures = 0;
         const updated = await resp.json();
-        if(updated.status !== bkg.status) { window.location.reload(); return; }
+        if(normStatus(updated.status) !== bkg.status) { window.location.reload(); return; }
         if(updated.mechanic_location?.lat && updated.mechanic_location?.lng) {
           placeMarker(updated.mechanic_location.lat, updated.mechanic_location.lng);
           const ms = document.getElementById('map-status');

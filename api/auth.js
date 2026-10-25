@@ -4958,7 +4958,7 @@ async function handleTrackRoute(req, res) {
   return res.status(200).json({ route: route || null, reason: route ? null : 'routing-failed' });
 }
 
-async function handlePublicTrack(req, res) {
+export async function handlePublicTrack(req, res) {
   // tracking_token ONLY - it's the one credential this endpoint is meant to
   // accept (a long random UUID, unguessable). Raw booking_id used to work
   // here too, which defeated the entire point of having a separate secret
@@ -5012,7 +5012,7 @@ async function handlePublicTrack(req, res) {
 
   // Fetch mechanic location server-side (bypasses RLS on mechanic_locations)
   let mechanic_location = null;
-  const isActive = ['confirmed', 'enroute', 'en_route', 'in_progress', 'arrived'].includes(
+  const isActive = ['confirmed', 'enroute', 'en_route', ...IN_PROGRESS_STATUSES].includes(
     booking.status
   );
 
@@ -5110,9 +5110,56 @@ async function handlePublicTrack(req, res) {
   // link - pero deja de entregar direccion, PIN y posicion. Ninguno de los tres
   // significa nada para un trabajo terminado hace semanas, y son exactamente
   // los que dolerian si el link se filtra.
+  // When the job should be done, once the mechanic is there (Diego,
+  // 26-oct-2026: the client sees it on the "your mechanic has arrived" screen).
+  // Asked for separately and allowed to fail: started_at comes from a
+  // hand-run migration, and PostgREST rejects the whole query on an unknown
+  // column - a missing one costs the finish time, never the tracking page.
+  let estimated_finish_at = null;
+  if (IN_PROGRESS_STATUSES.includes(booking.status)) {
+    const timingCols = (cols) =>
+      fetch(`${SUPABASE_URL}/rest/v1/bookings?select=${cols}&${filter}&limit=1`, { headers });
+    const [tResp, sResp] = await Promise.all([
+      timingCols('arrived_at,started_at').then((r) => (r.ok ? r : timingCols('arrived_at'))),
+      fetch(
+        `${SUPABASE_URL}/rest/v1/services?select=duration_max&name=eq.${encodeURIComponent(booking.service_name || '')}&limit=1`,
+        { headers }
+      ),
+    ]);
+    const timing = tResp.ok ? (await tResp.json())?.[0] || {} : {};
+    const durationMax = sResp.ok ? (await sResp.json())?.[0]?.duration_max : null;
+    estimated_finish_at = estimatedFinishAt({ ...booking, ...timing }, durationMax);
+  }
+
   return res
     .status(200)
-    .json(applyTrackingScope({ ...booking, mechanic_location, mechanic_profile }, scope));
+    .json(
+      applyTrackingScope(
+        { ...booking, mechanic_location, mechanic_profile, estimated_finish_at },
+        scope
+      )
+    );
+}
+
+// The arrival endpoint writes 'inprogress', the admin's status list says
+// 'in_progress', and some older rows say 'arrived'. All three mean the
+// mechanic is at the door working, and every reader has to say so - the
+// tracking page and the availability each knew only some of them.
+export const IN_PROGRESS_STATUSES = ['arrived', 'inprogress', 'in_progress'];
+
+// Start (when the mechanic pressed Start, else when he arrived, else the booked
+// time) plus the service's longest duration. Null before he is there, or when
+// the duration is unknown.
+export function estimatedFinishAt(b, durationMax) {
+  if (!IN_PROGRESS_STATUSES.includes(b.status) || !(Number(durationMax) > 0)) return null;
+  let start = Date.parse(b.started_at || b.arrived_at || '');
+  if (!Number.isFinite(start))
+    start = sydneyLocalToUtc(
+      b.scheduled_date,
+      String(b.scheduled_time || '').slice(0, 5)
+    )?.getTime();
+  if (!Number.isFinite(start)) return null;
+  return new Date(start + Number(durationMax) * 60000).toISOString();
 }
 
 // Increment uses_count on a discount/gift code after it is actually used in a booking.
@@ -5789,7 +5836,9 @@ export async function handleGetAvailability(req, res) {
           'id,scheduled_time,van_number,service_name,status,created_at,stripe_payment_intent_id'
         )
         .eq('scheduled_date', date)
-        .in('status', ['pending', 'confirmed', 'enroute', 'in_progress', 'arrived']),
+        // 'inprogress' too: that is what the arrival writes, so a job being
+        // worked on did not hold its van and the rest of its window was offered.
+        .in('status', ['pending', 'confirmed', 'enroute', ...IN_PROGRESS_STATUSES]),
       // van_number too: a block is per van (0 = all of them), and reading only
       // the slot made one van's day off close the day for both.
       sb.from('availability').select('time_slot, available, van_number').eq('date', date),
