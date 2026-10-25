@@ -1,8 +1,10 @@
-// tests/unit/long-services-end-by-five.test.js - Diego, 25-oct-2026: a service
-// of more than an hour cannot be booked to start at 4pm or later (its last
-// start is 3pm, so the job ends inside working hours). A Tune-Up (60 min) still
-// can. The 4pm hour is shown unavailable WITH a reason, so the client is told
-// why; the booking itself is refused on the server too.
+// tests/unit/long-services-end-by-five.test.js - every job ends by 5pm (Diego,
+// 26-oct-2026). A service can start only if its longest duration finishes by
+// closing: the 4-hour Ultimate Overhaul's last start is 1pm (the first rule, on
+// 25-oct, let it start at 3pm and end at 7pm), a 90-minute service's 3pm, a
+// Tune-Up's 4pm. The late hours are shown unavailable WITH the reason and the
+// last start, so the client is told why; the booking is refused on the server
+// too.
 //
 // Same fake Supabase as guest-books-end-to-end.test.js: the assertions are
 // about what the endpoints answer and what lands in the table, not the source.
@@ -105,7 +107,8 @@ const {
   handleGetAvailability,
   computeAvailableSlots,
   isLongServiceTooLate,
-  LONG_SERVICE_MESSAGE,
+  lastStartSlot,
+  longServiceMessage,
 } = await import('../../api/auth.js');
 
 const makeRes = () => {
@@ -161,46 +164,65 @@ beforeEach(() => {
   refunds.length = 0;
 });
 
-describe('the rule', () => {
-  it('more than an hour: 3pm yes, 4pm no', () => {
+describe('the rule: every job ends by 5pm', () => {
+  it('a 90-minute job: 3pm yes, 4pm no', () => {
     expect(isLongServiceTooLate(90, '15:00')).toBe(false);
     expect(isLongServiceTooLate(90, '16:00')).toBe(true);
     expect(isLongServiceTooLate(90, '4:00 PM')).toBe(true);
+  });
+  it('the 4-hour Ultimate Overhaul: 1pm yes, 2pm and 3pm no (3pm used to end at 7pm)', () => {
+    expect(isLongServiceTooLate(240, '13:00')).toBe(false);
+    expect(isLongServiceTooLate(240, '14:00')).toBe(true);
+    expect(isLongServiceTooLate(240, '3:00 PM')).toBe(true);
     expect(isLongServiceTooLate(240, '16:00:00')).toBe(true);
   });
-  it('an hour or less can still start at 4pm', () => {
+  it('a 2-hour job ending exactly at 5pm is fine', () => {
+    expect(isLongServiceTooLate(120, '15:00')).toBe(false);
+  });
+  it('an hour or less can still start at 4pm; an unknown duration counts as an hour', () => {
     expect(isLongServiceTooLate(60, '16:00')).toBe(false);
     expect(isLongServiceTooLate(20, '4:00 PM')).toBe(false);
-  });
-  it('an unknown duration is not treated as long', () => {
     expect(isLongServiceTooLate(null, '16:00')).toBe(false);
   });
-  it('the slot list marks 4pm with the reason, and nothing else changes', () => {
+  it('the last start each service fits in, and the message that names it', () => {
+    expect(lastStartSlot(240)).toBe('1:00 PM');
+    expect(lastStartSlot(120)).toBe('3:00 PM');
+    expect(lastStartSlot(90)).toBe('3:00 PM');
+    expect(lastStartSlot(60)).toBe('4:00 PM');
+    expect(longServiceMessage(240)).toBe(
+      'The latest start for this service is 1:00 PM, due to the complexity of the job.'
+    );
+  });
+  it('the slot list marks the late hours with the reason and the last start', () => {
     const args = {
-      allSlots: ['3:00 PM', '4:00 PM'],
+      allSlots: ['1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM'],
       vans: [1],
       busyIntervals: [],
-      neededMin: 120,
+      neededMin: 270,
       blockIntervals: [],
       isToday: false,
       nowMin: 0,
     };
-    expect(computeAvailableSlots({ ...args, longService: true })).toEqual([
-      { time: '3:00 PM', available: true },
-      { time: '4:00 PM', available: false, reason: 'long-service' },
+    expect(computeAvailableSlots({ ...args, serviceDuration: 240 })).toEqual([
+      { time: '1:00 PM', available: true },
+      { time: '2:00 PM', available: false, reason: 'long-service', until: '1:00 PM' },
+      { time: '3:00 PM', available: false, reason: 'long-service', until: '1:00 PM' },
+      { time: '4:00 PM', available: false, reason: 'long-service', until: '1:00 PM' },
     ]);
-    expect(computeAvailableSlots(args)[1]).toEqual({ time: '4:00 PM', available: true });
+    // Not asked for one service: nothing is cut for finishing late.
+    expect(computeAvailableSlots(args).every((s) => !s.reason)).toBe(true);
   });
 });
 
 describe('the availability the client sees', () => {
-  it('a long service: 4pm unavailable, with the reason', async () => {
+  it('a 90-minute service: 4pm unavailable, with the reason and the last start', async () => {
     const r = await availability({ serviceId: 'svc-std' });
     expect(r.statusCode).toBe(200);
     expect(r.body.find((s) => s.time === '4:00 PM')).toEqual({
       time: '4:00 PM',
       available: false,
       reason: 'long-service',
+      until: '3:00 PM',
     });
     expect(r.body.find((s) => s.time === '3:00 PM').available).toBe(true);
   });
@@ -208,24 +230,37 @@ describe('the availability the client sees', () => {
     const r = await availability({ serviceId: 'svc-tune' });
     expect(r.body.find((s) => s.time === '4:00 PM').available).toBe(true);
   });
-  it('a reschedule, which only knows the service NAME, gets the same answer', async () => {
+  it('the Ultimate Overhaul, asked by NAME as a reschedule does: from 2pm on, last start 1pm', async () => {
     const r = await availability({ serviceName: 'Ultimate Overhaul' });
-    expect(r.body.find((s) => s.time === '4:00 PM').reason).toBe('long-service');
+    expect(r.body.find((s) => s.time === '1:00 PM').reason).toBeUndefined();
+    for (const t of ['2:00 PM', '3:00 PM', '4:00 PM']) {
+      expect(r.body.find((s) => s.time === t)).toMatchObject({
+        reason: 'long-service',
+        until: '1:00 PM',
+      });
+    }
   });
 });
 
 describe('the booking itself', () => {
-  it('refuses a long service at 4pm, says why, and writes nothing', async () => {
+  it('refuses a 90-minute service at 4pm, says why, and writes nothing', async () => {
     const r = await hold(SERVICES[0], '16:00');
     expect(r.statusCode).toBe(409);
     expect(r.body.code).toBe('long-service-cutoff');
-    expect(r.body.error).toBe(LONG_SERVICE_MESSAGE);
+    expect(r.body.error).toBe(longServiceMessage(90));
     expect(db.bookings.length).toBe(0);
   });
   it('takes the same service at 3pm', async () => {
     const r = await hold(SERVICES[0], '15:00');
     expect(r.statusCode, JSON.stringify(r.body)).toBe(200);
     expect(db.bookings.length).toBe(1);
+  });
+  it('refuses the Ultimate Overhaul at 3pm (it would end at 7pm) and takes it at 1pm', async () => {
+    const late = await hold(SERVICES[2], '15:00');
+    expect(late.statusCode).toBe(409);
+    expect(late.body.error).toMatch(/latest start for this service is 1:00 PM/);
+    const ok = await hold(SERVICES[2], '13:00');
+    expect(ok.statusCode, JSON.stringify(ok.body)).toBe(200);
   });
   it('takes a Tune-Up at 4pm', async () => {
     const r = await hold(SERVICES[1], '16:00');

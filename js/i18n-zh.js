@@ -132,9 +132,10 @@ export default {
   Back: '返回',
   '- unavailable': '- 不可用',
   // Long jobs end by 5pm: their last start is 3pm (Diego, 25-oct-2026).
-  '- only until 3pm': '- 仅限下午3点前',
-  'This service is only available until 3pm due to the complexity of the job.':
-    '由于工作较复杂，此服务只能预约到下午3点。',
+  '- latest start LASTSTART': '- 最晚开始时间 LASTSTART',
+  'Estimated finish': '预计完成',
+  'The latest start for this service is LASTSTART, due to the complexity of the job.':
+    '由于工作较复杂，此服务的最晚开始时间为 LASTSTART。',
   'No times available that day - try another date.': '当天没有可用时间 - 请尝试其他日期。',
   'Could not load times': '无法加载时间',
   'Could not check availability. Try again.': '无法查看可用性，请重试。',
