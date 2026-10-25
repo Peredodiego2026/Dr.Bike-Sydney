@@ -777,6 +777,7 @@ async function load() {
       membership_plan: b.client_membership_plan || null,
       membership_status: b.client_membership_status || null,
       has_card_on_file: !!b.client_has_card_on_file,
+      duration_max: b.duration_max ?? null,
     }));
     jobs = mapped;
     try {
@@ -1069,9 +1070,19 @@ const MEMBERSHIP_BADGE = {
   vip: { label: 'VIP member · 15%+5% off', color: 'var(--purple)' },
 };
 
+// When a job should be done: its start plus the service's longest duration,
+// "09:00" + 90 -> "10:30" (Diego, 26-oct-2026). '' when either is unknown.
+function jobEnd(time, durationMax) {
+  const m = String(time || '').match(/^(\d{1,2}):(\d{2})/);
+  if (!m || !(Number(durationMax) > 0)) return '';
+  const end = Number(m[1]) * 60 + Number(m[2]) + Number(durationMax);
+  return `${String(Math.floor(end / 60)).padStart(2, '0')}:${String(end % 60).padStart(2, '0')}`;
+}
+
 function card(j) {
   const today = new Date().toISOString().split('T')[0];
-  const t = j.time ? j.time.substring(0, 5) : '';
+  const end = jobEnd(j.time, j.duration_max);
+  const t = j.time ? j.time.substring(0, 5) + (end ? '-' + end : '') : '';
   const d = j.date
     ? new Date(j.date + 'T00:00:00').toLocaleDateString('en-AU', {
         weekday: 'short',
@@ -3335,7 +3346,7 @@ function renderAgenda() {
         .forEach((j) => {
           const color = stColors[j.status] || 'var(--gray)';
           html += `<div style="display:flex;gap:10px;margin-bottom:8px;align-items:flex-start">
-          <div style="width:52px;font-size:11px;color:var(--gray-lt);padding-top:10px;flex-shrink:0;text-align:right">${j.time || '—'}</div>
+          <div style="width:52px;font-size:11px;color:var(--gray-lt);padding-top:10px;flex-shrink:0;text-align:right">${j.time ? j.time.substring(0, 5) : '—'}${jobEnd(j.time, j.duration_max) ? `<br>${jobEnd(j.time, j.duration_max)}` : ''}</div>
           <div style="flex:1;background:${color}12;border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:10px 12px;cursor:pointer" data-action="open-mech-chat" data-id="${j.id}">
             <div style="font-size:13px;font-weight:600;color:var(--navy)">${esc(j.service)}</div>
             <div style="font-size:13px;color:var(--gray);margin-top:2px">${esc(j.client)} · ${esc(j.suburb || j.address || '—')}</div>

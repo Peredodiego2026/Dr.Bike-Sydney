@@ -1465,7 +1465,7 @@ export async function handleCreateBooking(req, res) {
       code: 'service-hidden',
     });
   }
-  // 2b. A job of more than an hour cannot start at 4pm or later. Before any
+  // 2b. A job must finish by 5pm (see isLongServiceTooLate). Before any
   // charge: the hold runs this first, so normally no card has been touched.
   if (isLongServiceTooLate(svc.duration_max, scheduled_time)) {
     if (payment_intent_id) {
@@ -1478,7 +1478,9 @@ export async function handleCreateBooking(req, res) {
       }
     }
     return res.status(409).json({
-      error: LONG_SERVICE_MESSAGE + (payment_intent_id ? ' Your payment has been refunded.' : ''),
+      error:
+        longServiceMessage(svc.duration_max) +
+        (payment_intent_id ? ' Your payment has been refunded.' : ''),
       code: 'long-service-cutoff',
     });
   }
@@ -2232,7 +2234,7 @@ async function handleMechanic(req, res) {
   });
 }
 
-async function handleMechanicJobs(req, res) {
+export async function handleMechanicJobs(req, res) {
   const auth = await authMechanic(req);
   if (auth.error) return res.status(auth.status).json({ error: auth.error });
 
@@ -2317,6 +2319,21 @@ async function handleMechanicJobs(req, res) {
           client_has_card_on_file: !!p?.stripe_default_payment_method_id,
         };
       });
+    }
+  }
+
+  // How long each job runs, so the app can show when it should finish (Diego,
+  // 26-oct-2026). Bookings store the service NAME; a renamed or deleted
+  // service just gets no end time.
+  if (jobs.length) {
+    const svcResp = await fetch(`${SUPABASE_URL}/rest/v1/services?select=name,duration_max`, {
+      headers: hdrs,
+    });
+    if (svcResp.ok) {
+      const durations = new Map((await svcResp.json()).map((s) => [s.name, s.duration_max]));
+      jobs = jobs.map((j) => ({ ...j, duration_max: durations.get(j.service_name) ?? null }));
+    } else {
+      console.error('[mechanic-jobs] service durations unavailable:', svcResp.status);
     }
   }
 
@@ -3672,7 +3689,12 @@ async function rescheduleBookingCore(
 
   const neededMin = (svcData?.[0]?.duration_max || DEFAULT_SERVICE_DURATION_MIN) + SLOT_BUFFER_MIN;
   if (byClient && isLongServiceTooLate(svcData?.[0]?.duration_max, scheduled_time))
-    return { ok: false, status: 409, error: LONG_SERVICE_MESSAGE, code: 'long-service-cutoff' };
+    return {
+      ok: false,
+      status: 409,
+      error: longServiceMessage(svcData?.[0]?.duration_max),
+      code: 'long-service-cutoff',
+    };
   const blockResp = await fetch(
     `${SUPABASE_URL}/rest/v1/availability?select=time_slot,available,van_number&date=eq.${encodeURIComponent(scheduled_date)}`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
@@ -5494,21 +5516,6 @@ export function slotToMinutes(slot) {
   return -1;
 }
 
-// Long jobs finish by closing time (Diego, 25-oct-2026): a service of MORE than
-// an hour cannot be booked by a client to start at 4pm or later - its last start
-// is 3pm. A Tune-Up (60 min) still can. The hour is not hidden: it is shown as
-// unavailable with this reason, so the client is told why when they tap it.
-// Enforced again in handleCreateBooking and on a client's reschedule; the admin
-// is not bound by it.
-export const LONG_SERVICE_MINUTES = 60;
-export const LONG_SERVICE_LAST_START_MIN = 15 * 60;
-export const LONG_SERVICE_MESSAGE =
-  'This service is only available until 3pm due to the complexity of the job.';
-export function isLongServiceTooLate(durationMax, time) {
-  if (!(Number(durationMax) > LONG_SERVICE_MINUTES)) return false;
-  return slotToMinutes(time) > LONG_SERVICE_LAST_START_MIN;
-}
-
 // A service hidden in Admin (`active` false, Diego 25-oct-2026) cannot be newly
 // booked, priced or enquired about. The wizard stops listing it; this is the
 // same rule for a page that was already open when it was hidden. Bookings made
@@ -5528,6 +5535,35 @@ export const SLOT_BUFFER_MIN = 30;
 // deleted service, or a legacy row) - a full hour-slot is the safest assumption
 // given ALL_SLOTS itself is on 1-hour granularity.
 export const DEFAULT_SERVICE_DURATION_MIN = 60;
+
+// Every job finishes by closing time (Diego, 26-oct-2026). The first version of
+// this rule (25-oct) let anything over an hour start up to 3pm, which put a
+// 4-hour Ultimate Overhaul booked at 3pm finishing at 7pm. Now a service can
+// start only if its LONGEST duration ends by 5pm: the Ultimate Overhaul's last
+// start is 1pm, a 2-hour Standard+ 3pm, a Tune-Up 4pm - the same hours as
+// before for every service except the Ultimate. The hour is not hidden: it is
+// shown as unavailable with the reason, so the client is told why when they tap
+// it. Enforced again in handleCreateBooking and on a client's reschedule; the
+// admin is not bound by it. No buffer here: the buffer is travel to the next
+// job, and nobody travels after the last one.
+export const CLOSING_MIN = 17 * 60;
+export function serviceMinutes(durationMax) {
+  return Number(durationMax) > 0 ? Number(durationMax) : DEFAULT_SERVICE_DURATION_MIN;
+}
+export function isLongServiceTooLate(durationMax, time) {
+  return slotToMinutes(time) + serviceMinutes(durationMax) > CLOSING_MIN;
+}
+// The last slot this service still fits in - "1:00 PM" for the Ultimate.
+export function lastStartSlot(durationMax) {
+  const fits = ALL_SLOTS.filter((s) => !isLongServiceTooLate(durationMax, s));
+  return fits.length ? fits[fits.length - 1] : null;
+}
+export function longServiceMessage(durationMax) {
+  const last = lastStartSlot(durationMax);
+  return last
+    ? `The latest start for this service is ${last}, due to the complexity of the job.`
+    : 'This service does not fit in one working day. Please call us to book it.';
+}
 
 // Turns each existing booking into a per-van busy window in minutes-since-midnight,
 // using that booking's own service duration (looked up by name) + the buffer.
@@ -5607,13 +5643,20 @@ export function computeAvailableSlots({
   blockIntervals,
   isToday,
   nowMin,
-  longService = false,
+  // The requested service's duration_max. Undefined when the slots are not
+  // for one service, and then nothing is cut for finishing late.
+  serviceDuration,
 }) {
   const blocks = blockIntervals || [];
   return allSlots.map((time) => {
     const slotMin = slotToMinutes(time);
-    if (longService && slotMin > LONG_SERVICE_LAST_START_MIN)
-      return { time, available: false, reason: 'long-service' };
+    if (serviceDuration !== undefined && isLongServiceTooLate(serviceDuration, time))
+      return {
+        time,
+        available: false,
+        reason: 'long-service',
+        until: lastStartSlot(serviceDuration),
+      };
     const slotEnd = slotMin + neededMin;
     const clashes = (intervals, van) =>
       intervals.some((iv) => iv.van === van && slotMin < iv.end && iv.start < slotEnd);
@@ -5700,7 +5743,7 @@ export async function handleGetAvailability(req, res) {
     blockIntervals,
     isToday,
     nowMin,
-    longService: Number(requestedService?.duration_max) > LONG_SERVICE_MINUTES,
+    serviceDuration: requestedService ? requestedService.duration_max : undefined,
   });
 
   // Inside the closed window nothing is on offer, whatever the calendar and

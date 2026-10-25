@@ -118,7 +118,11 @@ async function openDetailWith(block, triage, extra = {}) {
     anBookingRevenue: () => 0,
     vanColor: () => 'red',
     showToast: () => {},
-    sb: { auth: { getSession: async () => ({ data: { session: { access_token: 'tok' } } }) } },
+    sb: {
+      auth: { getSession: async () => ({ data: { session: { access_token: 'tok' } } }) },
+      // The service durations the detail reads for its finish time.
+      from: () => ({ select: async () => ({ data: [], error: null }) }),
+    },
     fetch: async () => ({ ok: true, json: async () => ({ urls: [PHOTO_URL] }) }),
     // The browser globals the signing uses to bound itself. Wrapped rather
     // than captured, so a test that turns on fake timers AFTER the sandbox was
@@ -137,6 +141,9 @@ async function openDetailWith(block, triage, extra = {}) {
     [
       sliceFn('function esc('),
       sliceFn('function renderTriageBlock('),
+      sliceFn('function jobTimeRange('),
+      'let _serviceDurations = null;',
+      sliceFn('async function serviceDurations('),
       sliceFn('function renderBookingDetail('),
       sliceFn('async function signTriagePhoto('),
       sliceFn('async function openBookingDetail('),
@@ -307,7 +314,10 @@ describe('the booking detail shows the triage', () => {
       anBookingRevenue: () => 0,
       vanColor: () => 'red',
     });
-    vm.runInContext(sliceFn('function renderBookingDetail('), ctx);
+    vm.runInContext(
+      sliceFn('function jobTimeRange(') + '\n' + sliceFn('function renderBookingDetail('),
+      ctx
+    );
     ctx.renderBookingDetail(booking);
     return els['bkd-body'].innerHTML;
   }
@@ -710,6 +720,7 @@ describe('the labels are loaded before the detail opens', () => {
       allBookings: [{ id: 'b1' }],
       triageLabelsReady: ready,
       renderBookingDetail: (b) => drawn.push(b.id),
+      serviceDurations: async () => new Map(),
       document: { getElementById: () => modal },
     });
     vm.runInContext(sliceFn('async function openBookingDetail('), ctx);

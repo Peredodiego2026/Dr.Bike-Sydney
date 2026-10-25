@@ -3790,7 +3790,8 @@ async function openBookingDetail(id) {
     }
     photo = { url };
   }
-  renderBookingDetail(b, photo);
+  const durations = await serviceDurations();
+  renderBookingDetail(b, photo, durations.get(b.service_name));
   document.getElementById('booking-detail-modal').style.display = 'flex';
 }
 
@@ -3867,7 +3868,7 @@ function renderTriageBlock(triage, photo) {
     </section>`;
 }
 
-function renderBookingDetail(b, photo) {
+function renderBookingDetail(b, photo, durationMax) {
   const name = b.client_name || b.profiles?.full_name || b.client_email?.split('@')[0] || 'Client';
   const st = b.status || 'pending';
   const isPending = st === 'pending';
@@ -3898,7 +3899,7 @@ function renderBookingDetail(b, photo) {
     ${row('Service', esc(b.service_name || '—'))}
     ${renderTriageBlock(b.triage, photo)}
     ${row('Date', date)}
-    ${row('Time', esc(b.scheduled_time || '—'))}
+    ${row('Time', esc(jobTimeRange(b.scheduled_time, durationMax) || '—'))}
     ${row('Address', esc(b.address || '—'))}
     ${row('Van', `<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:${vanColor(b.van_number)};display:inline-block"></span>Van ${b.van_number || 1}</span>`)}
     ${row('Phone', b.client_phone ? `<a href="tel:${esc(b.client_phone)}" style="color:var(--blue-text);text-decoration:none">${esc(b.client_phone)}</a>` : '')}
@@ -9734,6 +9735,35 @@ function fitMonthGrid() {
   grid.style.height = Math.max(available, 320) + 'px';
 }
 
+// Service name -> its longest duration in minutes, for the finish time the
+// calendar and the booking detail show (Diego, 26-oct-2026). Loaded once; a
+// failed load just means no finish times, never a broken calendar or a booking
+// detail that will not open.
+let _serviceDurations = null;
+async function serviceDurations() {
+  if (_serviceDurations) return _serviceDurations;
+  try {
+    const { data, error } = await sb.from('services').select('name,duration_max');
+    if (error) throw new Error(error.message);
+    _serviceDurations = new Map((data || []).map((s) => [s.name, s.duration_max]));
+    return _serviceDurations;
+  } catch (e) {
+    console.error('[admin] service durations unavailable:', e.message);
+    return new Map();
+  }
+}
+
+// "13:00:00" + 240 -> "13:00-17:00". Just the start when the duration is
+// unknown (a renamed service, a legacy row).
+function jobTimeRange(time, durationMax) {
+  const m = String(time || '').match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return time || '';
+  const start = `${m[1].padStart(2, '0')}:${m[2]}`;
+  if (!(Number(durationMax) > 0)) return start;
+  const end = Number(m[1]) * 60 + Number(m[2]) + Number(durationMax);
+  return `${start}-${String(Math.floor(end / 60)).padStart(2, '0')}:${String(end % 60).padStart(2, '0')}`;
+}
+
 async function loadCalendar() {
   const grid = document.getElementById('cal-grid');
   if (!grid) return;
@@ -9898,6 +9928,7 @@ async function loadCalendar() {
       .lte('date', dateTo)
       .order('time_slot'),
   ]);
+  const durations = await serviceDurations();
 
   const jobs = bookings || [];
   const blockRows = blocks || [];
@@ -9964,7 +9995,7 @@ async function loadCalendar() {
                   // client_name primero, igual que la vista de mes: una
                   // reserva telefonica no tiene perfil.
                   const name = (j.client_name || j.profiles?.full_name)?.split(' ')[0] || 'Client';
-                  const time = j.scheduled_time || '';
+                  const time = jobTimeRange(j.scheduled_time, durations.get(j.service_name));
                   const van = j.van_number || 1;
                   return `<div style="background:${stBg[st] || 'var(--border-lt)'};border-left:3px solid ${stColors[st] || 'var(--gray)'};border-radius:6px;padding:6px 8px;cursor:pointer" data-action="view-booking" data-id="${j.id}">
               <div style="font-size:11px;font-weight:700;color:${stColors[st] || 'var(--gray)'}">${time}</div>

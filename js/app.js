@@ -76,7 +76,7 @@ import {
   configureShop,
 } from './shop-ui.js';
 import { canSeeShop } from './shop.js';
-import { toDbTime, toDisplayTime, sameTime } from './time-format.js';
+import { toDbTime, toDisplayTime, sameTime, timeToMinutes } from './time-format.js';
 import { questionsFor } from './triage-questions.js';
 import {
   getLang,
@@ -483,15 +483,16 @@ async function loadTimeSlots(screen, date, serviceId) {
     return;
   }
   grid.innerHTML = slots.map((s) => createTimeSlot(s.time, s.available, false, s.reason)).join('');
-  // A job of more than an hour cannot start at 4pm or later (Diego,
-  // 25-oct-2026). That hour is shown unavailable but still answers a tap,
-  // with the reason, instead of just not working.
+  // A job must finish by 5pm (Diego, 26-oct-2026), so a long service's late
+  // hours are shown unavailable but still answer a tap, with the reason and
+  // the last hour that works for it, instead of just not working.
+  const lastStart = slots.find((s) => s.reason === 'long-service')?.until || '';
   grid.querySelectorAll('.time-slot[data-reason="long-service"]').forEach((btn) => {
     btn.addEventListener('click', () =>
       showToast(
         translateValue(
-          'This service is only available until 3pm due to the complexity of the job.'
-        ),
+          'The latest start for this service is LASTSTART, due to the complexity of the job.'
+        ).replace('LASTSTART', lastStart),
         'error'
       )
     );
@@ -1944,6 +1945,17 @@ async function renderServiceSummary() {
 
   const inclusions = getServiceInclusions(service.name);
   const dur = formatServiceDuration(service);
+  // When the mechanic should be done: the start plus the service's longest
+  // duration (Diego, 26-oct-2026) - so the client knows how long to be home.
+  const startMin = timeToMinutes(time);
+  const endMin =
+    startMin !== null && Number(service.duration_max) > 0
+      ? startMin + Number(service.duration_max)
+      : null;
+  const finishAt =
+    endMin === null
+      ? ''
+      : toDisplayTime(`${Math.floor(endMin / 60)}:${String(endMin % 60).padStart(2, '0')}`);
 
   screen.innerHTML = `
     ${createHeader('Your Quote', true, '#book-service')}
@@ -1961,6 +1973,7 @@ async function renderServiceSummary() {
         <div style="padding:2px 0">
           ${createSummaryRow('Date', formatDate(date))}
           ${createSummaryRow('Time', time || '-')}
+          ${finishAt ? createSummaryRow(translateValue('Estimated finish'), finishAt) : ''}
           ${createSummaryRow('Location', location || 'Home')}
         </div>
       </div>
@@ -5275,7 +5288,7 @@ async function renderMyBookings() {
               try {
                 const slots = await getAvailableSlots(date, null, booking.service_name);
                 const anyAvailable = slots.some((s) => s.available);
-                const longCutoff = slots.some((s) => s.reason === 'long-service');
+                const lastStart = slots.find((s) => s.reason === 'long-service')?.until || '';
                 // The option VALUE is the 24h time the endpoint validates
                 // (`client-reschedule` rejects anything but HH:MM); the label
                 // stays the 12-hour slot name the client already sees in the
@@ -5287,16 +5300,19 @@ async function renderMyBookings() {
                     const isCurrent = sameTime(s.time, booking.scheduled_time);
                     const why =
                       s.reason === 'long-service'
-                        ? translateValue(' - only until 3pm')
+                        ? translateValue(' - latest start LASTSTART').replace(
+                            'LASTSTART',
+                            lastStart
+                          )
                         : translateValue(' - unavailable');
                     return `<option value="${escapeHtml(value || '')}" ${!s.available ? 'disabled' : ''} ${isCurrent && s.available ? 'selected' : ''}>${escapeHtml(toDisplayTime(s.time) || s.time)}${!s.available ? why : ''}</option>`;
                   })
                   .join('');
                 timeSel.disabled = !anyAvailable;
-                if (longCutoff && anyAvailable) {
+                if (lastStart && anyAvailable) {
                   errEl.textContent = translateValue(
-                    'This service is only available until 3pm due to the complexity of the job.'
-                  );
+                    'The latest start for this service is LASTSTART, due to the complexity of the job.'
+                  ).replace('LASTSTART', lastStart);
                   errEl.style.display = 'block';
                 }
                 if (!anyAvailable) {

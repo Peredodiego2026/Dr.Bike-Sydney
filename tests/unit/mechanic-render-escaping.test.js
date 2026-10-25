@@ -24,6 +24,10 @@ const src = readFileSync(join(root, 'js', 'mechanic.js'), 'utf8');
 const escSrc = src.match(/function esc\(str\) \{[\s\S]*?\n\}/);
 if (!escSrc) throw new Error('esc() not found in js/mechanic.js');
 const esc = new Function(`${escSrc[0]}; return esc;`)();
+// The week row also prints the job's finish time.
+const jobEndSrc = src.match(/function jobEnd\(time, durationMax\) \{[\s\S]*?\n\}/);
+if (!jobEndSrc) throw new Error('jobEnd() not found in js/mechanic.js');
+const jobEnd = new Function(`${jobEndSrc[0]}; return jobEnd;`)();
 
 const XSS = '<img src=x onerror=alert(1)>';
 
@@ -48,10 +52,9 @@ const tagOpenings = (html) => (html.match(/</g) || []).length;
 function assertInert(render, field, safe) {
   const dirty = render(XSS);
   const clean = render(safe);
-  expect(
-    tagOpenings(dirty),
-    `${field} added markup to innerHTML - it is not being escaped`
-  ).toBe(tagOpenings(clean));
+  expect(tagOpenings(dirty), `${field} added markup to innerHTML - it is not being escaped`).toBe(
+    tagOpenings(clean)
+  );
   // and it is still shown to the mechanic rather than dropped
   expect(dirty).toContain('&lt;');
   expect(dirty).toContain('&gt;');
@@ -61,15 +64,27 @@ describe('new-booking toast (alert2)', () => {
   const render = (j) => renderAssignment(/d\.innerHTML = `<b>[\s\S]*?`;/, { j });
 
   it('escapes service_name', () => {
-    assertInert((v) => render({ service_name: v, suburb: 'Bondi', service_price: 45 }), 'service_name', 'Tune-up');
+    assertInert(
+      (v) => render({ service_name: v, suburb: 'Bondi', service_price: 45 }),
+      'service_name',
+      'Tune-up'
+    );
   });
 
   it('escapes suburb', () => {
-    assertInert((v) => render({ service_name: 'Tune-up', suburb: v, service_price: 45 }), 'suburb', 'Bondi');
+    assertInert(
+      (v) => render({ service_name: 'Tune-up', suburb: v, service_price: 45 }),
+      'suburb',
+      'Bondi'
+    );
   });
 
   it('escapes service_price', () => {
-    assertInert((v) => render({ service_name: 'Tune-up', suburb: 'Bondi', service_price: v }), 'price', 45);
+    assertInert(
+      (v) => render({ service_name: 'Tune-up', suburb: 'Bondi', service_price: v }),
+      'price',
+      45
+    );
   });
 });
 
@@ -78,18 +93,31 @@ describe('week calendar row', () => {
     renderAssignment(/html \+= `<div style="display:flex;gap:10px;margin-bottom:8px[\s\S]*?`;/, {
       j,
       color: 'var(--gray)',
+      jobEnd,
     });
 
   it('escapes the address it falls back to when there is no suburb', () => {
-    assertInert((v) => render({ client: 'A', address: v, status: 'pending', price: 45 }), 'address', 'Bondi');
+    assertInert(
+      (v) => render({ client: 'A', address: v, status: 'pending', price: 45 }),
+      'address',
+      'Bondi'
+    );
   });
 
   it('escapes the suburb', () => {
-    assertInert((v) => render({ client: 'A', suburb: v, status: 'pending', price: 45 }), 'suburb', 'Bondi');
+    assertInert(
+      (v) => render({ client: 'A', suburb: v, status: 'pending', price: 45 }),
+      'suburb',
+      'Bondi'
+    );
   });
 
   it('escapes the status', () => {
-    assertInert((v) => render({ client: 'A', suburb: 'Bondi', status: v, price: 45 }), 'status', 'pending');
+    assertInert(
+      (v) => render({ client: 'A', suburb: 'Bondi', status: v, price: 45 }),
+      'status',
+      'pending'
+    );
   });
 
   it('survives a booking with no status at all', () => {

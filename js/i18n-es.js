@@ -155,9 +155,10 @@ export default {
   Back: 'Volver',
   '- unavailable': '- no disponible',
   // Long jobs end by 5pm: their last start is 3pm (Diego, 25-oct-2026).
-  '- only until 3pm': '- solo hasta las 15:00',
-  'This service is only available until 3pm due to the complexity of the job.':
-    'Este servicio solo está disponible hasta las 15:00 por la complejidad del trabajo.',
+  '- latest start LASTSTART': '- último horario LASTSTART',
+  'Estimated finish': 'Fin estimado',
+  'The latest start for this service is LASTSTART, due to the complexity of the job.':
+    'El último horario para este servicio es LASTSTART, por la complejidad del trabajo.',
   'No times available that day - try another date.':
     'No hay horarios disponibles ese día - prueba otra fecha.',
   'Could not load times': 'No se pudieron cargar los horarios',
