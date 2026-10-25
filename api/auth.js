@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { REDACTED, anonymisationPlan, exportPlan } from './_privacy.js';
 import Stripe from 'stripe';
+import { issueGiftCard } from './_gift-cards.js';
 import crypto from 'crypto';
 import { geocodeAddress, drivingRoute, drivingRouteGeometry, suggestAddresses } from './_eta.js';
 import { resolveCoverage, needsQuote, BASE, VALID_FEES, formatMinutes } from './_coverage.js';
@@ -4229,6 +4230,88 @@ export async function handleAdminInventoryHistory(req, res) {
   });
 }
 
+// Admin > Discount Codes: gift cards that were paid for and never issued.
+// Until 25-oct-2026 that was every gift card sold (api/_gift-cards.js says why),
+// and the webhook does not run again for a purchase Stripe was told succeeded.
+// The truth is in Stripe: every paid checkout session marked giftCard, compared
+// with the gift_cards rows that carry its session id.
+export async function handleAdminGiftCardsCheck(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  if (!process.env.STRIPE_SECRET_KEY)
+    return res.status(503).json({ error: 'Stripe is not configured' });
+  const paid = [];
+  try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const since = Math.floor(Date.now() / 1000) - 400 * 86400;
+    for await (const s of stripe.checkout.sessions.list({ created: { gte: since }, limit: 100 })) {
+      if (s.metadata?.giftCard === 'true' && s.payment_status === 'paid') paid.push(s);
+    }
+  } catch (e) {
+    console.error('[admin-gift-cards-check] Stripe read failed:', e.message);
+    return res.status(502).json({ error: 'Stripe could not be read: ' + e.message });
+  }
+  let issuedIds = new Set();
+  if (paid.length) {
+    const { data, error } = await auth.sb
+      .from('gift_cards')
+      .select('stripe_session_id')
+      .in(
+        'stripe_session_id',
+        paid.map((s) => s.id)
+      );
+    if (error)
+      return res.status(500).json({ error: 'gift_cards could not be read: ' + error.message });
+    issuedIds = new Set((data || []).map((r) => r.stripe_session_id));
+  }
+  const missing = paid
+    .filter((s) => !issuedIds.has(s.id))
+    .map((s) => ({
+      session_id: s.id,
+      created: new Date(s.created * 1000).toISOString(),
+      amount: Number(s.metadata?.amount) || (Number(s.amount_total) || 0) / 100,
+      recipient_email: s.metadata?.recipientEmail || '',
+      recipient_name: s.metadata?.recipientName || '',
+      purchaser_email: s.metadata?.purchaserEmail || s.customer_details?.email || '',
+    }))
+    .sort((a, b) => a.created.localeCompare(b.created));
+  res.setHeader('Cache-Control', 'private, no-store');
+  return res.status(200).json({ paid: paid.length, issued: paid.length - missing.length, missing });
+}
+
+// Issue one of them now: the same idempotent function the webhook runs, on the
+// session as Stripe has it - never on anything the browser sends but its id.
+export async function handleAdminGiftCardsIssue(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const sessionId = String(req.body?.session_id || '');
+  if (!/^cs_[A-Za-z0-9_]+$/.test(sessionId))
+    return res.status(400).json({ error: 'session_id required' });
+  if (!process.env.STRIPE_SECRET_KEY)
+    return res.status(503).json({ error: 'Stripe is not configured' });
+  let session;
+  try {
+    session = await new Stripe(process.env.STRIPE_SECRET_KEY).checkout.sessions.retrieve(sessionId);
+  } catch (e) {
+    return res.status(502).json({ error: 'Stripe could not be read: ' + e.message });
+  }
+  if (session.metadata?.giftCard !== 'true')
+    return res.status(400).json({ error: 'That payment is not a gift card' });
+  if (session.payment_status !== 'paid')
+    return res.status(409).json({ error: 'That gift card was never paid for' });
+  try {
+    const result = await issueGiftCard(auth.sb, session);
+    if (result.status === 'invalid')
+      return res.status(422).json({ error: 'The purchase has no amount or recipient email' });
+    return res.status(200).json(result);
+  } catch (e) {
+    console.error('[admin-gift-cards-issue] failed:', e.message);
+    return res.status(500).json({ error: e.message });
+  }
+}
+
 // A completed job's parts cost: booking_costs first (admin-only, since
 // 25-oct-2026), then the old bookings column for jobs finished before it. null
 // means "not recorded", never 0. PostgREST embeds a one-to-one as an object,
@@ -7030,6 +7113,7 @@ async function handler(req, res) {
           // Same reason: the Finance screen re-reads the expenses on every
           // change of month, quarter or year, and 5/min locks it on the third.
           role === 'admin-expenses-list' ||
+          role.startsWith('admin-gift-cards-') ||
           // One call per photo that arrives in an open chat.
           role === 'photo-sign' ||
           // Admin > Photos re-reads the list after every select-and-act.
@@ -7109,6 +7193,8 @@ async function handler(req, res) {
   if (role === 'admin-orphan-audit') return handleAdminOrphanAudit(req, res);
   if (role === 'admin-privacy-plan') return handleAdminPrivacyPlan(req, res);
   if (role === 'admin-expenses-list') return handleAdminExpensesList(req, res);
+  if (role === 'admin-gift-cards-check') return handleAdminGiftCardsCheck(req, res);
+  if (role === 'admin-gift-cards-issue') return handleAdminGiftCardsIssue(req, res);
   if (role === 'admin-expenses-save') return handleAdminExpensesSave(req, res);
   if (role === 'admin-closed-until') return handleAdminClosedUntil(req, res);
   if (role === 'admin-expenses-delete') return handleAdminExpensesDelete(req, res);
