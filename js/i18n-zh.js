@@ -1076,8 +1076,8 @@ export default {
     '我们覆盖悉尼都会区所有区域，包括Inner West、Eastern Suburbs、CBD、North Shore、Manly和Northern Beaches。',
   "You can reschedule or cancel from the link in your booking confirmation, or by calling us. It's free with more than 24 hours' notice; with less, a fee of up to the visit & diagnosis fee may apply.":
     '您可以通过预订确认中的链接或致电我们来改期或取消。提前24小时以上免费；不足24小时，可能收取最高相当于上门检查费的费用。',
-  "Yes. The van carries common parts like brake pads, cables, chains and tubes, and anything less common we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately.":
-    '是的。车上备有刹车片、线缆、链条和内胎等常用零件，不常见的零件我们会采购后再上门安装。零件不包含在服务价格内 - 技师会在安装前先报价，费用另计。',
+  "Yes. The van carries inner tubes in the common sizes, and any other part your bike needs we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately.":
+    '是的。车上备有常见尺寸的内胎，您的自行车需要的其他零件我们会采购后再上门安装。零件不包含在服务价格内 - 技师会在安装前先报价，费用另计。',
   "A Tune-Up takes about an hour, a Standard Service about 1.5 hours, a Standard+ Service about 2.5 hours and an Ultimate Overhaul about 4 hours. You'll see the estimate when you book.":
     '基础保养约1小时，标准服务约1.5小时，标准+服务约2.5小时，全面翻新约4小时。预订时会显示预计时间。',
   'We accept all major credit cards, debit cards, Apple Pay, and Google Pay. Payment is taken after service completion.':
