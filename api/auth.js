@@ -1976,6 +1976,25 @@ export async function handleCreateBooking(req, res) {
         .from('bookings')
         .update({ discount_applied: codeDiscount, discount_code: code })
         .eq('id', booking.id);
+      // A gift card is not a discount: it is money the client paid when the
+      // card was bought, and the sale happens now, on this job. Finance adds
+      // gift_applied back into revenue (anBookingRevenue in js/admin.js), so a
+      // job paid with a gift card is still a sale in the BAS. Written on its
+      // own so a missing column (scripts/add-gift-applied.sql not run) can
+      // never cost the discount itself.
+      if (code.startsWith('GIFT-')) {
+        const { error: giftErr } = await sb
+          .from('bookings')
+          .update({ gift_applied: codeDiscount })
+          .eq('id', booking.id);
+        if (giftErr) console.error('[create-booking] gift_applied not recorded:', giftErr.message);
+        const { error: ledgerErr } = await sb
+          .from('gift_cards')
+          .update({ status: 'redeemed', redeemed_at: new Date().toISOString() })
+          .eq('code', code);
+        if (ledgerErr)
+          console.error('[create-booking] gift card not marked redeemed:', ledgerErr.message);
+      }
     }
   }
 
