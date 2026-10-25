@@ -4515,6 +4515,98 @@ export async function handleAdminInventorySummary(req, res) {
   });
 }
 
+// The repurchase report (item 6, 26-oct-2026): what to buy, and when, from the
+// stock history Diego decided to keep forever (parts are deactivated, never
+// deleted, 23-oct). Usage is net of reverts - a cancelled job gives its parts
+// back - over the last 30 and 90 days.
+//   target    = min_stock + 30 days of use at the 90-day rate
+//   suggested = what brings the stock up to the target
+//   reorder   = at or below min_stock, or 14 days of stock or less
+//   soon      = 30 days or less
+// The thresholds are named, not buried: they are Diego's call to change.
+export const RESTOCK_COVER_DAYS = 30;
+export const RESTOCK_REORDER_DAYS = 14;
+const DAY_MS = 24 * 60 * 60 * 1000;
+export function restockReport(parts, movements, now = Date.now()) {
+  const used = new Map();
+  for (const m of movements || []) {
+    const age = now - new Date(m.created_at).getTime();
+    if (!(age >= 0 && age <= 90 * DAY_MS)) continue;
+    const u = used.get(m.part_id) || { d30: 0, d90: 0 };
+    const units = -Number(m.delta || 0);
+    u.d90 += units;
+    if (age <= 30 * DAY_MS) u.d30 += units;
+    used.set(m.part_id, u);
+  }
+  const rank = { reorder: 0, soon: 1, ok: 2 };
+  const rows = (parts || [])
+    .filter((p) => p.active !== false)
+    .map((p) => {
+      const u = used.get(p.id) || { d30: 0, d90: 0 };
+      const used30 = Math.max(0, u.d30);
+      const used90 = Math.max(0, u.d90);
+      const stock = Math.max(0, Number(p.stock) || 0);
+      const min = Math.max(0, Number(p.min_stock) || 0);
+      const daily = used90 / 90;
+      const daysLeft = daily > 0 ? Math.floor(stock / daily) : null;
+      const target = min + Math.ceil(daily * RESTOCK_COVER_DAYS);
+      const suggested = Math.max(0, target - stock);
+      const status =
+        stock <= min || (daysLeft !== null && daysLeft <= RESTOCK_REORDER_DAYS)
+          ? 'reorder'
+          : daysLeft !== null && daysLeft <= RESTOCK_COVER_DAYS
+            ? 'soon'
+            : 'ok';
+      return {
+        id: p.id,
+        name: p.name,
+        category: p.category || 'General',
+        stock,
+        min_stock: min,
+        used_30: used30,
+        used_90: used90,
+        days_left: daysLeft,
+        suggested,
+        est_cost: Math.round(suggested * (Number(p.cost_price) || 0) * 100) / 100,
+        status,
+      };
+    })
+    .sort(
+      (a, b) =>
+        rank[a.status] - rank[b.status] ||
+        (a.days_left ?? Infinity) - (b.days_left ?? Infinity) ||
+        a.name.localeCompare(b.name)
+    );
+  const toBuy = rows.filter((r) => r.status !== 'ok' && r.suggested > 0);
+  return {
+    rows,
+    reorder: rows.filter((r) => r.status === 'reorder').length,
+    soon: rows.filter((r) => r.status === 'soon').length,
+    units_used_90: rows.reduce((s, r) => s + r.used_90, 0),
+    est_cost: Math.round(toBuy.reduce((s, r) => s + r.est_cost, 0) * 100) / 100,
+    cover_days: RESTOCK_COVER_DAYS,
+    reorder_days: RESTOCK_REORDER_DAYS,
+  };
+}
+
+export async function handleAdminInventoryReorder(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const hdr = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
+  const since = new Date(Date.now() - 90 * DAY_MS).toISOString();
+  const [p, mv] = await Promise.all([
+    fetch(`${SUPABASE_URL}/rest/v1/parts_inventory?select=*&order=name.asc`, { headers: hdr }),
+    fetch(
+      `${SUPABASE_URL}/rest/v1/stock_movements?select=part_id,delta,created_at&reason=in.(job_used,job_reverted)&created_at=gte.${encodeURIComponent(since)}`,
+      { headers: hdr }
+    ),
+  ]);
+  if (!p.ok || !mv.ok) return res.status(500).json({ error: 'Failed to load the stock history' });
+  res.setHeader('Cache-Control', 'private, no-store');
+  return res.status(200).json(restockReport(await p.json(), await mv.json()));
+}
+
 // Deactivate / reactivate a part. Parts are never deleted - Diego, 23-oct-2026:
 // the usage history is what a repurchase study is built on. A deactivated part
 // leaves every mechanic list and keeps its stock and all its movements. The
@@ -7415,6 +7507,7 @@ async function handler(req, res) {
   if (role === 'admin-inventory-active') return handleAdminInventoryActive(req, res);
   if (role === 'admin-inventory-history') return handleAdminInventoryHistory(req, res);
   if (role === 'admin-inventory-summary') return handleAdminInventorySummary(req, res);
+  if (role === 'admin-inventory-reorder') return handleAdminInventoryReorder(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
   if (role === 'admin-analytics') return handleAdminAnalytics(req, res);
