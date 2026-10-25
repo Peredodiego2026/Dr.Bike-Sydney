@@ -70,9 +70,13 @@
 
   // Emergency Service is priced 0 - it is a "call us and we quote you" path,
   // not a free job - so a plain minimum would publish "From $0", which reads as
-  // free. Zero-priced rows are excluded rather than assumed away.
+  // free. Zero-priced rows are excluded rather than assumed away, and so are
+  // hidden ones: a floor nobody can book is not a floor.
   function cheapestPrice(services) {
-    const priced = services.map((s) => Number(s.price)).filter((p) => p > 0);
+    const priced = services
+      .filter((s) => s.active !== false)
+      .map((s) => Number(s.price))
+      .filter((p) => p > 0);
     return priced.length ? Math.min(...priced) : null;
   }
 
@@ -87,7 +91,7 @@
     // failure mode MOCK_SERVICES was deleted for; it must at least say so.
     let services;
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/services?select=name,price`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/services?select=name,price,active`, {
         headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
       });
       if (!res.ok) {
@@ -138,6 +142,15 @@
         card.dataset.service || window.__drbikeI18n?.sourceOf?.(rendered) || rendered;
       const lookupName = NAME_MAP[cardName] || cardName;
       const match = services.find((s) => s.name === lookupName);
+      // Hidden in Admin: the card goes too, so nobody is offered a service the
+      // booking wizard will not list. style, not the hidden attribute - the
+      // card classes set display themselves and would win over [hidden]. The
+      // card is still in the HTML, so making the service visible again brings
+      // it back on the next load with nothing to re-add.
+      if (match && match.active === false) {
+        card.style.display = 'none';
+        return;
+      }
       if (match && typeof match.price === 'number') {
         priceEl.textContent = showsFloor ? fromLabel() + ' $' + match.price : '$' + match.price;
       } else {

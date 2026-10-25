@@ -71,7 +71,7 @@ async function table(query) {
 let services, zones;
 try {
   [services, zones] = await Promise.all([
-    table('services?select=name,price'),
+    table('services?select=name,price,active'),
     table('callout_zones?select=name,callout_fee'),
   ]);
 } catch (e) {
@@ -90,7 +90,11 @@ const priceFor = (raw) => {
   const key = byName.has(name) ? name : NAME_MAP[name];
   return byName.has(key) ? byName.get(key) : undefined;
 };
-const priced = services.map((s) => Number(s.price)).filter((p) => p > 0);
+// The category card's floor, as js/live-prices.js computes it: hidden rows out.
+const priced = services
+  .filter((s) => s.active !== false)
+  .map((s) => Number(s.price))
+  .filter((p) => p > 0);
 const cheapest = priced.length ? Math.min(...priced) : undefined;
 
 // ── 2. Cards and structured data on the hand-written pages ──────────────────

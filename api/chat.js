@@ -60,6 +60,8 @@ async function getServicesPromptBlock() {
     const { data, error } = await supabase
       .from('services')
       .select('name,price,category,duration_min,duration_max')
+      // A service hidden in Admin is not offered by the chatbot either.
+      .not('active', 'is', false)
       .order('category')
       .order('price');
     if (error) {
@@ -138,7 +140,11 @@ async function handleDiagnose(req, res) {
     const { createClient } = await import('@supabase/supabase-js');
     const sbUrl = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
     const supabase = createClient(sbUrl, process.env.SUPABASE_SERVICE_KEY);
-    const { data: svcs } = await supabase.from('services').select('id,name,price').order('price');
+    const { data: svcs } = await supabase
+      .from('services')
+      .select('id,name,price')
+      .not('active', 'is', false)
+      .order('price');
     if (svcs?.length) {
       servicesList = svcs.map((s) => `- id:${s.id} | ${s.name} | $${s.price}`).join('\n');
     }

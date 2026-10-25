@@ -63,11 +63,17 @@ Then: a card in landing.html "All Services" under the matching heading (`.svc-ca
 
 Rename: `update ... set name = 'New' where name = 'Old';` then rename the cards, or add `'Card text': 'New'` to `NAME_MAP` in `js/live-prices.js`; add es/zh entries for the new name.
 
-Remove - needs Diego's explicit yes (CLAUDE.md: no DELETE without confirming):
+Take a service off the app - **hide it, don't delete it.** Admin > Services & Prices > Edit > untick "Visible to clients" (or by SQL below). `active = false` drops it from the booking wizard, book-again, Admin's create-booking picker, the chatbot and the price cards (`live-prices.js` hides its card on load); the server refuses to price, quote or book it (409 `service-hidden`, refunding a card already charged). Existing bookings, reschedules and history are untouched. Ticking it again brings all of it back. The card stays in the static HTML and JSON-LD until removed by hand - `services:check` lists those under "HIDDEN IN ADMIN, STILL IN THE HTML"; remove them only if it is gone for good.
+```sql
+update public.services set active = false where name = 'Wheel Build';
+-- verify
+select name, active from public.services where name = 'Wheel Build';
+```
+Delete only on Diego's explicit yes (CLAUDE.md: no DELETE without confirming) - it cannot be brought back:
 ```sql
 select count(*) from public.bookings where service_id = (select id from public.services where name = 'Wheel Build');
 ```
-Bookings keep `service_name`, so history still reads. `active = false` does **not** hide a service today - nothing filters on it. After the delete: remove its cards and any `NAME_MAP` entry pointing at it.
+Bookings keep `service_name`, so history still reads. After the delete: remove its cards and any `NAME_MAP` entry pointing at it.
 
 Visit fee: move `FEE_BANDS` / `PENINSULA_FAR_FEE` / `NORTH_NEAR_FEE` and the test in the PR, and `callout_zones` by SQL to the same ladder; zones above the top band mean "outside the perimeter". `callout_zones` has no Admin screen:
 ```sql

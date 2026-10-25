@@ -202,7 +202,7 @@ function categoryCardNames(file) {
   return out;
 }
 
-const res = await fetch(`${SUPABASE_URL}/rest/v1/services?select=name,price,description`, {
+const res = await fetch(`${SUPABASE_URL}/rest/v1/services?select=name,price,description,active`, {
   headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
 });
 if (!res.ok) {
@@ -215,6 +215,8 @@ if (!Array.isArray(services) || !services.length) {
   process.exit(1);
 }
 const byName = new Map(services.map((s) => [s.name, s.price]));
+// Hidden in Admin: not bookable, and js/live-prices.js hides their cards on load.
+const hiddenNames = new Set(services.filter((s) => s.active === false).map((s) => s.name));
 const NAME_MAP = loadNameMap();
 
 // Every page that carries hand-written service cards.
@@ -328,7 +330,7 @@ const pageText = pages.map((p) => readFileSync(p, 'utf8')).join('\n');
 const unadvertised = [];
 const unpricedMissing = [];
 for (const s of services) {
-  if (advertised.has(s.name)) continue;
+  if (advertised.has(s.name) || hiddenNames.has(s.name)) continue;
   if (Number(s.price) === 0) {
     if (!pageText.includes(s.name)) unpricedMissing.push(s.name);
     continue;
@@ -364,6 +366,20 @@ if (unadvertised.length) {
   console.log('SERVICES ON NO MARKETING PAGE  (bookable, but nobody is told)');
   console.log('These work in the booking wizard and the chatbot already.\n');
   for (const n of unadvertised) console.log(`  ! ${n} ($${byName.get(n)})`);
+  console.log('');
+}
+
+// Not a problem - a hidden service keeps its cards so that showing it again
+// needs no edit - but they are still in the HTML: a visitor whose price fetch
+// fails sees them, and so does Google in any structured-data offer.
+const hiddenShown = [...hiddenNames].filter(
+  (n) => advertised.has(n) || ldOffers.some((o) => resolve(o.name) === n)
+);
+if (hiddenShown.length) {
+  console.log('HIDDEN IN ADMIN, STILL IN THE HTML  (hidden on load by live-prices.js)');
+  console.log('Fine while it is temporary. If the service is gone for good, remove');
+  console.log('its cards and offers so Google stops listing it.\n');
+  for (const n of hiddenShown) console.log(`  - ${n}`);
   console.log('');
 }
 

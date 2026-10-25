@@ -252,7 +252,12 @@
 // distintos bajo un mismo nombre de cache es un navegador que ya tiene el de
 // main y nunca recibe estos archivos: el bug que este numero existe para
 // evitar. Si main vuelve a alcanzarlo antes del merge, sube otra vez.
-const CACHE_STATIC = 'drbike-static-v153';
+// v154: servicios ocultos desde Admin (`active` false) y el Bike Wash.
+// js/supabase.js filtra los ocultos y se importa sin ?v=, igual que los dos
+// diccionarios, que ganaron el Bike Wash y la cuenta de ahorro con el lavado
+// a $50. Sin este numero los navegadores que ya visitaron siguen listando un
+// servicio oculto en la reserva y leyendo el ahorro viejo en es/zh.
+const CACHE_STATIC = 'drbike-static-v154';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
