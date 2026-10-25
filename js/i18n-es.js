@@ -1936,4 +1936,8 @@ export default {
   'Parts are extra if your bike needs any - you approve each one first.':
     'Los repuestos van aparte si tu bici los necesita: apruebas cada uno antes.',
   'See parts prices': 'Ver precios de repuestos',
+  // Tracking: the finish once the mechanic is there (26-oct-2026).
+  '🔧 Service in progress': '🔧 Servicio en curso',
+  'Should be done around': 'Debería estar listo alrededor de las',
+  'Done around FINISH': 'Termina aprox. FINISH',
 };

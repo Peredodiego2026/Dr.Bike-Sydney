@@ -1776,4 +1776,8 @@ export default {
   'Parts are extra if your bike needs any - you approve each one first.':
     '如果您的自行车需要零件，零件费用另计 - 每个零件都需您先批准。',
   'See parts prices': '查看零件价格',
+  // Tracking: the finish once the mechanic is there (26-oct-2026).
+  '🔧 Service in progress': '🔧 服务进行中',
+  'Should be done around': '预计完成时间约为',
+  'Done around FINISH': '预计 FINISH 完成',
 };

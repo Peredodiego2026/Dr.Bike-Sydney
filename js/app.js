@@ -3396,6 +3396,7 @@ async function renderTracking() {
     <div style="flex-shrink:0;display:flex;align-items:center;gap:8px;padding:9px 16px;background:var(--white);border-bottom:1px solid var(--border-lt)">
       <div id="status-dot" style="width:8px;height:8px;border-radius:50%;background:var(--blue-dark);flex-shrink:0;transition:background 0.3s"></div>
       <span id="status-text" style="font-size:13px;font-weight:600;color:var(--navy)">Loading booking...</span>
+      <span id="status-finish" style="margin-left:auto;font-size:13px;font-weight:700;color:var(--navy);white-space:nowrap"></span>
     </div>
 
     <!-- The map and the panel below it each take HALF the space under the
@@ -3641,6 +3642,26 @@ async function renderTracking() {
   }
 
   // ── Status updater ────────────────────────────────────────────────────────
+  // Once the mechanic is there: when the job should be done (Diego,
+  // 26-oct-2026), worked out by public-track from when he started plus the
+  // service's longest duration. Blank before he arrives and once it is done.
+  function applyFinish(b) {
+    const el = screen.querySelector('#status-finish');
+    if (!el) return;
+    const iso = b?.estimated_finish_at;
+    const hhmm = iso
+      ? new Intl.DateTimeFormat('en-GB', {
+          timeZone: 'Australia/Sydney',
+          hour: '2-digit',
+          minute: '2-digit',
+          hourCycle: 'h23',
+        }).format(new Date(iso))
+      : '';
+    el.textContent = hhmm
+      ? translateValue('Done around FINISH').replace('FINISH', toDisplayTime(hhmm))
+      : '';
+  }
+
   function applyStatus(status) {
     const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.confirmed;
     const dot = screen.querySelector('#status-dot');
@@ -3712,6 +3733,7 @@ async function renderTracking() {
 
   if (booking) {
     applyStatus(booking.status || 'confirmed');
+    applyFinish(booking);
 
     const lat = Number(booking.address_lat);
     const lng = Number(booking.address_lng);
@@ -3906,6 +3928,7 @@ async function renderTracking() {
       applyStatus(updated.status);
       lastStatus = updated.status;
     }
+    applyFinish(updated);
     // Subscribe to realtime once mechanic_id becomes known
     const newMechId = updated.mechanic_location?.mechanic_id;
     if (newMechId && newMechId !== lastMechId) {

@@ -168,7 +168,7 @@ describe('el endpoint lo aplica', () => {
   });
 
   it('la respuesta pasa por applyTrackingScope', () => {
-    expect(fn).toMatch(/applyTrackingScope\(\{ \.\.\.booking/);
+    expect(fn).toMatch(/applyTrackingScope\(\s*\{ \.\.\.booking/);
   });
 
   // El largo del token no se toca: 122 bits de UUID v4 no son el problema.

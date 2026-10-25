@@ -263,7 +263,9 @@
 // v156: todo trabajo termina a las 17:00 (el Ultimate Overhaul empieza hasta la
 // 1pm) y la hora de fin estimada; cambian los dos diccionarios, que se importan
 // sin ?v=.
-const CACHE_STATIC = 'drbike-static-v156';
+// v157: la hora de fin en el seguimiento cuando el mecanico llego; cambian los
+// dos diccionarios, que se importan sin ?v=.
+const CACHE_STATIC = 'drbike-static-v157';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
