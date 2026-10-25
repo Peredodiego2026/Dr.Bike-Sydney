@@ -530,11 +530,16 @@ function page(sub, lang) {
     })),
   });
 
+  // Home is `/` in every language, never `${meta.prefix}/`: /es/ and /zh/ have
+  // no page of their own - the catch-all rewrite serves the English landing.html
+  // there (canonical `/`) and middleware.js (matcher '/') never sees them, so a
+  // phone got the desktop page. The language comes from the visitor's saved
+  // choice or browser either way (js/i18n.js detectLang), not from the URL.
   const breadcrumbSchema = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: c.breadcrumbHome, item: `${SITE}${meta.prefix}/` },
+      { '@type': 'ListItem', position: 1, name: c.breadcrumbHome, item: `${SITE}/` },
       { '@type': 'ListItem', position: 2, name: sub.name, item: url },
     ],
   });
@@ -628,7 +633,7 @@ ${alternates}
 </head>
 <body>
 <header>
-  <a href="${meta.prefix}/" class="logo" style="display:inline-flex;align-items:center;gap:8px"><img src="/images/logo-db.png" alt="Dr. Bike Sydney" style="height:28px;width:auto">Dr. <span style="color:#60A5FA">Bike</span> Sydney</a>
+  <a href="/" class="logo" style="display:inline-flex;align-items:center;gap:8px"><img src="/images/logo-db.png" alt="Dr. Bike Sydney" style="height:28px;width:auto">Dr. <span style="color:#60A5FA">Bike</span> Sydney</a>
   <div class="head-right">
     <div class="lang-links">${langSwitcher}</div>
     <a href="/" class="cta-header">${c.bookNow}</a>
