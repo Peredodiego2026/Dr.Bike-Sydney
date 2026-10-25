@@ -3355,7 +3355,12 @@ async function openAdminCreateBooking() {
   svcSelect.innerHTML = '<option value="">Loading...</option>';
   document.getElementById('admin-create-booking-modal').style.display = 'flex';
 
-  const { data: services, error } = await sb.from('services').select('id,name,price').order('name');
+  // Hidden services are not offered here either; Services & Prices still lists them.
+  const { data: services, error } = await sb
+    .from('services')
+    .select('id,name,price')
+    .not('active', 'is', false)
+    .order('name');
   if (error) {
     svcSelect.innerHTML = '<option value="">Could not load services</option>';
     return;
@@ -9333,10 +9338,12 @@ function renderServices() {
   }
 
   function svcRow(s) {
+    // Same "Hidden" badge as a shop product taken off the shop.
+    const hidden = s.active === false;
     return `<tr>
-      <td data-label="Service" style="font-weight:600;color:var(--navy)">${escapeHtml(s.name)}</td>
+      <td data-label="Service" style="font-weight:600;color:var(--navy)">${escapeHtml(s.name)}${hidden ? ' <span style="background:var(--border-lt);color:var(--gray);font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;margin-left:6px;white-space:nowrap">Hidden</span>' : ''}</td>
       <td data-label="Category" style="color:var(--mgray)">${escapeHtml(s.category || '')}</td>
-      <td data-label="Price" style="font-weight:700;font-size:15px;color:var(--blue-text)">$${parseFloat(s.price || 0).toFixed(0)}</td>
+      <td data-label="Price" style="font-weight:700;font-size:15px;color:${hidden ? 'var(--mgray)' : 'var(--blue-text)'}">$${parseFloat(s.price || 0).toFixed(0)}</td>
       <td data-label="Duration" style="color:var(--mgray)">${durationLabel(s)}</td>
       <td data-label="Actions">
         <div style="display:flex;gap:6px">
@@ -9381,6 +9388,10 @@ function openServiceModal(id) {
       </div>
       <div><div style="font-size:11px;font-weight:600;color:var(--mgray);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em">Description</div>
         <input class="inp" id="sm-desc" value="${s?.description ? escapeHtml(s.description) : ''}" placeholder="Shown to clients when booking" aria-label="Description"></div>
+      <div>
+        <label style="display:flex;align-items:center;gap:8px;min-height:44px;font-size:14px;color:var(--navy);cursor:pointer"><input type="checkbox" id="sm-active"${s?.active === false ? '' : ' checked'} style="width:20px;height:20px"> Visible to clients</label>
+        <div style="font-size:12px;color:var(--mgray);line-height:1.4">Untick to hide it from booking, the price lists and the chatbot. Nothing is deleted - tick it again to bring it back.</div>
+      </div>
     </div>
     <div style="display:flex;gap:10px;margin-top:20px">
       <button data-action="close-service-modal" style="flex:1;background:var(--off);border:1.5px solid var(--border);color:var(--navy);border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Cancel</button>
@@ -9398,6 +9409,7 @@ async function saveService(id) {
   const dminRaw = document.getElementById('sm-dmin')?.value;
   const dmaxRaw = document.getElementById('sm-dmax')?.value;
   const description = document.getElementById('sm-desc')?.value?.trim();
+  const active = document.getElementById('sm-active')?.checked ?? true;
 
   if (!name) {
     showToast('Service name is required');
@@ -9429,6 +9441,7 @@ async function saveService(id) {
       duration_min: dminRaw === '' ? null : parseInt(dminRaw),
       duration_max: dmaxRaw === '' ? null : parseInt(dmaxRaw),
       description: description || null,
+      active,
     }),
   });
   const result = await resp.json();
@@ -9443,7 +9456,11 @@ async function saveService(id) {
 
 async function deleteService(id) {
   const s = servicesData.find((x) => x.id === id);
-  if (!confirm(`Delete "${s?.name || 'this service'}"? It will disappear from booking everywhere.`))
+  if (
+    !confirm(
+      `Delete "${s?.name || 'this service'}" for good?\n\nIt disappears from booking everywhere and cannot be brought back.\nTo take it off the app without losing it, open Edit and untick "Visible to clients" instead.`
+    )
+  )
     return;
 
   const {

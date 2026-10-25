@@ -700,6 +700,9 @@ export default {
   'Full tune-up + wheel true + drivetrain clean': '全面调校 + 车轮校正 + 传动系统清洁',
   'Ultimate Overhaul': '终极大修',
   'Strip & rebuild, all consumables replaced': '拆解重装，更换所有易损件',
+  // Tambien es el nombre de la fila del catalogo (regla 1 del bloque del final).
+  'Bike Wash': '自行车清洗',
+  'Full bike wash and dry': '全面清洗并擦干',
   'Flat Tyre Repair': '爆胎修理',
   'Tube replace or patch, remount & inflate': '更换或修补内胎，重新安装并充气',
   'Tyre Replacement': '轮胎更换',
@@ -996,8 +999,8 @@ export default {
   '1 free bike wash per month': '每月1次免费洗车',
   'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $35, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.':
     '数字化服务记录是Standard/VIP会员专享。不含上门检查费 - 您的覆盖服务仍需支付上门检查费（从$35起，视郊区而定）。完整保养服务（基础调校及以上）不计入免费小额维修额度。备件或更换零件（如链条、变速器、刹车卡钳、线缆）安装前会先报价，费用另计。',
-  'A wash plus an average minor repair is worth around $75. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
-    '一次洗车加一次平均小额维修价值约$75。使用Basic（$67/月）在享受其他服务5%折扣之前就已经划算了。',
+  'A wash plus an average minor repair is worth around $90. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
+    '一次洗车加一次平均小额维修价值约$90。使用Basic（$67/月）在享受其他服务5%折扣之前就已经划算了。',
   '2 free minor repairs per month (any repair under $70)':
     '每月2次免费小额维修（任何低于$70的维修）',
   '1 free Tune-Up per month': '每月1次免费基础调校',
@@ -1006,13 +1009,13 @@ export default {
     '每月1次紧急上门（需付上门检查费，从$35起视郊区而定）',
   'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.':
     '备件或更换零件（如链条、变速器、刹车卡钳、线缆）安装前会先报价，费用另计。',
-  'A Tune-Up ($119) + a wash ($35) + 2 minor repairs (~$100) = about $254 in free work every month, for $97.':
-    '1次基础调校（$119）+ 1次洗车（$35）+ 2次小额维修（约$100）= 每月约$254的免费服务，只需$97。',
+  'A Tune-Up ($119) + a wash ($50) + 2 minor repairs (~$100) = about $269 in free work every month, for $97.':
+    '1次基础调校（$119）+ 1次洗车（$50）+ 2次小额维修（约$100）= 每月约$269的免费服务，只需$97。',
   '3 free minor repairs per month (any repair under $70)':
     '每月3次免费小额维修（任何低于$70的维修）',
   '2 free bike washes per month': '每月2次免费洗车',
-  'A Tune-Up ($119) + 2 washes ($70) + 3 minor repairs (~$150) = about $339 in free work every month, for $197.':
-    '1次基础调校（$119）+ 2次洗车（$70）+ 3次小额维修（约$150）= 每月约$339的免费服务，只需$197。',
+  'A Tune-Up ($119) + 2 washes ($100) + 3 minor repairs (~$150) = about $369 in free work every month, for $197.':
+    '1次基础调校（$119）+ 2次洗车（$100）+ 3次小额维修（约$150）= 每月约$369的免费服务，只需$197。',
 
   // ── Gift card success alert ──────────────────────────────────────────
   '🎁 Gift card purchased! It has been emailed to the recipient with their unique code.':
@@ -1411,6 +1414,7 @@ export default {
   'Derailleur indexing and cable tension adjustment.': '变速器档位微调和线材张力调整。',
   'Replace outer and inner cables.': '更换内线和外套管。',
   'Professional fitting of accessories.': '专业安装各类配件。',
+  'Your bike washed and dried.': '为您的自行车清洗并擦干。',
   'Full assembly of a new boxed bike. Price change depending on the size and kind of bike.':
     '从纸箱完整组装新车。价格视车架尺寸和车型而定。',
   'Urgent same-day help. Contact us directly on 0433 963 250 and we quote your repair.':
