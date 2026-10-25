@@ -1429,6 +1429,8 @@
         <div class="kpi-card green" style="text-align:center"><div class="kpi-label">STOCK VALUE</div><div class="kpi-value" id="inv-stock-value" style="color:var(--green-text)">$—</div><div class="kpi-sub" id="inv-stock-sub">at cost price</div></div>
         <div class="kpi-card red" style="text-align:center"><div class="kpi-label">USED THIS MONTH</div><div class="kpi-value" id="inv-used-month" style="color:var(--red-text)">$—</div><div class="kpi-sub" id="inv-used-sub">parts cost, used in jobs</div></div>
       </div>
+      <!-- Restock: what to buy and when, from the stock history (js/admin.js loadInventoryReorder) -->
+      <div id="inv-reorder" style="margin-bottom:20px"></div>
       <!-- Search -->
       <div style="position:relative;margin-bottom:16px;max-width:360px">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--mgray)" stroke-width="2" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1699,5 +1701,5 @@
 
 
 <script type="module" src="js/shop-import.js?v=bfc77bc7e1"></script>
-<script src="js/admin.js?v=01c1b80e5d"></script>
+<script src="js/admin.js?v=a4c9f91928"></script>
 </body></html>

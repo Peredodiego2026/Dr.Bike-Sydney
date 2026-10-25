@@ -8980,6 +8980,79 @@ async function loadInventory() {
   inventoryData = data || [];
   renderInventory();
   renderInventoryMonth(await summary);
+  loadInventoryReorder();
+}
+
+// The repurchase report (item 6, 26-oct-2026): what to buy and when, worked
+// out on the server from the last 90 days of the stock history
+// (api/auth.js restockReport). Only what needs buying is listed; a quiet line
+// says so when nothing does.
+async function loadInventoryReorder() {
+  const box = document.getElementById('inv-reorder');
+  if (!box) return;
+  let r;
+  try {
+    r = await photosApi('admin-inventory-reorder');
+  } catch (e) {
+    box.innerHTML = `<div class="card" style="padding:14px 16px;font-size:13px;color:var(--red-text)">The restock report could not load: ${esc(e.message)}</div>`;
+    return;
+  }
+  const due = r.rows.filter((x) => x.status !== 'ok');
+  if (!due.length) {
+    box.innerHTML = `<div class="card" style="padding:14px 16px;border-left:4px solid var(--green);font-size:13px;color:var(--gray)"><strong style="color:var(--navy)">Restock:</strong> nothing to buy right now. ${r.units_used_90} part${r.units_used_90 === 1 ? '' : 's'} used in jobs in the last 90 days.</div>`;
+    return;
+  }
+  const chip = {
+    reorder: ['Reorder now', 'var(--red-lt)', 'var(--red-text)'],
+    soon: ['Soon', 'var(--amber-lt)', 'var(--amber-ink)'],
+  };
+  const summary = [
+    r.reorder ? `${r.reorder} to reorder now` : '',
+    r.soon ? `${r.soon} soon` : '',
+    r.est_cost ? `about ${anMoney(r.est_cost)} at cost` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  box.innerHTML = `<div class="card" style="padding:16px 18px;border-left:4px solid ${r.reorder ? 'var(--red)' : 'var(--amber)'}">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">Restock</div>
+        <div style="font-size:13px;color:var(--navy);margin-top:2px">${esc(summary)}</div>
+        <div style="font-size:12px;color:var(--mgray);margin-top:4px;line-height:1.5">From the last 90 days of use. Reorder now = at the minimum or ${r.reorder_days} days of stock or less; soon = ${r.cover_days} days or less. Buy brings the stock to the minimum plus ${r.cover_days} days of use.</div>
+      </div>
+      <button type="button" id="inv-reorder-copy" style="min-height:44px;padding:0 16px;background:var(--white);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">Copy order list</button>
+    </div>
+    <div class="tbl-scroll" style="overflow-x:auto;margin-top:12px">
+      <table class="tbl">
+        <thead><tr><th>Part</th><th>In stock</th><th>Used 30 / 90 days</th><th>Lasts</th><th>Buy</th><th>Est. cost</th><th>Status</th></tr></thead>
+        <tbody>${due
+          .map(
+            (x) => `<tr>
+          <td data-label="Part" style="font-weight:600;color:var(--navy)">${esc(x.name)}</td>
+          <td data-label="In stock"><span>${x.stock} <span style="color:var(--mgray);font-size:12px">(min ${x.min_stock})</span></span></td>
+          <td data-label="Used 30 / 90 days">${x.used_30} / ${x.used_90}</td>
+          <td data-label="Lasts">${x.days_left === null ? '<span style="color:var(--mgray)">no use yet</span>' : `${x.days_left} day${x.days_left === 1 ? '' : 's'}`}</td>
+          <td data-label="Buy" style="font-weight:700;color:var(--navy)">${x.suggested}</td>
+          <td data-label="Est. cost">${anMoney(x.est_cost)}</td>
+          <td data-label="Status"><span style="background:${chip[x.status][1]};color:${chip[x.status][2]};padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap">${chip[x.status][0]}</span></td>
+        </tr>`
+          )
+          .join('')}</tbody>
+      </table>
+    </div>
+  </div>`;
+  box.querySelector('#inv-reorder-copy').addEventListener('click', async () => {
+    const list = due
+      .filter((x) => x.suggested > 0)
+      .map((x) => `${x.name} x${x.suggested}`)
+      .join('\n');
+    try {
+      await navigator.clipboard.writeText(list);
+      showToast('Order list copied');
+    } catch (e) {
+      showToast('Could not copy: ' + e.message);
+    }
+  });
 }
 
 // "Used this month" was a hardcoded $0 until 2026-10-24 ("updated from
