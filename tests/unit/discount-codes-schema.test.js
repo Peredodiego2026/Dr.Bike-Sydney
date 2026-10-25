@@ -13,7 +13,15 @@ import { dirname, join } from 'path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..', '..');
 
-const filesThatReadDiscountCodes = ['js/app.js', 'landing.html', 'js/admin.js'];
+// api/stripe-webhook.js and api/_gift-cards.js since 25-oct-2026: the webhook
+// inserted gift cards as discount_amount, so every one sold was never issued.
+const filesThatReadDiscountCodes = [
+  'js/app.js',
+  'landing.html',
+  'js/admin.js',
+  'api/stripe-webhook.js',
+  'api/_gift-cards.js',
+];
 
 describe('discount_codes column names', () => {
   for (const file of filesThatReadDiscountCodes) {
