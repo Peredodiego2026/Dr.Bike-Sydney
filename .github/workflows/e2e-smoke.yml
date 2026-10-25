@@ -5,7 +5,12 @@ name: Production smoke test
 # git-triggered. This is post-deploy monitoring, not a pre-merge gate.
 on:
   schedule:
+    # Every 6 hours: the 12 core pages, the landing, the SPA and the booking
+    # flow (SMOKE_SCOPE=core). Once a day: everything, the 75 suburb and blog
+    # pages included. Each run is real traffic against the live Supabase
+    # project - the step at the end says how much.
     - cron: '0 */6 * * *'
+    - cron: '30 3 * * *'
   workflow_dispatch:
 
 jobs:
@@ -24,11 +29,19 @@ jobs:
 
       - name: Run e2e smoke tests against production
         run: npm run test:e2e
+        env:
+          SMOKE_SCOPE: ${{ github.event.schedule == '0 */6 * * *' && 'core' || 'all' }}
+
+      - name: Supabase traffic of this run
+        if: always()
+        run: node scripts/e2e-supabase-traffic.mjs
 
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
-          path: playwright-report/
+          path: |
+            playwright-report/
+            test-results/supabase-traffic.jsonl
           retention-days: 14

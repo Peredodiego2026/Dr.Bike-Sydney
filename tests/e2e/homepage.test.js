@@ -2,7 +2,7 @@
 // Run: npm run test:e2e
 // Requires: npx playwright install
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 
 // middleware.js routes by user-agent: desktop UA -> landing.html, mobile UA -> index.html (SPA).
 // These tests assert landing.html DOM, so they only apply to the desktop project.
