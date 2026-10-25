@@ -16,6 +16,13 @@ import path from 'node:path';
 export const TRAFFIC_FILE = path.join('test-results', 'supabase-traffic.jsonl');
 const SUPABASE = /^https:\/\/[a-z0-9]+\.supabase\.co\//;
 
+// And any test that downloads a single Supabase response over this fails: the
+// photo was 1.9 MB shown as a 76px circle. Admin > Mechanic Profile shrinks
+// uploads to ~60 KB since f59dfdf8; this catches the next one. Judged by the
+// bytes that arrived - a content-length check missed half the photo loads,
+// because the header is not always there.
+export const SUPABASE_MAX_BYTES = 300 * 1024;
+
 export const test = base.extend({
   supabaseMeter: [
     async ({ page }, use, testInfo) => {
@@ -31,6 +38,7 @@ export const test = base.extend({
       });
       await use();
       const hits = await Promise.all(sizes);
+      if (testInfo.status === 'skipped') return;
       fs.mkdirSync(path.dirname(TRAFFIC_FILE), { recursive: true });
       fs.appendFileSync(
         TRAFFIC_FILE,
@@ -43,6 +51,10 @@ export const test = base.extend({
           heaviest: hits.sort((a, b) => b.bytes - a.bytes)[0] || null,
         }) + '\n'
       );
+      const heavy = hits
+        .filter((h) => h.bytes > SUPABASE_MAX_BYTES)
+        .map((h) => `${Math.round(h.bytes / 1024)} KB ${h.url}`);
+      expect(heavy, `Supabase responses over ${SUPABASE_MAX_BYTES / 1024} KB`).toEqual([]);
     },
     { auto: true },
   ],

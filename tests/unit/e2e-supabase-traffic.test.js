@@ -84,9 +84,12 @@ describe('the suite is metered and the 6-hourly run stays small', () => {
     );
   });
 
-  it('a Supabase response over 300 KB fails the page', () => {
-    const src = read('tests/e2e/all-pages-smoke.test.js');
-    expect(src).toContain('const SUPABASE_MAX_BYTES = 300 * 1024;');
+  it('a Supabase response over 300 KB fails any test, judged by the bytes that arrived', () => {
+    const src = read('tests/e2e/fixtures.js');
+    expect(src).toContain('export const SUPABASE_MAX_BYTES = 300 * 1024;');
+    expect(src).toMatch(/\.filter\(\(h\) => h\.bytes > SUPABASE_MAX_BYTES\)/);
     expect(src).toMatch(/expect\(heavy, /);
+    // content-length is not always sent: checking it missed 6 of 11 photo loads.
+    expect(read('tests/e2e/all-pages-smoke.test.js')).not.toMatch(/content-length/);
   });
 });

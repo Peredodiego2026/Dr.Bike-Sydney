@@ -39,12 +39,6 @@ const MARKETING_PAGES = [
 ];
 const PAGES = process.env.SMOKE_SCOPE === 'core' ? CORE_PAGES : [...CORE_PAGES, ...MARKETING_PAGES];
 
-// No single Supabase response a visitor downloads should be this big. The
-// landing's profile photo was 1.9 MB, shown as a 76px circle, and it alone
-// spent the Free plan's 5 GB of cached egress (Oct 2026). Admin > Mechanic
-// Profile now shrinks uploads to ~60 KB; this catches the next one.
-const SUPABASE_MAX_BYTES = 300 * 1024;
-
 // Known-benign console noise, not app bugs - excluded so a real regression
 // doesn't get lost in expected third-party chatter.
 const IGNORE_CONSOLE = [
@@ -98,12 +92,8 @@ test.describe('All pages load clean', () => {
         if (msg.type() === 'error') consoleErrors.push(msg.text());
       });
       page.on('pageerror', (err) => consoleErrors.push(String(err)));
-      const heavy = [];
       page.on('response', (res) => {
         if (res.status() >= 400) failedRequests.push(`${res.status()} ${res.url()}`);
-        const size = Number(res.headers()['content-length'] || 0);
-        if (/\.supabase\.co\//.test(res.url()) && size > SUPABASE_MAX_BYTES)
-          heavy.push(`${Math.round(size / 1024)} KB ${res.url()}`);
       });
 
       // 'networkidle' never fires on landing.html: PostHog/Sentry/GA keep making
@@ -119,7 +109,6 @@ test.describe('All pages load clean', () => {
 
       expect(realErrors, `console errors on ${path}`).toEqual([]);
       expect(realFailures, `failed requests on ${path}`).toEqual([]);
-      expect(heavy, `Supabase responses over ${SUPABASE_MAX_BYTES / 1024} KB on ${path}`).toEqual([]);
     });
   }
 });
