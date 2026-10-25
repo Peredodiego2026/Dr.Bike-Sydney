@@ -76,6 +76,28 @@ async function openTheDateStep(page) {
 test.describe('the cookie card does not take taps meant for the app', () => {
   test.skip(({ isMobile }) => !isMobile, 'Mobile UA required - middleware serves index.html');
 
+  // Every question here is about the layout at rest, so the screens' entrance
+  // motion is switched off - through the app's own prefers-reduced-motion path
+  // (css/main.css drops slideInRight, js/router.js scrolls without 'smooth'),
+  // which changes nothing about where things end up.
+  //
+  // With motion on, this file failed now and then on Mobile Safari with "a tap
+  // lands on null" (16-oct, 24-oct). The 24-oct CI trace shows why: WebKit
+  // painted no frame for ~2s, the screen sat frozen half-way through its 250ms
+  // slide, and the router's smooth scrollIntoView onto that still-shifted
+  // screen had left the document scrolled 78px sideways. A position:fixed bar
+  // inside a transformed screen follows the screen, so the Continue button's
+  // centre was past the right edge of the 390px viewport - elementFromPoint
+  // answers null there. Nothing was over the button; the retry's screenshot,
+  // taken moments later, shows it clear of the card. Rebuilt on purpose in
+  // WebKit: slide frozen at 0-60ms + 78px -> null; at 120ms -> it "lands on
+  // DIV#drbike-consent", a false report of the very bug this file guards;
+  // reduced motion -> the button, every time.
+  //
+  // The bottom-nav test's wait below ("on screen and stopped moving") could not
+  // catch it: a frozen frame does not move.
+  test.use({ contextOptions: { reducedMotion: 'reduce' } });
+
   // Deliberately never answers the card: that is the state the bug lived in,
   // and the state a first-time visitor is in for their whole first session if
   // they ignore it.
