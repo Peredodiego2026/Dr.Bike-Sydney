@@ -80,6 +80,45 @@
     return priced.length ? Math.min(...priced) : null;
   }
 
+  // The structured data follows the cards: an offer for a hidden service is
+  // dropped from the page's JSON-LD, so a search result never quotes a price
+  // for something nobody can book. Google reads JSON-LD from the rendered page,
+  // so rewriting it here reaches Google the same way hiding the card does, and
+  // the static HTML still holds the offer for when the service comes back.
+  // `hidden` has catalog names plus the headings of the cards hidden on this
+  // page: the translated suburb pages name their offers exactly like their
+  // cards ("Ajuste"), not like the table ("Tune-Up").
+  function dropHiddenOffers(hidden) {
+    if (!hidden.size) return;
+    const keep = (offer) => {
+      const name = offer?.itemOffered?.name ?? offer?.name;
+      return !(hidden.has(name) || hidden.has(NAME_MAP[name]));
+    };
+    document.querySelectorAll('script[type="application/ld+json"]').forEach((el) => {
+      let data;
+      try {
+        data = JSON.parse(el.textContent);
+      } catch (e) {
+        console.warn('[live-prices] unreadable structured data left as is (' + e.message + ')');
+        return;
+      }
+      const catalog = data?.hasOfferCatalog;
+      const lists = [
+        [data, 'offers'],
+        [catalog, 'itemListElement'],
+      ].filter(([owner, key]) => Array.isArray(owner?.[key]));
+      let changed = false;
+      for (const [owner, key] of lists) {
+        const kept = owner[key].filter(keep);
+        if (kept.length !== owner[key].length) {
+          owner[key] = kept;
+          changed = true;
+        }
+      }
+      if (changed) el.textContent = JSON.stringify(data);
+    });
+  }
+
   async function syncPrices() {
     const cards = document.querySelectorAll('.service-card, .svc-card');
     if (!cards.length) return;
@@ -112,6 +151,7 @@
       return;
     }
 
+    const hidden = new Set(services.filter((s) => s.active === false).map((s) => s.name));
     cards.forEach((card) => {
       const heading = card.querySelector('h3, .service-name, .svc-name');
       const priceEl = card.querySelector('.price, .service-price, .svc-price');
@@ -149,6 +189,7 @@
       // it back on the next load with nothing to re-add.
       if (match && match.active === false) {
         card.style.display = 'none';
+        hidden.add(rendered);
         return;
       }
       if (match && typeof match.price === 'number') {
@@ -159,6 +200,7 @@
         );
       }
     });
+    dropHiddenOffers(hidden);
   }
 
   if (document.readyState === 'loading') {
