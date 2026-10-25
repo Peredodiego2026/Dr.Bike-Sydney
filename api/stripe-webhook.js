@@ -20,6 +20,8 @@
 //   SHOP's mode (Test mode / sandbox), same URL, event payment_intent.succeeded.
 // An event signed with that secret can only settle shop orders - see viaShop.
 import Stripe from 'stripe';
+
+import { issueGiftCard } from './_gift-cards.js';
 import { createClient } from '@supabase/supabase-js';
 import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
 import { calloutFeeForAddress, applySurcharge, applyMembershipPricing } from './auth.js';
@@ -65,89 +67,6 @@ async function getRawBody(req) {
     req.on('end', () => resolve(Buffer.concat(chunks)));
     req.on('error', reject);
   });
-}
-
-function genGiftCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no ambiguous chars
-  let s = '';
-  for (let i = 0; i < 8; i++) s += chars[Math.floor(Math.random() * chars.length)];
-  return `GIFT-${s}`;
-}
-
-async function handleGiftCardPurchase(session) {
-  const m = session.metadata || {};
-  const amount = Number(m.amount) || 0;
-  if (!amount || !m.recipientEmail) {
-    console.error('[gift-card] missing amount or recipient', session.id);
-    return;
-  }
-
-  // Generate a unique code (retry on rare collision)
-  let code = genGiftCode();
-  for (let attempt = 0; attempt < 3; attempt++) {
-    const { data: existing } = await sb
-      .from('discount_codes')
-      .select('code')
-      .eq('code', code)
-      .maybeSingle();
-    if (!existing) break;
-    code = genGiftCode();
-  }
-
-  // 1. Insert redeemable code into discount_codes (reuses existing redemption flow)
-  const { error: dcErr } = await sb.from('discount_codes').insert({
-    code,
-    discount_amount: amount,
-    discount_type: 'fixed',
-    max_uses: 1,
-    uses_count: 0,
-    active: true,
-  });
-  if (dcErr) {
-    console.error('[gift-card] discount_codes insert failed:', dcErr.message);
-    return; // without a redeemable code, do not email
-  }
-
-  // 2. Record in gift_cards ledger (best-effort; table may not exist yet)
-  await sb
-    .from('gift_cards')
-    .insert({
-      code,
-      amount,
-      purchaser_email: m.purchaserEmail || session.customer_details?.email || null,
-      recipient_email: m.recipientEmail,
-      recipient_name: m.recipientName || null,
-      sender_name: m.senderName || null,
-      message: m.message || null,
-      status: 'active',
-      stripe_session_id: session.id,
-    })
-    .then(({ error }) => {
-      if (error) console.warn('[gift-card] ledger insert skipped:', error.message);
-    });
-
-  // 3. Email the gift card to the recipient
-  try {
-    await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL || 'https://drbikesydney.com.au'}/api/send-email`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'gift_card',
-          to: m.recipientEmail,
-          name: m.recipientName || 'there',
-          senderName: m.senderName || 'A friend',
-          message: m.message || '',
-          amount,
-          code,
-        }),
-      }
-    );
-    console.log(`[gift-card] issued ${code} ($${amount}) to ${m.recipientEmail}`);
-  } catch (err) {
-    console.error('[gift-card] email failed:', err.message);
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -213,7 +132,11 @@ async function notifyNewBooking(booking, lang) {
   const post = (path, body) =>
     fetch(`${SELF}${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        // send-email / send-message answer 403 to a server call without it.
+        'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+      },
       body: JSON.stringify(body),
     }).then(
       (r) => {
@@ -486,11 +409,13 @@ export async function handleShopPaymentSucceeded(pi, client = sb) {
   // existe no: reintentar durante tres dias no lo va a hacer aparecer.
   if (error) throw new Error('shop order lookup failed for ' + pi.id + ': ' + error.message);
   if (!order) return { shop: 'no order for this payment', pi: pi.id };
-  if (order.payment_intent_id !== pi.id) return { shop: 'payment does not belong to that order', pi: pi.id };
+  if (order.payment_intent_id !== pi.id)
+    return { shop: 'payment does not belong to that order', pi: pi.id };
   const out = await settleOrder(client, order, pi.metadata?.lang || '');
   // 5xx: no se pudo preguntar a Stripe o escribir - que Stripe reintente.
   // 409 (importe distinto) queda anotado en el pedido y no se reintenta.
-  if (out.code >= 500) throw new Error('shop settle failed for ' + pi.id + ': ' + JSON.stringify(out.body));
+  if (out.code >= 500)
+    throw new Error('shop settle failed for ' + pi.id + ': ' + JSON.stringify(out.body));
   return { shop: out.body };
 }
 
@@ -601,7 +526,9 @@ async function handler(req, res) {
             }
           }
         } else if (session.metadata?.giftCard === 'true') {
-          await handleGiftCardPurchase(session);
+          // Throws if the card could not be made redeemable: the 500 makes
+          // Stripe retry, and issueGiftCard is safe to run again (api/_gift-cards.js).
+          await issueGiftCard(sb, session);
         } else {
           // One-time payment — log for now; extend as needed
           console.log(`[checkout.session.completed] One-time payment: ${session.id}`);
@@ -757,7 +684,11 @@ async function handler(req, res) {
               `${process.env.NEXT_PUBLIC_SITE_URL || 'https://drbikesydney.com.au'}/api/send-email`,
               {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                  'Content-Type': 'application/json',
+                  // send-email / send-message answer 403 to a server call without it.
+                  'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+                },
                 body: JSON.stringify({
                   type: 'payment_failed',
                   to: profile.email,
@@ -797,7 +728,11 @@ async function handler(req, res) {
               `${process.env.NEXT_PUBLIC_SITE_URL || 'https://drbikesydney.com.au'}/api/send-email`,
               {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                  'Content-Type': 'application/json',
+                  // send-email / send-message answer 403 to a server call without it.
+                  'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+                },
                 body: JSON.stringify({
                   type: 'payment_action_required',
                   to: profile.email,

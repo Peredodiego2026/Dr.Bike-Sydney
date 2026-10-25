@@ -2333,9 +2333,82 @@ function showToast(msg) {
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 // ── DISCOUNT CODES ────────────────────────────────────────────────────────────
-async function loadCoupons() {
+// Gift cards that Stripe charged and that were never issued. Until 25-oct-2026
+// that was every gift card sold (api/_gift-cards.js explains the two faults),
+// and a purchase Stripe was told had succeeded is never sent to the webhook
+// again - so each one is listed here, with a button that issues and emails it
+// now. Shown only when there is something to do, or something went wrong.
+async function loadGiftCardsPending() {
+  const box = document.getElementById('giftcards-pending');
+  if (!box) return;
+  let d;
+  try {
+    d = await photosApi('admin-gift-cards-check');
+  } catch (e) {
+    box.innerHTML = `<div style="font-size:13px;color:var(--red-text)">Gift cards could not be checked: ${esc(e.message)}</div>`;
+    return;
+  }
+  if (!d.missing?.length) {
+    box.innerHTML = d.paid
+      ? `<div style="font-size:12px;color:var(--mgray)">Gift cards: all ${d.paid} paid card${d.paid === 1 ? ' was' : 's were'} issued.</div>`
+      : '';
+    return;
+  }
+  const n = d.missing.length;
+  box.innerHTML = `<div class="card" style="border-left:4px solid var(--amber);padding:16px 18px">
+    <div style="font-size:15px;font-weight:700;color:var(--navy)">${n} gift card${n === 1 ? '' : 's'} paid for and never sent</div>
+    <div style="font-size:12px;color:var(--mgray);margin-top:4px;line-height:1.5">Bought on the site and charged by Stripe, but the code was never created, so the person got nothing. Issue each one: the code is created and emailed to the recipient now.</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+      ${d.missing
+        .map(
+          (
+            g
+          ) => `<div id="gc-${esc(g.session_id)}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--border);border-radius:10px">
+        <div style="min-width:0">
+          <div style="font-size:14px;font-weight:700;color:var(--navy)">${anMoney(g.amount)} for ${esc(g.recipient_name || g.recipient_email)}</div>
+          <div style="font-size:12px;color:var(--mgray);margin-top:2px">${esc(g.recipient_email)} · bought ${esc(new Date(g.created).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' }))}${g.purchaser_email ? ' by ' + esc(g.purchaser_email) : ''}</div>
+        </div>
+        <button type="button" data-action="issue-gift-card" data-session="${esc(g.session_id)}" style="min-height:44px;padding:0 16px;background:var(--blue);color:var(--white);border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)">Issue &amp; email</button>
+      </div>`
+        )
+        .join('')}
+    </div>
+  </div>`;
+  box
+    .querySelectorAll('[data-action="issue-gift-card"]')
+    .forEach((btn) => btn.addEventListener('click', () => issueGiftCardNow(btn)));
+}
+
+async function issueGiftCardNow(btn) {
+  const row = document.getElementById('gc-' + btn.dataset.session);
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+  btn.textContent = 'Issuing...';
+  try {
+    const r = await photosApi('admin-gift-cards-issue', { session_id: btn.dataset.session });
+    const note =
+      r.status === 'already'
+        ? `Already issued: ${esc(r.code)}`
+        : r.emailed
+          ? `Issued ${esc(r.code)} and emailed`
+          : `Issued ${esc(r.code)} - the email failed, send this code to the recipient yourself`;
+    btn.outerHTML = `<div style="font-size:13px;font-weight:700;color:${r.emailed || r.status === 'already' ? 'var(--green-text)' : 'var(--red-text)'}">${note}</div>`;
+    if (row) row.style.borderColor = 'var(--green)';
+    loadCoupons(true);
+  } catch (e) {
+    btn.disabled = false;
+    btn.style.opacity = '';
+    btn.textContent = 'Issue & email';
+    showToast('Could not issue it: ' + e.message);
+  }
+}
+
+// skipGiftCards: after issuing one, refresh the codes but keep the gift card
+// box as it is, so its "Issued GIFT-... and emailed" line stays on screen.
+async function loadCoupons(skipGiftCards = false) {
   const grid = document.getElementById('coupons-grid');
   if (!grid) return;
+  if (!skipGiftCards) loadGiftCardsPending();
   grid.innerHTML =
     '<div style="text-align:center;padding:48px;color:var(--mgray);grid-column:1/-1;font-size:13px">Loading...</div>';
 
