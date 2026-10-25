@@ -257,7 +257,10 @@
 // diccionarios, que ganaron el Bike Wash y la cuenta de ahorro con el lavado
 // a $50. Sin este numero los navegadores que ya visitaron siguen listando un
 // servicio oculto en la reserva y leyendo el ahorro viejo en es/zh.
-const CACHE_STATIC = 'drbike-static-v154';
+// v155: la lista publica de precios de repuestos (js/parts-prices.js, un modulo
+// nuevo que se importa sin ?v=) y sus textos en los dos diccionarios. Sin este
+// numero, quien ya visito el sitio no tiene el modulo y el link no abre nada.
+const CACHE_STATIC = 'drbike-static-v155';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

@@ -65,6 +65,7 @@ import {
   announce,
 } from './components.js';
 import { openGiftCardModal } from './gift-card.js';
+import { openPartsPrices } from './parts-prices.js';
 import { getRiderTier } from './rider-tier.js';
 import {
   renderShop,
@@ -2049,6 +2050,9 @@ async function renderServiceSummary() {
           <strong>Then, at your door:</strong> ${translateValue(
             "once your bike is diagnosed, the mechanic goes ahead with the repair - $DOORAMOUNT, paid at your door when it's done."
           ).replace('DOORAMOUNT', `<span id="q-door-amount">${serviceTotal.toFixed(2)}</span>`)}
+          <div style="margin-top:6px;font-size:12px">${translateValue(
+            'Parts are extra if your bike needs any - you approve each one first.'
+          )} <button type="button" data-action="parts-prices" style="background:none;border:none;padding:12px 4px;margin:-12px -4px;font:inherit;font-weight:700;color:inherit;text-decoration:underline;cursor:pointer">${translateValue('See parts prices')}</button></div>
           <div id="q-discount-row" style="display:none;justify-content:space-between;margin-top:6px;padding-top:6px;border-top:1px solid var(--red-edge);font-size:12px">
             <span>Promo discount</span><span id="q-discount-amt" style="font-weight:700"></span>
           </div>
@@ -7037,6 +7041,18 @@ router.init();
 // navigation link changing the hash and nothing happening, with no error
 // anyone would connect to the cause.
 window.drbikeOpenGiftCard = openGiftCardModal;
+// Every "See parts prices" link, on either surface and on screens the router
+// paints later (the booking summary): one delegated listener, no inline
+// handlers. terms.html cannot import this, so it links to /?view=parts-prices.
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('[data-action="parts-prices"]')) return;
+  e.preventDefault();
+  openPartsPrices();
+});
+if (new URLSearchParams(window.location.search).get('view') === 'parts-prices') {
+  window.history.replaceState(null, '', window.location.pathname + window.location.hash);
+  openPartsPrices();
+}
 document.dispatchEvent(new Event('routerinit'));
 renderSpaLangSwitcher();
 updateHomeNav();

@@ -1920,4 +1920,19 @@ export default {
     'Esa foto es demasiado grande para enviarla. Tu reserva no se ve afectada.',
   'We could not read that photo. Your booking is not affected.':
     'No pudimos leer esa foto. Tu reserva no se ve afectada.',
+  // The parts price list (js/parts-prices.js), 25-oct-2026.
+  'Parts prices': 'Precios de repuestos',
+  'Final prices, fitted by your mechanic.': 'Precios finales, colocados por tu mecánico.',
+  'Search parts': 'Buscar repuestos',
+  'Your mechanic shows you the part and its price before fitting it - nothing goes on without your OK.':
+    'Tu mecánico te muestra el repuesto y su precio antes de colocarlo: no se instala nada sin tu OK.',
+  'No parts match your search.': 'Ningún repuesto coincide con tu búsqueda.',
+  'Loading prices...': 'Cargando precios...',
+  'The price list could not be loaded right now. Your mechanic will still show you every price before fitting anything.':
+    'No pudimos cargar la lista de precios ahora. Igual tu mecánico te mostrará cada precio antes de colocar nada.',
+  'Parts are quoted on the spot - your mechanic tells you the price before fitting anything.':
+    'Los repuestos se cotizan en el momento: tu mecánico te dice el precio antes de colocar nada.',
+  'Parts are extra if your bike needs any - you approve each one first.':
+    'Los repuestos van aparte si tu bici los necesita: apruebas cada uno antes.',
+  'See parts prices': 'Ver precios de repuestos',
 };

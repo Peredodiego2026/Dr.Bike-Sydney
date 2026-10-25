@@ -862,7 +862,8 @@
             >
               All prices include a visit & diagnosis fee (from $35, depending on your suburb). Parts
               charged separately unless stated.<br />
-              Sunday &amp; NSW public holiday bookings +20%. Saturday is normal price.
+              Sunday &amp; NSW public holiday bookings +20%. Saturday is normal price.<br />
+              <button type="button" data-action="parts-prices" style="background:none;border:none;padding:12px 8px;margin:-4px 0 0;font:inherit;font-weight:700;color:var(--blue-text);text-decoration:underline;cursor:pointer">See parts prices</button>
             </p>
           </div>
         </section>
@@ -1602,6 +1603,7 @@
                   <summary class="faq-q">Do you bring spare parts?</summary>
                   <div class="faq-a">
                     Yes. The van carries common parts like brake pads, cables, chains and tubes, and anything less common we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately.
+                    <button type="button" data-action="parts-prices" style="display:block;background:none;border:none;padding:12px 0 0;min-height:44px;font:inherit;font-weight:700;color:var(--blue-text);text-decoration:underline;cursor:pointer">See parts prices</button>
                   </div>
                 </details>
                 <details class="faq-item">
@@ -2480,7 +2482,7 @@
      (removed 2026-07-28); router.js and components.js got away with it only
      because they hold no state of their own. app.js pulls in the whole graph -
      router, supabase, components, i18n, rider-tier, stripe. -->
-    <script src="js/app.js?v=9e2078b63a" type="module"></script>
+    <script src="js/app.js?v=69b17a376f" type="module"></script>
     <script type="module">
       /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
       import { sb } from './js/supabase.js';

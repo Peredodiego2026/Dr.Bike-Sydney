@@ -1760,4 +1760,19 @@ export default {
     '这张照片太大，无法发送。您的预约不受影响。',
   'We could not read that photo. Your booking is not affected.':
     '我们无法读取这张照片。您的预约不受影响。',
+  // The parts price list (js/parts-prices.js), 25-oct-2026.
+  'Parts prices': '零件价格',
+  'Final prices, fitted by your mechanic.': '最终价格，由您的技师安装。',
+  'Search parts': '搜索零件',
+  'Your mechanic shows you the part and its price before fitting it - nothing goes on without your OK.':
+    '技师会在安装前向您展示零件及其价格 - 未经您同意，不会安装任何零件。',
+  'No parts match your search.': '没有与您的搜索匹配的零件。',
+  'Loading prices...': '正在加载价格...',
+  'The price list could not be loaded right now. Your mechanic will still show you every price before fitting anything.':
+    '目前无法加载价格表。技师仍会在安装任何零件前向您出示每项价格。',
+  'Parts are quoted on the spot - your mechanic tells you the price before fitting anything.':
+    '零件现场报价 - 技师会在安装任何零件前告诉您价格。',
+  'Parts are extra if your bike needs any - you approve each one first.':
+    '如果您的自行车需要零件，零件费用另计 - 每个零件都需您先批准。',
+  'See parts prices': '查看零件价格',
 };
