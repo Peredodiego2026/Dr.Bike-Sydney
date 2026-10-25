@@ -1248,6 +1248,46 @@ function finRevenueDate(j) {
   return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
 }
 
+// A Stripe/shop timestamp as the local calendar day, the same way
+// finRevenueDate() dates a job - so a payment lands on the same bar of the
+// chart and the same row date as a job paid at that moment.
+function finLocalDate(iso) {
+  const t = new Date(iso);
+  if (!Number.isFinite(t.getTime())) return '';
+  return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+}
+
+// Every sale of the period as one list, oldest first: jobs (what each client
+// paid), membership payments and shop orders. The transactions table and the
+// CSV both read it, so they cannot disagree with each other or with Revenue.
+function finLedger(jobs, membershipItems, shopItems) {
+  const rows = [
+    ...jobs.map((j) => ({
+      date: finRevenueDate(j),
+      client:
+        j.client_name || j.profiles?.full_name || j.profiles?.email?.split('@')[0] || 'Client',
+      what: j.service_name || 'Service',
+      amount: anBookingRevenue(j),
+      kind: 'job',
+    })),
+    ...membershipItems.map((i) => ({
+      date: finLocalDate(i.date),
+      client: i.name || (i.email || '').split('@')[0] || 'Member',
+      what: 'Membership - ' + i.description,
+      amount: i.amount,
+      kind: 'membership',
+    })),
+    ...shopItems.map((i) => ({
+      date: finLocalDate(i.date),
+      client: i.name || (i.email || '').split('@')[0] || 'Customer',
+      what: i.description,
+      amount: i.amount,
+      kind: 'shop',
+    })),
+  ];
+  return rows.sort((a, b) => a.date.localeCompare(b.date));
+}
+
 // Everything money-shaped on this screen goes blank, and the P&L says why.
 // Leaving the zeros on screen was the actual bug: a permissions error, a dead
 // session or a dropped connection all rendered as a month with no work.
@@ -1288,6 +1328,14 @@ async function loadFinance() {
   // are dated 'YYYY-MM-DD'; the Dates drive the bookings query, which now
   // compares against a timestamp and therefore needs real instants.
   const { dateFrom, dateTo, rangeStart, rangeEndExclusive } = finRange(view, month, year);
+
+  // Memberships (from Stripe) and shop sales for the same period, read while
+  // the jobs load. Both are sales and both belong in Revenue and the BAS - see
+  // handleAdminFinanceIncome in api/auth.js.
+  const incomeP = photosApi('admin-finance-income', {
+    from: rangeStart.toISOString(),
+    to: rangeEndExclusive.toISOString(),
+  }).catch((e) => ({ error: e.message }));
 
   // The money is dated by when the job was FINISHED, not by when it was
   // booked in. Until 2026-08-16 this screen filtered on scheduled_date while
@@ -1334,7 +1382,17 @@ async function loadFinance() {
   }
 
   const jobs = bookings || [];
-  const revenue = anRevenueOf(jobs);
+  const jobsRevenue = anRevenueOf(jobs);
+  const income = await incomeP;
+  const memberships = income.memberships?.available ? income.memberships : { total: 0, items: [] };
+  const shopSales = income.shop?.available ? income.shop : { total: 0, items: [] };
+  // What could not be read, said on screen rather than silently left out.
+  const incomeGaps = income.error
+    ? [`Memberships and shop sales could not be read: ${income.error}`]
+    : [income.memberships, income.shop]
+        .filter((x) => x && x.available === false)
+        .map((x) => x.reason);
+  const revenue = jobsRevenue + memberships.total + shopSales.total;
 
   // Visit & diagnosis fees already charged on jobs that have not happened yet.
   // Deliberately NOT added to revenue: it is not earned until the mechanic
@@ -1359,7 +1417,7 @@ async function loadFinance() {
   const grossProfit = netRevenue - varCosts;
   const netProfit = grossProfit - fixedTotal;
   const margin = netRevenue > 0 ? Math.round((netProfit / netRevenue) * 100) : 0;
-  const avgJob = jobCount > 0 ? Math.round(revenue / jobCount) : 0;
+  const avgJob = jobCount > 0 ? Math.round(jobsRevenue / jobCount) : 0;
 
   // KPIs
   document.getElementById('fk-revenue').textContent = '$' + revenue.toLocaleString('en-AU');
@@ -1384,7 +1442,9 @@ async function loadFinance() {
     jobCount +
     ' job' +
     (jobCount !== 1 ? 's' : '') +
-    (calloutGaps ? ` · ${calloutGaps} with no visit & diagnosis fee recorded` : '');
+    (calloutGaps ? ` · ${calloutGaps} with no visit & diagnosis fee recorded` : '') +
+    (memberships.total ? ` · ${anMoney(memberships.total)} memberships` : '') +
+    (shopSales.total ? ` · ${anMoney(shopSales.total)} shop` : '');
   document.getElementById('fk-gst').textContent = '$' + gst.toLocaleString('en-AU');
   document.getElementById('fk-net').textContent = '$' + netRevenue.toLocaleString('en-AU');
   document.getElementById('fk-avg').textContent = 'avg ' + anMoney(avgJob) + ' / job';
@@ -1396,6 +1456,15 @@ async function loadFinance() {
   // P&L rows
   const plRows = [
     { label: 'Revenue (incl. GST)', val: revenue, bold: true, color: 'var(--green)' },
+    ...(memberships.total || shopSales.total
+      ? [
+          { label: 'Jobs', val: jobsRevenue, detail: true },
+          ...(memberships.total
+            ? [{ label: 'Memberships', val: memberships.total, detail: true }]
+            : []),
+          ...(shopSales.total ? [{ label: 'Shop sales', val: shopSales.total, detail: true }] : []),
+        ]
+      : []),
     { label: 'GST collected (1/11)', val: -gst, neg: true },
     { label: 'Net revenue (ex GST)', val: netRevenue, bold: true, sub: true },
     { label: 'Variable costs (parts)', val: -varCosts, neg: true },
@@ -1424,13 +1493,18 @@ async function loadFinance() {
     : exp.total === 0
       ? '<div class="pl-row" style="color:var(--mgray);font-size:13px;line-height:1.5;display:block">No expenses loaded for this period. Add them on the Expenses screen - until then this is revenue, not profit.</div>'
       : '';
+  // Never let an unread income source look like a period without it.
+  const incomeNote = incomeGaps.length
+    ? `<div class="pl-row" style="color:var(--red-text);font-size:13px;line-height:1.5;display:block">Revenue is missing part of the income: ${incomeGaps.map(esc).join('; ')}</div>`
+    : '';
   document.getElementById('fin-pl-rows').innerHTML =
+    incomeNote +
     expNote +
     plRows
       .map(
         (r) => `
     <div class="pl-row${r.sub ? ' subtotal' : ''}${r.total ? ' total' : ''}">
-      <span class="pl-label${r.bold ? ' dark' : ''}">${esc(r.label)}</span>
+      <span class="pl-label${r.bold ? ' dark' : ''}"${r.detail ? ' style="padding-left:14px"' : ''}>${esc(r.label)}</span>
       <span style="font-weight:${r.bold ? '700' : '500'};color:${r.color || (r.neg ? 'var(--red)' : 'var(--navy)')}">
         ${r.val >= 0 ? '$' : '–$'}${Math.abs(r.val).toLocaleString('en-AU')}
       </span>
@@ -1448,6 +1522,10 @@ async function loadFinance() {
     if (!d) return;
     dailyMap[d] = (dailyMap[d] || 0) + anBookingRevenue(j);
   });
+  for (const i of [...memberships.items, ...shopSales.items]) {
+    const d = finLocalDate(i.date);
+    if (d) dailyMap[d] = (dailyMap[d] || 0) + i.amount;
+  }
   const days = Object.keys(dailyMap).sort();
   const maxVal = Math.max(...Object.values(dailyMap), 1);
   document.getElementById('fin-chart-sub').textContent = periodStr + ' · ' + jobCount + ' jobs';
@@ -1472,20 +1550,25 @@ async function loadFinance() {
   document.getElementById('bas-net').textContent = '$' + gst.toLocaleString('en-AU');
 
   // Transactions table
-  document.getElementById('fin-tx-sub').textContent = jobCount + ' completed jobs · ' + periodStr;
-  document.getElementById('fin-tx-body').innerHTML = jobs.length
-    ? jobs
-        .map((j) => {
-          const price = anBookingRevenue(j);
-          const jGst = Math.round(price / 11);
-          const jNet = price - jGst;
-          const name =
-            j.client_name || j.profiles?.full_name || j.profiles?.email?.split('@')[0] || 'Client';
+  const ledger = finLedger(jobs, memberships.items, shopSales.items);
+  const extraCount = memberships.items.length + shopSales.items.length;
+  document.getElementById('fin-tx-sub').textContent =
+    jobCount +
+    ' completed jobs' +
+    (memberships.items.length ? ` · ${memberships.items.length} membership payments` : '') +
+    (shopSales.items.length ? ` · ${shopSales.items.length} shop orders` : '') +
+    ' · ' +
+    periodStr;
+  document.getElementById('fin-tx-body').innerHTML = ledger.length
+    ? ledger
+        .map((t) => {
+          const jGst = Math.round(t.amount / 11);
+          const jNet = t.amount - jGst;
           return `<tr>
-      <td data-label="Date">${esc(finRevenueDate(j))}</td>
-      <td data-label="Client">${esc(name)}</td>
-      <td data-label="Service">${esc(j.service_name || 'Service')}</td>
-      <td data-label="Amount" style="font-weight:600">$${price.toLocaleString('en-AU')}</td>
+      <td data-label="Date">${esc(t.date)}</td>
+      <td data-label="Client">${esc(t.client)}</td>
+      <td data-label="Service">${esc(t.what)}</td>
+      <td data-label="Amount" style="font-weight:600">$${t.amount.toLocaleString('en-AU')}</td>
       <td data-label="GST" style="color:var(--orange)">${anMoney(jGst)}</td>
       <td data-label="Net">${anMoney(jNet)}</td>
       <td data-label="Status"><span style="background:var(--green-lt);color:var(--green-ink);border-radius:12px;padding:2px 8px;font-size:11px;font-weight:600">Paid</span></td>
@@ -1519,6 +1602,11 @@ async function loadFinance() {
     expenses: exp,
     expensesAvailable: _expenses.available !== false,
     partsSold,
+    jobsRevenue,
+    memberships,
+    shopSales,
+    incomeGaps,
+    ledger,
     periodStr,
     dateFrom,
     dateTo,
@@ -1628,23 +1716,18 @@ function exportFinanceCSV() {
   if (!d) return;
   const rows = [
     ['Date', 'Client', 'Service', 'Amount (incl GST)', 'GST', 'Net Amount', 'Status'],
-    ...d.jobs.map((j) => {
-      const price = anBookingRevenue(j);
-      const gst = Math.round(price / 11);
-      return [
-        finRevenueDate(j),
-        j.profiles?.full_name || j.profiles?.email || '',
-        j.service_name || '',
-        price,
-        gst,
-        price - gst,
-        'Completed',
-      ];
+    ...d.ledger.map((t) => {
+      const gst = Math.round(t.amount / 11);
+      return [t.date, t.client, t.what, t.amount, gst, t.amount - gst, 'Paid'];
     }),
     [],
     ['SUMMARY', '', '', '', '', '', ''],
     ['Period', d.periodStr, '', '', '', '', ''],
     ['Total Revenue (incl GST)', d.revenue, '', '', '', '', ''],
+    ['  Jobs', d.jobsRevenue, '', '', '', '', ''],
+    ['  Memberships', d.memberships.total, '', '', '', '', ''],
+    ['  Shop sales', d.shopSales.total, '', '', '', '', ''],
+    ...d.incomeGaps.map((g) => ['WARNING - not in revenue', g, '', '', '', '', '']),
     ['GST Collected', d.gst, '', '', '', '', ''],
     ['Net Revenue', d.netRevenue, '', '', '', '', ''],
     ['Net Profit', d.netProfit, '', '', '', '', ''],
@@ -1743,9 +1826,16 @@ Give the figures below to your tax agent and let them fill those three boxes.
 ${basExpensesBlock(d)}
 
 SALES DETAIL
-Jobs completed: ${d.jobCount}
+Jobs completed: ${d.jobCount} - ${anMoney(d.jobsRevenue)}
 Average job value: ${anMoney(d.avgJob)}
-Basis: service_price + callout_fee, as recorded on each completed booking.
+Membership payments: ${d.memberships.items.length} - ${anMoney(d.memberships.total)}
+Shop orders: ${d.shopSales.items.length} - ${anMoney(d.shopSales.total)}
+Basis: what each client actually paid. Jobs = the visit & diagnosis fee taken at
+booking plus the completion charge (service less any discount code or credit,
+plus parts); tips are not sales and are left out. Memberships = subscription
+payments as Stripe recorded them, on the day they were paid. Shop = live orders
+paid in the period, refunded ones excluded.
+${d.incomeGaps.length ? `WARNING: G1 above is UNDERSTATED - ${d.incomeGaps.join('; ')}.` : ''}
 ${
   d.calloutGaps
     ? `WARNING: ${d.calloutGaps} of those ${d.jobCount} bookings have no visit & diagnosis fee
@@ -1848,7 +1938,7 @@ function exportFinancePDF() {
     </div>
 
     <div class="kpis">
-      <div class="kpi"><div class="kpi-label">Revenue (incl GST)</div><div class="kpi-val">$${d.revenue.toLocaleString('en-AU')}</div><div class="kpi-sub">${(d.jobs || []).length} completed jobs</div></div>
+      <div class="kpi"><div class="kpi-label">Revenue (incl GST)</div><div class="kpi-val">$${d.revenue.toLocaleString('en-AU')}</div><div class="kpi-sub">${(d.jobs || []).length} completed jobs${d.memberships.total ? ` · ${anMoney(d.memberships.total)} memberships` : ''}${d.shopSales.total ? ` · ${anMoney(d.shopSales.total)} shop` : ''}</div></div>
       <div class="kpi green"><div class="kpi-label">Net Revenue</div><div class="kpi-val">$${d.netRevenue.toLocaleString('en-AU')}</div><div class="kpi-sub">excl. GST</div></div>
       <div class="kpi orange"><div class="kpi-label">GST Collected</div><div class="kpi-val">$${d.gst.toLocaleString('en-AU')}</div><div class="kpi-sub">payable to ATO</div></div>
       <div class="kpi"><div class="kpi-label">Est. Net Profit</div><div class="kpi-val">$${d.netProfit.toLocaleString('en-AU')}</div><div class="kpi-sub">after expenses</div></div>
@@ -1882,8 +1972,9 @@ function exportFinancePDF() {
         <table style="margin:0">
           <tbody>
             <tr><td>Total bookings</td><td class="bold" style="text-align:right">${(d.jobs || []).length}</td></tr>
-            <tr><td>Avg order value</td><td class="bold" style="text-align:right">$${(d.jobs || []).length ? Math.round(d.revenue / (d.jobs || []).length) : 0}</td></tr>
+            <tr><td>Avg order value</td><td class="bold" style="text-align:right">$${d.avgJob}</td></tr>
             <tr><td>Revenue (incl GST)</td><td class="blue" style="text-align:right">$${d.revenue.toLocaleString('en-AU')}</td></tr>
+            ${d.memberships.total || d.shopSales.total ? `<tr><td style="padding-left:14px">Jobs</td><td style="text-align:right">${anMoney(d.jobsRevenue)}</td></tr>${d.memberships.total ? `<tr><td style="padding-left:14px">Memberships</td><td style="text-align:right">${anMoney(d.memberships.total)}</td></tr>` : ''}${d.shopSales.total ? `<tr><td style="padding-left:14px">Shop sales</td><td style="text-align:right">${anMoney(d.shopSales.total)}</td></tr>` : ''}` : ''}
             <tr><td>GST (10%)</td><td class="bold" style="text-align:right">$${d.gst.toLocaleString('en-AU')}</td></tr>
             <tr><td>Net revenue</td><td class="bold" style="text-align:right">$${d.netRevenue.toLocaleString('en-AU')}</td></tr>
             <tr><td>Est. expenses</td><td class="bold" style="text-align:right">$${(d.netRevenue - d.netProfit).toLocaleString('en-AU')}</td></tr>

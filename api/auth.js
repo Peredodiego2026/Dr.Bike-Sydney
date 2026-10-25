@@ -4191,6 +4191,111 @@ export async function handleAdminInventoryHistory(req, res) {
   });
 }
 
+// Finance's income beyond jobs (Diego, 25-oct-2026): until now Revenue and the
+// BAS added up bookings only, so a member's monthly fee and a shop sale - both
+// real sales - were in neither.
+//
+// - Memberships: read from Stripe, the only place the money is recorded. The
+//   webhook's invoice.paid marks the member active and stores no amount, so
+//   there is no table to sum. Each paid subscription invoice counts on the day
+//   it was PAID (status_transitions.paid_at), like jobs count on the day they
+//   were finished.
+// - Shop: live orders (never test-mode ones) that are paid or further along,
+//   dated by paid_at. A refunded order is out, same rule as the shop's own
+//   sales report (SOLD in api/_shop-admin.js).
+//
+// Each half answers for itself: if Stripe cannot be reached the shop still
+// comes back, and the screen says which part is missing instead of showing a
+// smaller number as if it were complete.
+const FINANCE_SHOP_SOLD = ['paid', 'ordered', 'packed', 'sent', 'delivered'];
+
+export async function handleAdminFinanceIncome(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const from = new Date(req.body?.from);
+  const to = new Date(req.body?.to);
+  if (!Number.isFinite(from.getTime()) || !Number.isFinite(to.getTime()) || to <= from)
+    return res.status(400).json({ error: 'from and to (ISO instants, from < to) required' });
+  const inRange = (iso) => {
+    const t = new Date(iso).getTime();
+    return Number.isFinite(t) && t >= from.getTime() && t < to.getTime();
+  };
+  const r2 = (n) => Math.round(n * 100) / 100;
+
+  const memberships = await (async () => {
+    if (!process.env.STRIPE_SECRET_KEY)
+      return { available: false, reason: 'Stripe is not configured' };
+    try {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+      const items = [];
+      // An invoice is created a moment before it is paid; a renewal that
+      // retried for a few days was created earlier still. 40 days back covers
+      // that, and paid_at decides which period it belongs to.
+      const params = {
+        status: 'paid',
+        created: {
+          gte: Math.floor(from.getTime() / 1000) - 40 * 86400,
+          lt: Math.floor(to.getTime() / 1000),
+        },
+        limit: 100,
+      };
+      for await (const inv of stripe.invoices.list(params)) {
+        const sub = inv.parent?.subscription_details?.subscription ?? inv.subscription ?? null;
+        if (!sub) continue; // one-off invoices are not membership fees
+        const paidAt = inv.status_transitions?.paid_at
+          ? new Date(inv.status_transitions.paid_at * 1000).toISOString()
+          : null;
+        const amount = (Number(inv.amount_paid) || 0) / 100;
+        if (!paidAt || !inRange(paidAt) || amount <= 0) continue;
+        items.push({
+          date: paidAt,
+          name: inv.customer_name || '',
+          email: inv.customer_email || '',
+          description: inv.lines?.data?.[0]?.description || 'Membership',
+          amount: r2(amount),
+        });
+      }
+      items.sort((a, b) => a.date.localeCompare(b.date));
+      return { available: true, total: r2(items.reduce((s, i) => s + i.amount, 0)), items };
+    } catch (e) {
+      console.error('[admin-finance-income] Stripe read failed:', e.message);
+      return { available: false, reason: 'Stripe could not be read: ' + e.message };
+    }
+  })();
+
+  const shop = await (async () => {
+    const { data, error } = await auth.sb
+      .from('shop_orders')
+      .select('id,status,mode,total,paid_at,created_at,client_name,client_email')
+      .eq('mode', 'live')
+      .in('status', FINANCE_SHOP_SOLD);
+    if (error) {
+      // No shop_orders table yet (the shop migration not run) is "no sales",
+      // not an error worth a red line on the screen.
+      if (
+        /does not exist|schema cache|42P01|PGRST205/i.test(error.message + ' ' + (error.code || ''))
+      )
+        return { available: true, total: 0, items: [] };
+      return { available: false, reason: 'Shop orders could not be read: ' + error.message };
+    }
+    const items = (data || [])
+      .filter((o) => inRange(o.paid_at || o.created_at))
+      .map((o) => ({
+        date: o.paid_at || o.created_at,
+        name: o.client_name || '',
+        email: o.client_email || '',
+        description: 'Shop order',
+        amount: r2(Number(o.total) || 0),
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+    return { available: true, total: r2(items.reduce((s, i) => s + i.amount, 0)), items };
+  })();
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  return res.status(200).json({ memberships, shop });
+}
+
 // A completed job's parts cost: booking_costs first (admin-only, since
 // 25-oct-2026), then the old bookings column for jobs finished before it. null
 // means "not recorded", never 0. PostgREST embeds a one-to-one as an object,
@@ -6967,6 +7072,7 @@ async function handler(req, res) {
           // Same reason: the Finance screen re-reads the expenses on every
           // change of month, quarter or year, and 5/min locks it on the third.
           role === 'admin-expenses-list' ||
+          role === 'admin-finance-income' ||
           // One call per photo that arrives in an open chat.
           role === 'photo-sign' ||
           // Admin > Photos re-reads the list after every select-and-act.
@@ -7046,6 +7152,7 @@ async function handler(req, res) {
   if (role === 'admin-orphan-audit') return handleAdminOrphanAudit(req, res);
   if (role === 'admin-privacy-plan') return handleAdminPrivacyPlan(req, res);
   if (role === 'admin-expenses-list') return handleAdminExpensesList(req, res);
+  if (role === 'admin-finance-income') return handleAdminFinanceIncome(req, res);
   if (role === 'admin-expenses-save') return handleAdminExpensesSave(req, res);
   if (role === 'admin-closed-until') return handleAdminClosedUntil(req, res);
   if (role === 'admin-expenses-delete') return handleAdminExpensesDelete(req, res);
