@@ -3167,7 +3167,7 @@ async function sendCompletionNotifications(args, sbHdr) {
   return { ...summary, skipped };
 }
 
-async function handleClientCancel(req, res) {
+export async function handleClientCancel(req, res) {
   const { access_token, booking_id, client_id } = req.body;
   if (!access_token || !booking_id || !client_id)
     return res.status(400).json({ error: 'access_token, booking_id, client_id required' });
@@ -3182,7 +3182,7 @@ async function handleClientCancel(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const bkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_name,service_name,scheduled_date,scheduled_time,stripe_payment_intent_id,google_event_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_name,service_name,scheduled_date,scheduled_time,stripe_payment_intent_id,callout_fee,google_event_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
@@ -3237,7 +3237,7 @@ async function handleClientCancel(req, res) {
   // Remove the mechanic's calendar event, if one was ever created (fire-and-forget)
   if (bk.google_event_id) deleteCalendarEvent(bk.google_event_id).catch(() => {});
 
-  // Auto-refund the $20 callout fee for >=24h notice (per terms.html section 6),
+  // Auto-refund the visit fee for >=24h notice (per terms.html section 6),
   // then tell Diego the outcome (fire-and-forget - never block the client's
   // cancel response on this).
   notifyAdminCancellation(bk, SERVICE_KEY).catch((e) =>
@@ -3290,13 +3290,18 @@ async function notifyAdminCancellation(bk, SERVICE_KEY) {
 
   let refunded = false;
   let refundAttempted = false;
+  // The visit fee is the zone's ($35, $45, $55...), not the flat $20 this
+  // message used to quote. Stripe says what it actually gave back; the
+  // booking's own fee is what Diego has to refund by hand if Stripe failed.
+  let refundAmount = Number(bk.callout_fee) || 0;
   if (eligibleForRefund && bk.stripe_payment_intent_id && process.env.STRIPE_SECRET_KEY) {
     refundAttempted = true;
     try {
-      await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
+      const refund = await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
         payment_intent: bk.stripe_payment_intent_id,
       });
       refunded = true;
+      if (Number(refund?.amount) > 0) refundAmount = refund.amount / 100;
     } catch (e) {
       console.error('[client-cancel] Stripe refund failed:', e.message);
     }
@@ -3321,6 +3326,8 @@ async function notifyAdminCancellation(bk, SERVICE_KEY) {
         refund: eligibleForRefund,
         refunded,
         refundAttempted,
+        amount: refundAmount,
+        charged: !!bk.stripe_payment_intent_id,
       },
     }),
   });
