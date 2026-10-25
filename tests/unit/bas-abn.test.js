@@ -38,7 +38,7 @@ function fnSource(head) {
   throw new Error(`unbalanced braces from ${open}`);
 }
 
-function runExportBAS() {
+function runExportBAS(over = {}) {
   let written = '';
   const stub = () => '';
   const defined = {
@@ -52,6 +52,12 @@ function runExportBAS() {
         calloutGaps: 0,
         expensesAvailable: true,
         expenses: { total: 0, byCat: {} },
+        // Since 25-oct-2026 the BAS also lists memberships and shop sales.
+        jobsRevenue: 1000,
+        memberships: { total: 0, items: [] },
+        shopSales: { total: 0, items: [] },
+        incomeGaps: [],
+        ...over,
       },
     },
     EXPENSE_LABELS: {},
@@ -126,5 +132,29 @@ describe('one ABN, one place', () => {
     const invoice = fs.readFileSync(new URL('../../api/send-invoice.js', import.meta.url), 'utf8');
     const abn = src.match(/const DRBIKE_ABN = '([^']+)'/)[1];
     expect(invoice, 'the invoice states a different ABN from the BAS').toContain(abn);
+  });
+});
+
+// Diego, 25-oct-2026: memberships and shop sales are sales too. The BAS text
+// lists each source, says what the figure is based on, and shouts when a source
+// could not be read instead of printing a smaller G1 as if it were complete.
+describe('the BAS lists every source of sales', () => {
+  it('jobs, memberships and shop, each with its amount', () => {
+    const bas = runExportBAS({
+      revenue: 1298,
+      jobsRevenue: 1000,
+      memberships: { total: 194, items: [{}, {}] },
+      shopSales: { total: 104, items: [{}] },
+    });
+    expect(bas).toContain('G1 — Total Sales (incl GST): $1,298');
+    expect(bas).toContain('Membership payments: 2 - $194.00');
+    expect(bas).toContain('Shop orders: 1 - $104.00');
+    expect(bas).toContain('what each client actually paid');
+    expect(bas).not.toContain('service_price + callout_fee');
+  });
+
+  it('a source that could not be read makes G1 say it is understated', () => {
+    const bas = runExportBAS({ incomeGaps: ['Stripe could not be read: timeout'] });
+    expect(bas).toContain('G1 above is UNDERSTATED - Stripe could not be read: timeout');
   });
 });

@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { REDACTED, anonymisationPlan, exportPlan } from './_privacy.js';
 import Stripe from 'stripe';
+import { issueGiftCard } from './_gift-cards.js';
 import crypto from 'crypto';
 import { geocodeAddress, drivingRoute, drivingRouteGeometry, suggestAddresses } from './_eta.js';
 import { resolveCoverage, needsQuote, BASE, VALID_FEES, formatMinutes } from './_coverage.js';
@@ -4248,6 +4249,193 @@ export async function handleAdminInventoryHistory(req, res) {
   });
 }
 
+// Finance's income beyond jobs (Diego, 25-oct-2026): until now Revenue and the
+// BAS added up bookings only, so a member's monthly fee and a shop sale - both
+// real sales - were in neither.
+//
+// - Memberships: read from Stripe, the only place the money is recorded. The
+//   webhook's invoice.paid marks the member active and stores no amount, so
+//   there is no table to sum. Each paid subscription invoice counts on the day
+//   it was PAID (status_transitions.paid_at), like jobs count on the day they
+//   were finished.
+// - Shop: live orders (never test-mode ones) that are paid or further along,
+//   dated by paid_at. A refunded order is out, same rule as the shop's own
+//   sales report (SOLD in api/_shop-admin.js).
+//
+// Each half answers for itself: if Stripe cannot be reached the shop still
+// comes back, and the screen says which part is missing instead of showing a
+// smaller number as if it were complete.
+const FINANCE_SHOP_SOLD = ['paid', 'ordered', 'packed', 'sent', 'delivered'];
+
+export async function handleAdminFinanceIncome(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const from = new Date(req.body?.from);
+  const to = new Date(req.body?.to);
+  if (!Number.isFinite(from.getTime()) || !Number.isFinite(to.getTime()) || to <= from)
+    return res.status(400).json({ error: 'from and to (ISO instants, from < to) required' });
+  const inRange = (iso) => {
+    const t = new Date(iso).getTime();
+    return Number.isFinite(t) && t >= from.getTime() && t < to.getTime();
+  };
+  const r2 = (n) => Math.round(n * 100) / 100;
+
+  const memberships = await (async () => {
+    if (!process.env.STRIPE_SECRET_KEY)
+      return { available: false, reason: 'Stripe is not configured' };
+    try {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+      const items = [];
+      // An invoice is created a moment before it is paid; a renewal that
+      // retried for a few days was created earlier still. 40 days back covers
+      // that, and paid_at decides which period it belongs to.
+      const params = {
+        status: 'paid',
+        created: {
+          gte: Math.floor(from.getTime() / 1000) - 40 * 86400,
+          lt: Math.floor(to.getTime() / 1000),
+        },
+        limit: 100,
+      };
+      for await (const inv of stripe.invoices.list(params)) {
+        const sub = inv.parent?.subscription_details?.subscription ?? inv.subscription ?? null;
+        if (!sub) continue; // one-off invoices are not membership fees
+        const paidAt = inv.status_transitions?.paid_at
+          ? new Date(inv.status_transitions.paid_at * 1000).toISOString()
+          : null;
+        const amount = (Number(inv.amount_paid) || 0) / 100;
+        if (!paidAt || !inRange(paidAt) || amount <= 0) continue;
+        items.push({
+          date: paidAt,
+          name: inv.customer_name || '',
+          email: inv.customer_email || '',
+          description: inv.lines?.data?.[0]?.description || 'Membership',
+          amount: r2(amount),
+        });
+      }
+      items.sort((a, b) => a.date.localeCompare(b.date));
+      return { available: true, total: r2(items.reduce((s, i) => s + i.amount, 0)), items };
+    } catch (e) {
+      console.error('[admin-finance-income] Stripe read failed:', e.message);
+      return { available: false, reason: 'Stripe could not be read: ' + e.message };
+    }
+  })();
+
+  const shop = await (async () => {
+    const { data, error } = await auth.sb
+      .from('shop_orders')
+      .select('id,status,mode,total,paid_at,created_at,client_name,client_email')
+      .eq('mode', 'live')
+      .in('status', FINANCE_SHOP_SOLD);
+    if (error) {
+      // No shop_orders table yet (the shop migration not run) is "no sales",
+      // not an error worth a red line on the screen.
+      if (
+        /does not exist|schema cache|42P01|PGRST205/i.test(error.message + ' ' + (error.code || ''))
+      )
+        return { available: true, total: 0, items: [] };
+      return { available: false, reason: 'Shop orders could not be read: ' + error.message };
+    }
+    const items = (data || [])
+      .filter((o) => inRange(o.paid_at || o.created_at))
+      .map((o) => ({
+        date: o.paid_at || o.created_at,
+        name: o.client_name || '',
+        email: o.client_email || '',
+        description: 'Shop order',
+        amount: r2(Number(o.total) || 0),
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+    return { available: true, total: r2(items.reduce((s, i) => s + i.amount, 0)), items };
+  })();
+
+  res.setHeader('Cache-Control', 'private, no-store');
+  return res.status(200).json({ memberships, shop });
+}
+
+// Admin > Discount Codes: gift cards that were paid for and never issued.
+// Until 25-oct-2026 that was every gift card sold (api/_gift-cards.js says why),
+// and the webhook does not run again for a purchase Stripe was told succeeded.
+// The truth is in Stripe: every paid checkout session marked giftCard, compared
+// with the gift_cards rows that carry its session id.
+export async function handleAdminGiftCardsCheck(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  if (!process.env.STRIPE_SECRET_KEY)
+    return res.status(503).json({ error: 'Stripe is not configured' });
+  const paid = [];
+  try {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const since = Math.floor(Date.now() / 1000) - 400 * 86400;
+    for await (const s of stripe.checkout.sessions.list({ created: { gte: since }, limit: 100 })) {
+      if (s.metadata?.giftCard === 'true' && s.payment_status === 'paid') paid.push(s);
+    }
+  } catch (e) {
+    console.error('[admin-gift-cards-check] Stripe read failed:', e.message);
+    return res.status(502).json({ error: 'Stripe could not be read: ' + e.message });
+  }
+  let issuedIds = new Set();
+  if (paid.length) {
+    const { data, error } = await auth.sb
+      .from('gift_cards')
+      .select('stripe_session_id')
+      .in(
+        'stripe_session_id',
+        paid.map((s) => s.id)
+      );
+    if (error)
+      return res.status(500).json({ error: 'gift_cards could not be read: ' + error.message });
+    issuedIds = new Set((data || []).map((r) => r.stripe_session_id));
+  }
+  const missing = paid
+    .filter((s) => !issuedIds.has(s.id))
+    .map((s) => ({
+      session_id: s.id,
+      created: new Date(s.created * 1000).toISOString(),
+      amount: Number(s.metadata?.amount) || (Number(s.amount_total) || 0) / 100,
+      recipient_email: s.metadata?.recipientEmail || '',
+      recipient_name: s.metadata?.recipientName || '',
+      purchaser_email: s.metadata?.purchaserEmail || s.customer_details?.email || '',
+    }))
+    .sort((a, b) => a.created.localeCompare(b.created));
+  res.setHeader('Cache-Control', 'private, no-store');
+  return res.status(200).json({ paid: paid.length, issued: paid.length - missing.length, missing });
+}
+
+// Issue one of them now: the same idempotent function the webhook runs, on the
+// session as Stripe has it - never on anything the browser sends but its id.
+export async function handleAdminGiftCardsIssue(req, res) {
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(req.body?.access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  const sessionId = String(req.body?.session_id || '');
+  if (!/^cs_[A-Za-z0-9_]+$/.test(sessionId))
+    return res.status(400).json({ error: 'session_id required' });
+  if (!process.env.STRIPE_SECRET_KEY)
+    return res.status(503).json({ error: 'Stripe is not configured' });
+  let session;
+  try {
+    session = await new Stripe(process.env.STRIPE_SECRET_KEY).checkout.sessions.retrieve(sessionId);
+  } catch (e) {
+    return res.status(502).json({ error: 'Stripe could not be read: ' + e.message });
+  }
+  if (session.metadata?.giftCard !== 'true')
+    return res.status(400).json({ error: 'That payment is not a gift card' });
+  if (session.payment_status !== 'paid')
+    return res.status(409).json({ error: 'That gift card was never paid for' });
+  try {
+    const result = await issueGiftCard(auth.sb, session);
+    if (result.status === 'invalid')
+      return res.status(422).json({ error: 'The purchase has no amount or recipient email' });
+    return res.status(200).json(result);
+  } catch (e) {
+    console.error('[admin-gift-cards-issue] failed:', e.message);
+    return res.status(500).json({ error: e.message });
+  }
+}
+
 // A completed job's parts cost: booking_costs first (admin-only, since
 // 25-oct-2026), then the old bookings column for jobs finished before it. null
 // means "not recorded", never 0. PostgREST embeds a one-to-one as an object,
@@ -7049,6 +7237,8 @@ async function handler(req, res) {
           // Same reason: the Finance screen re-reads the expenses on every
           // change of month, quarter or year, and 5/min locks it on the third.
           role === 'admin-expenses-list' ||
+          role === 'admin-finance-income' ||
+          role.startsWith('admin-gift-cards-') ||
           // One call per photo that arrives in an open chat.
           role === 'photo-sign' ||
           // Admin > Photos re-reads the list after every select-and-act.
@@ -7128,6 +7318,9 @@ async function handler(req, res) {
   if (role === 'admin-orphan-audit') return handleAdminOrphanAudit(req, res);
   if (role === 'admin-privacy-plan') return handleAdminPrivacyPlan(req, res);
   if (role === 'admin-expenses-list') return handleAdminExpensesList(req, res);
+  if (role === 'admin-finance-income') return handleAdminFinanceIncome(req, res);
+  if (role === 'admin-gift-cards-check') return handleAdminGiftCardsCheck(req, res);
+  if (role === 'admin-gift-cards-issue') return handleAdminGiftCardsIssue(req, res);
   if (role === 'admin-expenses-save') return handleAdminExpensesSave(req, res);
   if (role === 'admin-closed-until') return handleAdminClosedUntil(req, res);
   if (role === 'admin-expenses-delete') return handleAdminExpensesDelete(req, res);
