@@ -5395,8 +5395,15 @@ async function renderMyBookings() {
                 btn.disabled = false;
                 return;
               }
-              booking.scheduled_date = newDate;
-              booking.scheduled_time = newTime;
+              // The server's copy, not just the new time: a client's move goes
+              // back to 'pending' until Diego confirms it, and the visit fee is
+              // re-priced for the new day.
+              const d = await resp.json().catch(() => ({}));
+              Object.assign(
+                booking,
+                { scheduled_date: newDate, scheduled_time: newTime },
+                d.booking
+              );
               overlay.remove();
               renderList(tab);
               showToast('Booking rescheduled!');

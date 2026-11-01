@@ -3930,7 +3930,17 @@ async function rescheduleBookingCore(
     }).catch(() => {});
   }
 
-  if (!moved) return { ok: true, emailed: false };
+  // What was saved, so the client's app can show it without a reload: a
+  // client's move is 'pending' now, and the fees are the new day's.
+  const saved = {
+    status: updatePayload.status || bk.status,
+    scheduled_date,
+    scheduled_time,
+    callout_fee: newCalloutFee,
+    ...(newServicePrice !== null ? { service_price: newServicePrice } : {}),
+  };
+
+  if (!moved) return { ok: true, emailed: false, booking: saved };
 
   // History (scripts/add-booking-reschedules.sql). Run by hand, so the table
   // can be missing for a while: that costs the record, never the reschedule.
@@ -4022,14 +4032,14 @@ async function rescheduleBookingCore(
       .catch((e) => console.error('[reschedule] WhatsApp to admin threw:', bk.id, e.message));
   }
 
-  return { ok: true, emailed };
+  return { ok: true, emailed, booking: saved };
 }
 
 const RESCHEDULE_BOOKING_COLS =
   'id,status,client_id,google_event_id,service_name,address,van_number,callout_fee,' +
   'scheduled_date,scheduled_time,client_email,client_name,client_lang';
 
-async function handleClientReschedule(req, res) {
+export async function handleClientReschedule(req, res) {
   const { access_token, booking_id, client_id, scheduled_date, scheduled_time } = req.body;
   if (!access_token || !booking_id || !client_id || !scheduled_date || !scheduled_time)
     return res.status(400).json({
@@ -4064,7 +4074,7 @@ async function handleClientReschedule(req, res) {
     byClient: true,
   });
   if (!result.ok) return res.status(result.status).json({ error: result.error, code: result.code });
-  return res.status(200).json({ ok: true, emailed: result.emailed });
+  return res.status(200).json({ ok: true, emailed: result.emailed, booking: result.booking });
 }
 
 // Admin-side equivalent - the calendar's own reschedule (docs/PENDIENTES.md
@@ -7107,7 +7117,13 @@ export async function handleAdminCancelBooking(req, res) {
   }
   return res
     .status(200)
-    .json({ booking: bk, parts_returned: returned, emailed, refunded, refund_amount: refundAmount });
+    .json({
+      booking: bk,
+      parts_returned: returned,
+      emailed,
+      refunded,
+      refund_amount: refundAmount,
+    });
 }
 
 // Cleans up a booking's synced calendar event after an admin-side cancel

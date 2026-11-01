@@ -100,8 +100,13 @@ globalThis.fetch = async (url, init = {}) => {
   return json([]);
 };
 
-const { handleClientCancel, handleAdminCancelBooking, handleJoinWaitlist, handleApplyReferral } =
-  await import('../../api/auth.js');
+const {
+  handleClientCancel,
+  handleAdminCancelBooking,
+  handleJoinWaitlist,
+  handleApplyReferral,
+  handleClientReschedule,
+} = await import('../../api/auth.js');
 const sendEmail = (await import('../../api/send-email.js')).default;
 
 const run = async (handler, body) => {
@@ -543,5 +548,42 @@ describe('reschedule: confirmed only when the admin did it', () => {
     const msg = readFileSync(new URL('../../api/send-message.js', import.meta.url), 'utf8');
     expect(msg).toContain("'client_rescheduled',");
     expect(msg).toContain("case 'client_rescheduled':");
+  });
+});
+
+// The app used to change only the date and time on its card, so a confirmed
+// booking the client had just moved still said "Confirmed" until a reload.
+describe("a client reschedules: the answer carries the booking's new state", () => {
+  const reschedule = (time) =>
+    run(handleClientReschedule, {
+      access_token: 'tok',
+      booking_id: 'bk-1',
+      client_id: 'client-1',
+      scheduled_date: '2099-03-11',
+      scheduled_time: time,
+    });
+
+  it('moved: pending, with the new time and the fee it was saved with', async () => {
+    const r = await reschedule('11:00');
+    expect(r.statusCode, JSON.stringify(r.body)).toBe(200);
+    expect(r.body.booking).toEqual({
+      status: 'pending',
+      scheduled_date: '2099-03-11',
+      scheduled_time: '11:00',
+      callout_fee: 45,
+    });
+  });
+
+  it('same slot sent again: the status it already had', async () => {
+    booking.scheduled_date = '2099-03-11';
+    const r = await reschedule('10:00');
+    expect(r.body.booking.status).toBe('confirmed');
+  });
+
+  it('the app applies it to the card', () => {
+    const app = readFileSync(new URL('../../js/app.js', import.meta.url), 'utf8');
+    expect(app).toMatch(
+      /Object\.assign\(\s*booking,\s*\{ scheduled_date: newDate, scheduled_time: newTime \},\s*d\.booking\s*\);/
+    );
   });
 });
