@@ -197,17 +197,23 @@ async function handler(req, res) {
       <p style="font-size:11px;color:#D1D5DB;margin:0">ABN: 87 654 025 287 · contact@drbikesydney.com.au</p>
     </div></div>`;
 
-  const bookingTable = () => `
+  // amounts: false for a cancellation - a total for a visit that is not going
+  // to happen reads as a bill, and its callers send no price ("Total $0").
+  const bookingTable = ({ amounts = true } = {}) => `
     <div style="background:${PAPER};border-radius:12px;padding:20px;margin-bottom:24px">
       <table style="width:100%;border-collapse:collapse">
         <tr><td style="padding:8px 0;color:${MUTED};font-size:13px">Service</td><td style="padding:8px 0;font-weight:600;color:${INK};font-size:13px;text-align:right">${service}</td></tr>
         ${date ? `<tr><td style="padding:8px 0;color:${MUTED};font-size:13px;border-top:1px solid ${RULE}">Date & time</td><td style="padding:8px 0;font-weight:600;color:${INK};font-size:13px;text-align:right;border-top:1px solid ${RULE}">${date}${time ? ' · ' + time : ''}</td></tr>` : ''}
         ${address ? `<tr><td style="padding:8px 0;color:${MUTED};font-size:13px;border-top:1px solid ${RULE}">Address</td><td style="padding:8px 0;font-weight:600;color:${INK};font-size:13px;text-align:right;border-top:1px solid ${RULE}">${address}</td></tr>` : ''}
-        <tr><td style="padding:8px 0;color:${MUTED};font-size:13px;border-top:1px solid ${RULE}">Net amount</td><td style="padding:8px 0;font-weight:600;color:${INK};font-size:13px;text-align:right;border-top:1px solid ${RULE}">$${net} AUD</td></tr>
-        <tr><td style="padding:8px 0;color:${MUTED};font-size:13px;border-top:1px solid ${RULE}">GST (10%)</td><td style="padding:8px 0;font-weight:600;color:${MUTED};font-size:13px;text-align:right;border-top:1px solid ${RULE}">$${gst} AUD</td></tr>
-        <tr><td style="padding:10px 0 0;font-weight:700;color:${INK};font-size:14px;border-top:2px solid ${RULE}">Total</td><td style="padding:10px 0 0;font-weight:800;color:${BLUE};font-size:18px;text-align:right;border-top:2px solid ${RULE}">$${price} AUD</td></tr>
         ${
-          paidNow > 0
+          amounts
+            ? `<tr><td style="padding:8px 0;color:${MUTED};font-size:13px;border-top:1px solid ${RULE}">Net amount</td><td style="padding:8px 0;font-weight:600;color:${INK};font-size:13px;text-align:right;border-top:1px solid ${RULE}">$${net} AUD</td></tr>
+        <tr><td style="padding:8px 0;color:${MUTED};font-size:13px;border-top:1px solid ${RULE}">GST (10%)</td><td style="padding:8px 0;font-weight:600;color:${MUTED};font-size:13px;text-align:right;border-top:1px solid ${RULE}">$${gst} AUD</td></tr>
+        <tr><td style="padding:10px 0 0;font-weight:700;color:${INK};font-size:14px;border-top:2px solid ${RULE}">Total</td><td style="padding:10px 0 0;font-weight:800;color:${BLUE};font-size:18px;text-align:right;border-top:2px solid ${RULE}">$${price} AUD</td></tr>`
+            : ''
+        }
+        ${
+          amounts && paidNow > 0
             ? `<tr><td colspan="2" style="padding:14px 0 0;font-size:13px">Visit &amp; diagnosis &mdash; already paid: &minus;$${paidNow.toFixed(2)} AUD</td></tr>
         <tr><td colspan="2" style="padding:6px 0 0;font-size:17px;font-weight:800">To pay the mechanic on completion: $${stillOwed.toFixed(2)} AUD</td></tr>`
             : ''
@@ -407,7 +413,7 @@ async function handler(req, res) {
       html: `${header('#CF2020', '❌', 'Booking cancelled')}
         <div style="padding:32px 28px">
           <p style="color:${MUTED};font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:${INK}">${name}</strong>${cancelLine}</p>
-          ${bookingTable()}
+          ${bookingTable({ amounts: false })}
           ${
             feeText
               ? `<div style="background:${PAPER};border-left:3px solid ${BLUE};border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:20px">

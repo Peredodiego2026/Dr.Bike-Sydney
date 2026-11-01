@@ -408,6 +408,17 @@ describe('the cancellation email', () => {
     expect(html).toContain('关于您已支付的 $45.00 上门费，我们会与您联系。');
   });
 
+  it('no amounts: the callers send no price, and "Total $0" read as a bill', async () => {
+    const { html } = await render({
+      type: 'cancellation_client',
+      refundState: 'refunded',
+      refundAmount: 45,
+    });
+    expect(html).not.toContain('Total');
+    expect(html).not.toContain('Net amount');
+    expect(html).toContain('Tune-Up');
+  });
+
   it('late: not refundable', async () => {
     const { html } = await render({ type: 'cancellation_client', refundState: 'late' });
     expect(html).toContain('not refundable under our terms');
