@@ -7622,6 +7622,24 @@ async function readPostHog(days) {
     ctas: `select properties.button_text as label, properties.location as location, count() as clicks
            from events where event = 'cta_clicked' and timestamp > ${since} and ${live}
            group by label, location order by clicks desc limit 12`,
+    // Visitors card. Sections and screens are sent by js/landing-inline.js and
+    // js/router.js with a name and seconds only.
+    sections: `select properties.section as section, count(distinct person_id) as visitors,
+               round(avg(properties.seconds), 1) as avg_seconds
+               from events where event = 'section_viewed' and timestamp > ${since} and ${live}
+               group by section order by visitors desc limit 15`,
+    screens: `select properties.screen as screen, count() as exits,
+              round(avg(properties.seconds), 1) as avg_seconds
+              from events where event = 'screen_left' and timestamp > ${since} and ${live}
+              group by screen order by exits desc limit 15`,
+    // Autocaptured clicks. Labels with a digit or an @ are dropped: those are
+    // the ones that can hold an address, a phone or an email, and a button's
+    // label is not worth that risk. Prices lose out too; accepted.
+    clicks: `select properties.$el_text as label, count() as clicks
+             from events where event = '$autocapture' and timestamp > ${since} and ${live}
+             and length(properties.$el_text) between 1 and 40
+             and not match(properties.$el_text, '[0-9@]')
+             group by label order by clicks desc limit 15`,
   };
 
   // allSettled, not all: these are eight independent questions, and one bad
@@ -7669,6 +7687,9 @@ async function readPostHog(days) {
     // sequence, it just counts each value of the `step` property.
     funnel: list('funnel', ([step, people]) => ({ step, people })),
     booking_completed: completed ? (completed[0]?.[0] ?? 0) : null,
+    sections: list('sections', ([section, visitors, avg_seconds]) => ({ section, visitors, avg_seconds })),
+    screens: list('screens', ([screen, exits, avg_seconds]) => ({ screen, exits, avg_seconds })),
+    clicks: list('clicks', ([label, clicks]) => ({ label, clicks })),
   };
 }
 
