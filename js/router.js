@@ -19,6 +19,25 @@ const ROUTES = [
   'shop-checkout',
 ];
 
+// Time per screen, for Admin > Analytics > Visitors. capture_pageview only
+// counts the page load, so the hash screens are invisible to PostHog's
+// pageviews and the screen that was left is reported here instead.
+let _screenName = null;
+let _screenSince = 0;
+function reportScreenTime() {
+  if (_screenName && _screenSince && window.posthog)
+    window.posthog.capture('screen_left', {
+      screen: _screenName,
+      seconds: Math.round((Date.now() - _screenSince) / 1000),
+    });
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    reportScreenTime();
+    _screenSince = 0;
+  } else if (_screenName) _screenSince = Date.now();
+});
+
 const router = {
   current: 'home',
   params: {},
@@ -123,6 +142,13 @@ const router = {
         else
           nextScreen.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
       }
+    }
+
+    // Only the route name leaves the page: ROUTES is a whitelist, params never do.
+    if (route !== _screenName) {
+      reportScreenTime();
+      _screenName = route;
+      _screenSince = Date.now();
     }
 
     // Fire screen-change event so app.js can react

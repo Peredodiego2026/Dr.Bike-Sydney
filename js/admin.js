@@ -4832,6 +4832,7 @@ function renderAnalytics() {
   renderSources(inRange, d);
   renderCheckoutCard();
   renderTrafficCard();
+  renderVisitorsCard();
 
   // Lifetime by design - their subtitles say so.
   const plotted = renderHeatmap(all);
@@ -5963,6 +5964,39 @@ function renderTrafficCard() {
     </div>`;
 }
 
+// ── Visitors (PostHog: sections, screen time, autocaptured clicks) ───────────
+// Reads the same server response as the Traffic card. When that card says
+// PostHog is not connected, this one says nothing of its own.
+function renderVisitorsCard() {
+  const el = document.getElementById('an-visitors');
+  const sub = document.getElementById('an-visitors-sub');
+  if (!el) return;
+  const t = _anServer && _anServer.traffic;
+  if (!t || !t.configured || t.error) {
+    if (sub) sub.textContent = 'Needs the Traffic card above to be connected';
+    el.innerHTML = anEmpty('Nothing to show yet', 'See the Traffic card above.');
+    return;
+  }
+  if (sub) sub.textContent = `PostHog · last ${Number(t.days || 0).toLocaleString('en-AU')} days`;
+
+  const block = (title, rows, fmt) =>
+    `<div><div class="an-tile-label" style="margin-bottom:10px">${esc(title)}</div>` +
+    (rows === null || rows === undefined
+      ? anError('this query did not come back')
+      : rows.length
+        ? `<div class="an-bars">${anBarList(rows.map(fmt))}</div>`
+        : anEmpty('Nothing recorded yet', 'Events start after the next deploy and a visitor who accepted cookies.')) +
+    '</div>';
+
+  el.innerHTML = `<div class="an-body">
+      <div class="an-grid-2" style="gap:24px">
+        ${block('Sections seen (visitors, avg seconds visible)', t.sections, (r) => ({ name: r.section, value: r.visitors, sub: `${r.avg_seconds}s` }))}
+        ${block('Time per screen (exits, avg seconds)', t.screens, (r) => ({ name: r.screen, value: r.exits, sub: `${r.avg_seconds}s` }))}
+        ${block('Clicks on elements', t.clicks, (r) => ({ name: r.label, value: r.clicks }))}
+      </div>
+    </div>`;
+}
+
 // ── Wiring: range filter, refresh, table toggles, chart tooltip ─────────────
 // Delegated from #page-analytics and registered once, so re-rendering a card
 // never leaves a listener behind. No inline handlers anywhere.
@@ -5989,6 +6023,7 @@ function wireAnalytics() {
         _anServer = s;
         renderCheckoutCard();
         renderTrafficCard();
+        renderVisitorsCard();
       });
       return;
     }

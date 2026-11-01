@@ -377,6 +377,30 @@ document.querySelectorAll('section').forEach(function(s) {
   observer.observe(s);
 });
 
+// Section views for Admin > Analytics > Visitors: a section counts while at
+// least half of it is on screen, and one section_viewed event goes out when
+// it leaves (or the tab is hidden) with the seconds it was visible. Sections
+// without an id are named by their position on the page.
+const sectionSince = new Map();
+const sectionName = (s) => s.id || 'section-' + [...document.querySelectorAll('section')].indexOf(s);
+function reportSection(s) {
+  const since = sectionSince.get(s);
+  sectionSince.delete(s);
+  const seconds = Math.round((Date.now() - since) / 1000);
+  if (seconds >= 1 && window.posthog)
+    window.posthog.capture('section_viewed', { section: sectionName(s), seconds });
+}
+const sectionWatch = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) sectionSince.set(e.target, Date.now());
+    else if (sectionSince.has(e.target)) reportSection(e.target);
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('section').forEach(function(s) { sectionWatch.observe(s); });
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'hidden') [...sectionSince.keys()].forEach(reportSection);
+});
+
 // A jump to a section aims at its box as it is at that instant, and a section
 // not revealed yet is still 20px low (the translateY above). The reveal then
 // slides it up, under the sticky navbar: Fleet never landed square on the
