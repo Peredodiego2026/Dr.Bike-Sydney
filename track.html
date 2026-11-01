@@ -369,7 +369,7 @@ function showEmailForm(content) {
       await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'public-booking-list', email })
+        body: JSON.stringify({ role: 'public-booking-list', email, lang: document.documentElement.lang })
       });
       content.innerHTML = '<div class="card" style="text-align:center">'
         + '<div style="font-size:32px;margin-bottom:8px">📧</div>'

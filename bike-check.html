@@ -347,7 +347,7 @@ function restart(){
   async function bcNL(){
     const e=document.getElementById('bcc-nl-email').value.trim();
     if(!e)return;
-    try{await fetch('/api/subscribe-newsletter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,source:'bike_check'})})}catch(ex){}
+    try{await fetch('/api/subscribe-newsletter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,source:'bike_check',lang:document.documentElement.lang})})}catch(ex){}
     document.getElementById('bcc-nl-form').style.display='none';
     document.getElementById('bcc-nl-ok').style.display='block';
     if(window.gtag)gtag('event','newsletter_subscribe',{page:'bike_check'});

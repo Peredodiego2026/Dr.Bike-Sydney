@@ -332,7 +332,7 @@ if (ldate) ldate.min = new Date().toISOString().split('T')[0];
       const resp = await fetch('/api/send-b2b-inquiry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, lang: document.documentElement.lang }),
       });
       const result = await resp.json();
       if (!resp.ok) throw new Error(result.error || 'Submission failed');
@@ -606,7 +606,7 @@ document.querySelectorAll('.svc-card').forEach(function(card) {
       const r = await fetch('/api/subscribe-newsletter', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ email, source: 'landing_page', turnstileToken })
+        body: JSON.stringify({ email, source: 'landing_page', turnstileToken, lang: document.documentElement.lang })
       });
       if (!r.ok) throw new Error('Subscription failed');
     } catch(e) {
@@ -1267,7 +1267,7 @@ async function requestPasswordReset() {
     await fetch('/api/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: 'request-password-reset', email: email }),
+      body: JSON.stringify({ role: 'request-password-reset', email: email, lang: document.documentElement.lang }),
     });
     okEl.style.display = 'block';
   } catch (e) {

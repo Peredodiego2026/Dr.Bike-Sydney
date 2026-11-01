@@ -203,7 +203,8 @@ async function submitB2B() {
         phone: document.getElementById('biz-phone').value,
         fleetSize: fleet,
         frequency: document.getElementById('biz-freq').value,
-        notes: document.getElementById('biz-notes').value
+        notes: document.getElementById('biz-notes').value,
+        lang: document.documentElement.lang
       })
     });
     document.getElementById('success-msg').style.display = 'block';

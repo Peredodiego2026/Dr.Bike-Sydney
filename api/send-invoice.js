@@ -13,6 +13,7 @@ import PDFDocument from 'pdfkit';
 import { computeInvoiceTotals } from './_invoice-math.js';
 import { withSentry } from './_sentry.js';
 import { signJobPhoto } from './_job-photos.js';
+import { translateEmailHtml, translateEmailSubject, emailLocale } from './_email-i18n.js';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const sb = createClient(
@@ -430,15 +431,17 @@ async function handler(req, res) {
     bikeName = '';
   let photoBeforeUrl = '',
     photoAfterUrl = '';
+  let lang = 'en';
   try {
     const { data: bkg } = await sb
       .from('bookings')
       .select(
-        'pre_service_checklist, pre_service_notes, service_duration_seconds, photo_before_url, photo_after_url, bikes(nickname, brand, model, color, year)'
+        'pre_service_checklist, pre_service_notes, service_duration_seconds, photo_before_url, photo_after_url, client_lang, bikes(nickname, brand, model, color, year)'
       )
       .eq('id', bookingId)
       .single();
     if (bkg) {
+      lang = bkg.client_lang || 'en';
       try {
         checklist = JSON.parse(bkg.pre_service_checklist || 'null');
       } catch (e) {
@@ -465,6 +468,35 @@ async function handler(req, res) {
   } catch (e) {
     console.error('[send-invoice] checklist/photos lookup failed:', bookingId, e.message);
   }
+
+  // The email goes out in the client's language; the PDF stays in English
+  // (pdfkit's built-in fonts have no Chinese glyphs), so it keeps the
+  // English invoiceDate and nextService above.
+  const locale = emailLocale(lang);
+  const ymd = (d) => (/^\d{4}-\d{2}-\d{2}$/.test(String(d || '')) ? new Date(`${d}T00:00:00Z`) : null);
+  const invoiceDateLocal = new Date().toLocaleDateString(locale, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  const serviceDay = ymd(date);
+  const dateLocal = serviceDay
+    ? serviceDay.toLocaleDateString(locale, { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' })
+    : date
+      ? sanitize(String(date))
+      : invoiceDateLocal;
+  const hm = /^(\d{2}):(\d{2})/.exec(String(time || ''));
+  const timeLocal = hm
+    ? new Date(Date.UTC(2000, 0, 1, Number(hm[1]), Number(hm[2]))).toLocaleTimeString(locale, {
+        timeZone: 'UTC',
+        hour: 'numeric',
+        minute: '2-digit',
+      })
+    : sanitize(String(time || ''));
+  const nextDay = ymd(String(req.body.nextServiceDate || '').slice(0, 10));
+  const nextServiceLocal = nextDay
+    ? `Your next recommended service is on ${nextDay.toLocaleDateString(locale, { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' })}`
+    : nextService;
 
   // ── Build checklist HTML ──────────────────────────────────────────────────
   let checklistHtml = '';
@@ -510,7 +542,7 @@ async function handler(req, res) {
           </div>
           <div style="flex:1;min-width:160px;background:#F8FAFC;border-radius:10px;padding:14px 16px">
             <div style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;margin-bottom:4px">Date</div>
-            <div style="font-size:14px;font-weight:600;color:#0D1F3C">${date || invoiceDate}</div>
+            <div style="font-size:14px;font-weight:600;color:#0D1F3C">${dateLocal}</div>
           </div>
           ${
             durationSecs
@@ -588,7 +620,7 @@ async function handler(req, res) {
         ${
           nextService
             ? `<div style="background:#EEF3FC;border-radius:10px;padding:16px;font-size:13px;color:#2563EB;margin-bottom:8px">
-          🔧 <strong>Next service recommendation:</strong> ${nextService}
+          🔧 <strong>Next service recommendation:</strong> ${nextServiceLocal}
         </div>`
             : ''
         }
@@ -649,7 +681,7 @@ async function handler(req, res) {
       </div>
       <div style="text-align:right">
         <div class="section-label">Invoice details</div>
-        <div style="font-size:13px"><span style="color:#475569">Date:</span> ${invoiceDate}</div>
+        <div style="font-size:13px"><span style="color:#475569">Date:</span> ${invoiceDateLocal}</div>
         <div style="font-size:13px;margin-top:4px"><span style="color:#475569">Ref:</span> ${invoiceNumber}</div>
         <div style="margin-top:8px"><span class="badge">✓ Paid</span></div>
       </div>
@@ -658,7 +690,7 @@ async function handler(req, res) {
     <div class="section">
       <div class="section-label">Service details</div>
       <div class="info-row"><span class="info-label">Service</span><span class="info-val">${service}</span></div>
-      <div class="info-row"><span class="info-label">Date</span><span class="info-val">${date || invoiceDate}${time ? ' at ' + time : ''}</span></div>
+      <div class="info-row"><span class="info-label">Date</span><span class="info-val">${dateLocal}${timeLocal ? ' · ' + timeLocal : ''}</span></div>
       <div class="info-row"><span class="info-label">Location</span><span class="info-val">${address}</span></div>
       <div class="info-row"><span class="info-label">Mechanic</span><span class="info-val">${mechName}</span></div>
       ${durationSecs ? `<div class="info-row"><span class="info-label">Duration</span><span class="info-val">${formatDuration(durationSecs)}</span></div>` : ''}
@@ -671,13 +703,13 @@ async function handler(req, res) {
       <div class="total-row"><span>Service</span><span>$${finalPrice.toFixed(2)}</span></div>
       ${partsRows.map((p) => `<div class="total-row"><span style="padding-left:12px">${p.label}</span><span>$${p.value.toFixed(2)}</span></div>`).join('')}
       ${discountAmt > 0 ? `<div class="total-row"><span style="color:#15803D">Discount (at booking)</span><span style="color:#15803D">−$${discountAmt.toFixed(2)}</span></div>` : ''}
-      ${mechDiscount > 0 ? `<div class="total-row"><span style="color:#15803D">Discount${mechDiscountCode ? ' (' + mechDiscountCode + ')' : ''}</span><span style="color:#15803D">−$${mechDiscount.toFixed(2)}</span></div>` : ''}
+      ${mechDiscount > 0 ? `<div class="total-row"><span style="color:#15803D">${mechDiscountCode ? `Discount (${mechDiscountCode})` : 'Discount'}</span><span style="color:#15803D">−$${mechDiscount.toFixed(2)}</span></div>` : ''}
       <div class="total-row"><span style="color:#475569">GST included</span><span style="color:#475569">$${gst.toFixed(2)}</span></div>
       <div class="total-final"><span>Total general (AUD)</span><span>$${grandTotal.toFixed(2)}</span></div>
       ${tip > 0 ? `<div class="total-row" style="margin-top:8px"><span>💚 Tip for your mechanic</span><span>$${tip.toFixed(2)}</span></div><div class="total-final"><span>Total charged (AUD)</span><span>$${totalCollected.toFixed(2)}</span></div>` : ''}
     </div>
 
-    ${nextService ? `<div style="background:#EEF3FC;border-radius:10px;padding:16px;font-size:13px;color:#2563EB;margin-bottom:24px">🔧 <strong>Next service reminder:</strong> ${nextService}</div>` : ''}
+    ${nextService ? `<div style="background:#EEF3FC;border-radius:10px;padding:16px;font-size:13px;color:#2563EB;margin-bottom:24px">🔧 <strong>Next service reminder:</strong> ${nextServiceLocal}</div>` : ''}
 
     <div style="background:#FFFBEB;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center">
       <p style="font-size:13px;color:#B45309;font-weight:600;margin:0 0 10px">How was your service?</p>
@@ -774,8 +806,11 @@ async function handler(req, res) {
     const emailPayload = {
       from: 'Dr. Bike Sydney <receipts@drbikesydney.com.au>',
       to: recipient,
-      subject: `Your Dr. Bike Sydney receipt & service report — ${invoiceNumber}`,
-      html,
+      subject: translateEmailSubject(
+        `Your Dr. Bike Sydney receipt & service report — ${invoiceNumber}`,
+        lang
+      ),
+      html: translateEmailHtml(html, lang),
     };
     if (pdfBuffer) {
       emailPayload.attachments = [

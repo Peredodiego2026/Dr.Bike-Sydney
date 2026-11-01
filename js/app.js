@@ -4746,7 +4746,7 @@ async function renderLogin() {
         const resp = await fetch('/api/auth', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role: 'request-password-reset', email }),
+          body: JSON.stringify({ role: 'request-password-reset', email, lang: getLang() }),
         });
         if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error);
         renderResetSent(email);
@@ -4838,7 +4838,7 @@ function renderResetSent(email) {
       const resp = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'request-password-reset', email }),
+        body: JSON.stringify({ role: 'request-password-reset', email, lang: getLang() }),
       });
       if (!resp.ok) throw new Error((await resp.json().catch(() => ({}))).error);
       resendBtn.textContent = 'Link sent';

@@ -22,6 +22,13 @@ export const WHITE = '#FFFFFF';
 
 const LOGO = 'https://drbikesydney.com.au/images/logo-db.png';
 
+// "Hi <strong>Ana</strong>", which api/_email-i18n.js turns into "Hola Ana".
+// With no name it is "Hi there", and the dictionary drops that to a bare
+// "Hola": "Hola there" is worse than no name at all.
+export function greeting(name) {
+  return name ? `Hi <strong>${name}</strong>` : 'Hi <strong>there</strong>';
+}
+
 export function emailButton(href, label) {
   return `<a href="${href}" style="display:inline-block;background:${BLUE};color:${WHITE};padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px">${label}</a>`;
 }

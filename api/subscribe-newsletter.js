@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { guard, sanitize, isValidEmail, verifyTurnstile } from './_security.js';
 import { withSentry } from './_sentry.js';
 import { emailFrame, emailButton, INK, FAINT } from './_email-frame.js';
+import { translateEmailHtml, translateEmailSubject } from './_email-i18n.js';
 
 async function handler(req, res) {
   if (await guard(req, res, { rateMax: 20, rateWindow: 60000 })) return;
@@ -41,7 +42,8 @@ async function handler(req, res) {
     return res.status(500).json({ error: 'Could not subscribe' });
   }
 
-  // Send welcome email via Resend
+  // Send welcome email via Resend, in the language of the page it came from.
+  const lang = req.body?.lang;
   try {
     const welcomeHtml = emailFrame({
       title: `Thanks for subscribing${name ? ', ' + name : ''}!`,
@@ -60,8 +62,8 @@ async function handler(req, res) {
       body: JSON.stringify({
         from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
         to: email,
-        subject: "You're subscribed — Dr. Bike Sydney 🚲",
-        html: welcomeHtml,
+        subject: translateEmailSubject("You're subscribed — Dr. Bike Sydney 🚲", lang),
+        html: translateEmailHtml(welcomeHtml, lang),
       }),
     });
   } catch (e) {

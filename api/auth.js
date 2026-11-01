@@ -3402,7 +3402,7 @@ async function notifyWaitlist(SERVICE_KEY, date, time) {
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
   const { data: entries } = await sb
     .from('waitlist')
-    .select('id, client_email, client_name, service_name, preferred_date')
+    .select('id, client_id, client_email, client_name, service_name, preferred_date')
     .eq('preferred_date', date)
     .eq('status', 'waiting')
     .contains('preferred_times', [time])
@@ -3412,6 +3412,17 @@ async function notifyWaitlist(SERVICE_KEY, date, time) {
   const entry = entries[0];
   const RESEND_KEY = process.env.RESEND_API_KEY;
   if (!RESEND_KEY) return;
+  // A guest on the list has no profile and gets English.
+  let lang = 'en';
+  if (entry.client_id) {
+    const { data: prof } = await sb
+      .from('profiles')
+      .select('preferred_lang')
+      .eq('id', entry.client_id)
+      .limit(1);
+    lang = prof?.[0]?.preferred_lang || 'en';
+  }
+  const locale = emailLocale(lang);
   // The name and service were typed by the client when they joined the list.
   const esc = (s) =>
     String(s || '').replace(
@@ -3420,27 +3431,40 @@ async function notifyWaitlist(SERVICE_KEY, date, time) {
     );
   // "Wed, 11 Nov", not the "2026-11-11" the column stores.
   const day = /^\d{4}-\d{2}-\d{2}$/.test(date)
-    ? new Date(`${date}T00:00:00Z`).toLocaleDateString('en-AU', {
+    ? new Date(`${date}T00:00:00Z`).toLocaleDateString(locale, {
         timeZone: 'UTC',
         weekday: 'short',
         day: 'numeric',
         month: 'short',
       })
     : esc(date);
+  // "2:30 pm" in English, "14:30" in Spanish - the slot is a 24h HH:MM.
+  const hm = /^(\d{2}):(\d{2})$/.exec(String(time));
+  const at = hm
+    ? new Date(Date.UTC(2000, 0, 1, Number(hm[1]), Number(hm[2]))).toLocaleTimeString(locale, {
+        timeZone: 'UTC',
+        hour: 'numeric',
+        minute: '2-digit',
+      })
+    : esc(time);
   const svc = esc(entry.service_name);
+  const name = esc(entry.client_name);
   await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
       to: [entry.client_email],
-      subject: `A slot just opened up for ${day}!`,
-      html: emailFrame({
-        title: `Good news, ${esc(entry.client_name) || 'there'}!`,
-        body: `<p style="margin:0 0 24px">A slot just opened up on <strong style="color:${INK}">${day}</strong> at <strong style="color:${INK}">${esc(time)}</strong>${svc ? ' for ' + svc : ''}. Book now before it fills up again.</p>
+      subject: translateEmailSubject(`A slot just opened up for ${day}!`, lang),
+      html: translateEmailHtml(
+        emailFrame({
+          title: name ? `Good news, ${name}!` : 'Good news!',
+          body: `<p style="margin:0 0 24px">A slot just opened up on <strong style="color:${INK}">${day}</strong> at <strong style="color:${INK}">${at}</strong>${svc ? ` &middot; ${svc}` : ''}. Book now before it fills up again.</p>
           <p style="margin:0 0 24px">${emailButton('https://drbikesydney.com.au', 'Book now')}</p>
           <p style="margin:0;font-size:12px;color:${FAINT}">You're receiving this because you joined the waitlist for ${day}.</p>`,
-      }),
+        }),
+        lang
+      ),
     }),
   });
   await sb
@@ -3642,6 +3666,8 @@ async function handleRequestPasswordReset(req, res) {
     }
 
     const actionLink = data.properties.action_link;
+    // The language of the page the reset was asked from.
+    const lang = req.body?.lang;
     const emailResp = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -3651,8 +3677,9 @@ async function handleRequestPasswordReset(req, res) {
       body: JSON.stringify({
         from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
         to: [cleanEmail],
-        subject: '🔐 Reset your Dr. Bike Sydney password',
-        html: `<div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+        subject: translateEmailSubject('🔐 Reset your Dr. Bike Sydney password', lang),
+        html: translateEmailHtml(
+          `<div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
           <div style="background:#2563EB;padding:32px 28px;text-align:center">
             <div style="display:inline-block;background:#fff;border-radius:14px;padding:10px 18px;margin-bottom:14px">
               <img src="https://drbikesydney.com.au/images/logo-db.png" alt="Dr. Bike Sydney" height="26" style="display:block;width:auto">
@@ -3679,6 +3706,8 @@ async function handleRequestPasswordReset(req, res) {
             <p style="font-size:11px;color:#D1D5DB;margin:0">ABN: 87 654 025 287 · contact@drbikesydney.com.au</p>
           </div>
         </div>`,
+          lang
+        ),
       }),
     });
     if (!emailResp.ok)
@@ -5480,12 +5509,46 @@ async function handlePublicBookingList(req, res) {
     const bookings = await resp.json();
     if (!Array.isArray(bookings) || !bookings.length) return genericOk();
 
+    // The language of the page the links were asked from (track.html).
+    const lang = req.body?.lang;
+    const locale = emailLocale(lang);
+    const esc = (s) =>
+      String(s || '').replace(
+        /[<>&"']/g,
+        (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' })[c]
+      );
+    // The status as a word the dictionary knows, not the raw column value.
+    const STATUS = {
+      pending: 'Pending',
+      quote_requested: 'Quote requested',
+      confirmed: 'Confirmed',
+      enroute: 'On the way',
+      inprogress: 'In progress',
+      in_progress: 'In progress',
+      arrived: 'In progress',
+      completed: 'Completed',
+    };
+    const when = (d, t) => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(d || ''))) return esc(d);
+      const hm = /^(\d{2}):(\d{2})/.exec(String(t || ''));
+      const at = new Date(`${d}T${hm ? `${hm[1]}:${hm[2]}` : '00:00'}:00Z`);
+      const day = at.toLocaleDateString(locale, {
+        timeZone: 'UTC',
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+      });
+      return hm
+        ? `${day} · ${at.toLocaleTimeString(locale, { timeZone: 'UTC', hour: 'numeric', minute: '2-digit' })}`
+        : day;
+    };
+
     const rows = bookings
       .map(
         (b) => `
         <div style="padding:14px 0;border-top:1px solid #E2E8F0">
-          <div style="font-weight:700;color:#0D1F3C;font-size:14px">${b.service_name || 'Service'}</div>
-          <div style="color:#475569;font-size:13px;margin:2px 0 8px">${b.scheduled_date || ''}${b.scheduled_time ? ' · ' + b.scheduled_time : ''} · ${b.status}</div>
+          <div style="font-weight:700;color:#0D1F3C;font-size:14px">${esc(b.service_name) || 'Service'}</div>
+          <div style="color:#475569;font-size:13px;margin:2px 0 8px">${when(b.scheduled_date, b.scheduled_time)} · <span>${Object.hasOwn(STATUS, b.status) ? STATUS[b.status] : esc(b.status)}</span></div>
           <a href="https://drbikesydney.com.au/track.html?token=${b.tracking_token}" style="color:#2563EB;font-size:13px;font-weight:600">Track this booking →</a>
         </div>`
       )
@@ -5500,8 +5563,9 @@ async function handlePublicBookingList(req, res) {
       body: JSON.stringify({
         from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
         to: [cleanEmail],
-        subject: 'Your Dr. Bike Sydney booking tracking links',
-        html: `<div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+        subject: translateEmailSubject('Your Dr. Bike Sydney booking tracking links', lang),
+        html: translateEmailHtml(
+          `<div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
           <div style="background:#2563EB;padding:32px 28px;text-align:center">
             <div style="display:inline-block;background:#fff;border-radius:14px;padding:10px 18px;margin-bottom:14px">
               <img src="https://drbikesydney.com.au/images/logo-db.png" alt="Dr. Bike Sydney" height="26" style="display:block;width:auto">
@@ -5519,6 +5583,8 @@ async function handlePublicBookingList(req, res) {
             <p style="font-size:11px;color:#D1D5DB;margin:0">ABN: 87 654 025 287 · contact@drbikesydney.com.au</p>
           </div>
         </div>`,
+          lang
+        ),
       }),
     });
     if (!emailResp.ok)
@@ -7697,6 +7763,7 @@ import { handleShop } from './_shop.js';
 import { handleShopAdmin } from './_shop-admin.js';
 import { withSentry, captureMessage } from './_sentry.js';
 import { emailFrame, emailButton, INK, FAINT } from './_email-frame.js';
+import { translateEmailHtml, translateEmailSubject, emailLocale } from './_email-i18n.js';
 export default withSentry(handler, 'auth');
 async function handler(req, res) {
   const role = req.body?.type || req.body?.role || req.query?.role || 'admin';

@@ -84,13 +84,33 @@ describe('translateEmailHtml', () => {
 });
 
 describe('dictionary matches the real templates', () => {
-  const src = fs.readFileSync(new URL('../../api/send-email.js', import.meta.url), 'utf8');
+  // send-email.js, and since 01-nov-2026 the emails that go straight to Resend.
+  const src = [
+    'send-email.js',
+    'send-cron.js',
+    'auth.js',
+    'subscribe-newsletter.js',
+    'send-invoice.js',
+    '_completion-notify.js',
+    '_email-frame.js',
+  ]
+    .map((f) => fs.readFileSync(new URL(`../../api/${f}`, import.meta.url), 'utf8'))
+    .join('\n');
 
-  it('every body key still appears in send-email.js', () => {
+  it('every body key still appears in a template', () => {
     // A key that no longer matches the template is dead weight and, worse, means
-    // that sentence silently goes out in English.
-    const dead = Object.keys(dictionaries.body.es).filter((k) => !src.includes(k));
+    // that sentence silently goes out in English. A '>Label<' key is a label the
+    // code keeps in a lookup table ('Chain', 'Book now') and the template wraps
+    // in a tag, so for those the quoted string literal is what must exist.
+    const found = (k) => {
+      if (src.includes(k)) return true;
+      const tagged = /^>(.+)<$/.exec(k);
+      return !!tagged && src.includes(`'${tagged[1]}'`);
+    };
+    const dead = Object.keys(dictionaries.body.es).filter((k) => !found(k));
     expect(dead).toEqual([]);
+    const deadSubjects = Object.keys(dictionaries.subject.es).filter((k) => !src.includes(k));
+    expect(deadSubjects).toEqual([]);
   });
 
   it('es and zh cover exactly the same keys', () => {
@@ -107,13 +127,16 @@ describe('dictionary matches the real templates', () => {
       const table = dictionaries.body[lang];
       const untranslated = Object.entries(table)
         .filter(([k, v]) => k === v)
-        // Identical on purpose: an ABN line, and the Australian tax/currency
-        // names, which stay as-is in Spanish.
+        // Identical on purpose: an ABN line, the Australian tax/currency
+        // names, and two bike parts Spanish calls by the same word.
         .filter(
           ([k]) =>
-            !['ABN: 87 654 025 287 · contact@drbikesydney.com.au', 'GST (10%)'].includes(
-              k
-            )
+            ![
+              'ABN: 87 654 025 287 · contact@drbikesydney.com.au',
+              'GST (10%)',
+              '>Cassette<',
+              '>Cables<',
+            ].includes(k)
         )
         .map(([k]) => k);
       expect(untranslated).toEqual([]);
