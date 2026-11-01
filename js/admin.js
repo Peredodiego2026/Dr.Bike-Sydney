@@ -3427,6 +3427,7 @@ async function confirmBookingAdmin(id) {
 function openCancel(id) {
   document.getElementById('cancel-booking-id').value = id;
   document.getElementById('cancel-notes').value = '';
+  document.getElementById('cancel-notify').checked = true;
   document.getElementById('cancel-modal').style.display = 'flex';
 }
 
@@ -3440,10 +3441,18 @@ async function confirmCancel() {
   // browser-side update never did.
   let upd;
   let partsBack = 0;
+  let emailed = null;
   try {
-    const d = await photosApi('admin-cancel-booking', { id, reason: fullReason });
+    // reason_code picks the line the client reads; the notes stay internal.
+    const d = await photosApi('admin-cancel-booking', {
+      id,
+      reason: fullReason,
+      reason_code: reason,
+      notify_client: document.getElementById('cancel-notify').checked,
+    });
     upd = [d.booking];
     partsBack = Object.values(d.parts_returned || {}).reduce((s, q) => s + q, 0);
+    emailed = d.emailed ?? null;
   } catch (e) {
     showToast('Could not cancel: ' + e.message);
     return;
@@ -3456,9 +3465,14 @@ async function confirmCancel() {
   document.getElementById('cancel-modal').style.display = 'none';
   applyBookingFilters();
   showToast(
-    partsBack
+    (partsBack
       ? `Booking cancelled · ${partsBack} part${partsBack === 1 ? '' : 's'} back in stock`
-      : 'Booking cancelled'
+      : 'Booking cancelled') +
+      (emailed === true
+        ? ' · client emailed'
+        : emailed === false
+          ? ' · email to client FAILED'
+          : '')
   );
 
   if (upd[0]?.google_event_id) {
@@ -3651,7 +3665,13 @@ async function submitAdminReschedule() {
     if (!resp.ok) throw new Error(data.error || 'Could not reschedule');
     closeAdminReschedule();
     applyBookingFilters();
-    showToast('✅ Booking rescheduled');
+    // The server emails the client the new time; say whether it went, so a
+    // failed email is a phone call now instead of a confused client later.
+    showToast(
+      data.emailed
+        ? '✅ Booking rescheduled · client emailed'
+        : '✅ Booking rescheduled · client NOT emailed - let them know'
+    );
   } catch (e) {
     errEl.textContent = e.message;
     errEl.style.display = 'block';

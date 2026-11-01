@@ -176,6 +176,10 @@ async function notifyNewBooking(booking, lang) {
           to: booking.client_email,
           name: booking.client_name,
           ...common,
+          // The visit fee this webhook is booking off was just charged. Without
+          // it the email showed the whole total as still owed, the same as
+          // js/app.js's confirmation did before it started sending this.
+          calloutPaid: Number(booking.callout_fee || 0),
           bookingId: booking.id,
           type: 'confirmation',
           lang: lang || 'en',
@@ -675,7 +679,7 @@ async function handler(req, res) {
             .from('profiles')
             .update({ membership_status: 'past_due' })
             .eq('stripe_customer_id', customerId)
-            .select('email,full_name,membership_status')
+            .select('email,full_name,membership_status,preferred_lang')
             .single();
 
           // Send payment failed email to client
@@ -695,6 +699,9 @@ async function handler(req, res) {
                   name: profile.full_name || 'Member',
                   price: amountDue,
                   attemptCount,
+                  // No booking to read the language off, so send-email would
+                  // fall back to English for a member who reads Spanish.
+                  lang: profile.preferred_lang || 'en',
                 }),
               }
             );
@@ -719,7 +726,7 @@ async function handler(req, res) {
             .from('profiles')
             .update({ membership_status: 'past_due' })
             .eq('stripe_customer_id', customerId)
-            .select('email,full_name')
+            .select('email,full_name,preferred_lang')
             .single();
 
           // Send action required email
@@ -737,6 +744,7 @@ async function handler(req, res) {
                   type: 'payment_action_required',
                   to: profile.email,
                   name: profile.full_name || 'Member',
+                  lang: profile.preferred_lang || 'en',
                 }),
               }
             );
