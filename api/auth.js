@@ -3248,18 +3248,18 @@ export async function handleClientCancel(req, res) {
     });
   }
 
-  // Notify first person on waitlist for this slot (fire-and-forget)
-  notifyWaitlist(SERVICE_KEY, bk.scheduled_date, bk.scheduled_time).catch(() => {});
-
-  // Remove the mechanic's calendar event, if one was ever created (fire-and-forget)
-  if (bk.google_event_id) deleteCalendarEvent(bk.google_event_id).catch(() => {});
-
-  // Auto-refund the visit fee for >=24h notice (per terms.html section 6),
-  // then tell Diego the outcome (fire-and-forget - never block the client's
-  // cancel response on this).
-  notifyAdminCancellation(bk, SERVICE_KEY).catch((e) =>
-    console.error('[client-cancel] refund/notify failed:', e.message)
-  );
+  // The waitlist, the mechanic's calendar event, and the refund (>=24h notice,
+  // terms.html section 6) with Diego's WhatsApp and the client's email.
+  // Awaited, not fire-and-forget: Vercel can freeze the function once the
+  // response is sent, and a frozen one loses the refund and both messages.
+  // The client's button says "Cancelling..." for the second or two this takes.
+  await Promise.allSettled([
+    notifyWaitlist(SERVICE_KEY, bk.scheduled_date, bk.scheduled_time),
+    bk.google_event_id ? deleteCalendarEvent(bk.google_event_id) : null,
+    notifyAdminCancellation(bk, SERVICE_KEY).catch((e) =>
+      console.error('[client-cancel] refund/notify failed:', e.message)
+    ),
+  ]);
 
   return res.status(200).json({ ok: true });
 }
@@ -7115,15 +7115,13 @@ export async function handleAdminCancelBooking(req, res) {
       refundAmount,
     });
   }
-  return res
-    .status(200)
-    .json({
-      booking: bk,
-      parts_returned: returned,
-      emailed,
-      refunded,
-      refund_amount: refundAmount,
-    });
+  return res.status(200).json({
+    booking: bk,
+    parts_returned: returned,
+    emailed,
+    refunded,
+    refund_amount: refundAmount,
+  });
 }
 
 // Cleans up a booking's synced calendar event after an admin-side cancel

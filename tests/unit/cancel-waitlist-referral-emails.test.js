@@ -149,7 +149,8 @@ beforeEach(() => {
   };
 });
 
-// The client's cancel answers first; the refund and both messages follow.
+// The refund and both messages are done by the time the client's cancel
+// answers: Vercel can freeze the function once the response is sent.
 const clientCancel = async () => {
   const r = await run(handleClientCancel, {
     access_token: 'tok',
@@ -157,7 +158,6 @@ const clientCancel = async () => {
     client_id: 'client-1',
   });
   expect(r.statusCode, JSON.stringify(r.body)).toBe(200);
-  for (let i = 0; i < 100 && !whatsapps.length; i++) await new Promise((s) => setTimeout(s, 0));
   expect(whatsapps).toHaveLength(1);
   return emails;
 };
