@@ -61,7 +61,7 @@ describe('driving time decides, because distance would misprice it', () => {
   // straight line, but one is motorway and the other is the Spit Bridge.
   // Pricing on kilometres would charge them the same.
   it('same km, different time, different fee', () => {
-    // 14 router minutes is ~18 real: inside the $25 band. 30 router minutes
+    // 14 router minutes is ~18 real: inside the $35 band. 30 router minutes
     // is ~38 real: the city band. Nearly identical distances, different trips.
     const near = resolveCoverage({ minutes: 14, km: 15 });
     const cbd = resolveCoverage({ minutes: 30, km: 14 });
@@ -123,7 +123,7 @@ describe('nothing resolved - the layer this whole module exists for', () => {
 
   // Diego's rule (2026-08-24): if we cannot work out what the trip costs, we
   // do not take the customer's money on a guess. An earlier draft charged the
-  // cheapest band, which risked billing $25 for a trip to Katoomba and then
+  // cheapest band, which risked billing $35 for a trip to Katoomba and then
   // having to refund it.
   it('quotes NO fee - nothing is charged when we do not know the trip', () => {
     expect(resolveCoverage({}).calloutFee).toBe(null);
@@ -322,8 +322,8 @@ describe('the far peninsula is $45 to the tip, not a rejection', () => {
   });
 
   // A street named after a suburb must not reprice the address. "12 Newport
-  // Rd, Dee Why" is a $25 trip to Dee Why; matching 'newport' anywhere in the
-  // string would have billed it $35.
+  // Rd, Dee Why" is a $35 trip to Dee Why; matching 'newport' anywhere in the
+  // string would have billed it $45.
   it('a street named after a peninsula suburb does not move the fee', () => {
     const r = resolveCoverage({ address: '12 Newport Rd, Dee Why NSW 2099', minutes: 8, km: 4 });
     expect(r.calloutFee).toBe(35);
@@ -422,7 +422,7 @@ describe('real minutes, not free-flow minutes', () => {
 });
 
 // The other hand-drawn zone. Terrey Hills is 26 real minutes - one minute
-// past the $25 band - and without this it would cost the same as the CBD,
+// past the $35 band - and without this it would cost the same as the CBD,
 // despite being the same council, the same road, no bridge and no toll.
 describe('the near half of the north corridor is $35', () => {
   it.each([
@@ -443,7 +443,7 @@ describe('the near half of the north corridor is $35', () => {
     expect(matchNearNorth(null)).toBeNull();
   });
 
-  // "5 Terrey St, Bondi" must not become a $25 trip to Terrey Hills.
+  // "5 Terrey St, Bondi" must not become a $35 trip to Terrey Hills.
   it('a street name does not move the fee', () => {
     expect(matchNearNorth('5 Terrey Hills Rd, Bondi NSW 2026')).toBeNull();
   });

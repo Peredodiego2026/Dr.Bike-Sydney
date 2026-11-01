@@ -10,7 +10,7 @@
 // not.
 //
 // The rule now: DRIVING TIME from the base decides. Diego's own prices were
-// already a time ladder (Northern Beaches $25 is 10 min away, the CBD $45 is
+// already a time ladder (Northern Beaches $35 is 10 min away, the CBD $55 is
 // 40 min across the Spit) - they just were not being computed that way. A
 // straight-line distance would have broken them: Hornsby and the CBD are both
 // ~15 km out, but one is 30 minutes of motorway and the other 40 of bridge.
@@ -322,7 +322,7 @@ export function resolveCoverage({ minutes = null, zone = null, km = null, addres
   // No fee is quoted and NOTHING is charged. Diego's rule, and the right one:
   // if we cannot work out what the trip costs, we do not take the customer's
   // money on a guess - we ask. An earlier draft charged the cheapest band and
-  // confirmed by hand, which risked billing $25 for a trip to Katoomba and
+  // confirmed by hand, which risked billing $35 for a trip to Katoomba and
   // then having to refund it.
   //
   // This is still NOT a rejection. The person keeps their whole booking and

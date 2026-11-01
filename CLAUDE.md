@@ -77,13 +77,15 @@ convert, never raise it.
 
 ## Payments
 - Stripe LIVE keys active in production
-- Mobile (index.html): zone-based call-out fee charged via Stripe at booking step 3
-  (PaymentIntent). The fee is looked up per suburb from the `callout_zones` table
-  (`matchCalloutZone()` in `api/auth.js`, from $25; $20 only as a fallback when a
-  suburb matches no zone) - NOT a flat $20. This block said "$20 call-out fee" until
-  2026-08-23; the flat $20 was replaced by zone pricing and the copy across the app
-  was fixed in commit 67b27c6. The server is authoritative and refunds any Stripe
-  charge whose amount doesn't match the recomputed zone fee.
+- Mobile (index.html): visit & diagnosis fee charged via Stripe at booking step 3
+  (PaymentIntent). The fee comes from DRIVING TIME from the base, in
+  `api/_coverage.js` (`FEE_BANDS`, `PENINSULA_FAR_FEE`, `NORTH_NEAR_FEE`);
+  the `callout_zones` table is only the fallback when routing is down and holds
+  the same ladder. **The cheapest visit is $35** since the +$10 of 24-oct-2026.
+  This block said "from $25" until 2026-11-01 and a session quoted $25 to Diego
+  from it - read `FEE_BANDS` before quoting any visit fee. The server is
+  authoritative and refunds any Stripe charge whose amount doesn't match the
+  recomputed fee.
 - Desktop (landing.html): **the same flow.** `landing.html:3389` loads `js/app.js`
   and `openBooking()` opens the SPA wizard in-page (hash `#book-service`), so
   desktop charges the same PaymentIntent, fires the same analytics events and
@@ -159,8 +161,8 @@ mobile->index.html, desktop->landing.html. Full one-page routing was not retried
   SQL first, then `npm run prices:sync`, which rewrites the cards, structured
   data and suburb pages and lists every other line still quoting the old amount.
   The +$10 of 24-oct-2026 was 56 files by hand before it existed.
-- The mobile call-out fee is zone-based (from $25, per suburb in `callout_zones`),
-  NOT a flat $20 - see the Payments section above
+- The visit fee is by driving time, from $35 (`FEE_BANDS` in `api/_coverage.js`)
+  - see the Payments section above
 - Phone: 0433 963 250 / +61433963250
 - WhatsApp: wa.me/61433963250
 - Mechanic PIN: 3250 - **4 digits, and the last one that will be.** Since

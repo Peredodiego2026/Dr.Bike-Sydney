@@ -893,7 +893,7 @@ function alert2(j) {
     'position:fixed;top:80px;left:16px;right:16px;background:var(--green);color:#fff;border-radius:14px;padding:16px 20px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.3);cursor:pointer';
   // service_name is NOT a safe string. api/stripe-webhook.js falls back to the
   // browser-supplied bk_service_name metadata when the service row is missing,
-  // so an attacker who books once ($25 call-out) can store markup in it. The
+  // so an attacker who books once (one visit fee) can store markup in it. The
   // suburb next to it was already escaped; this one was not.
   d.innerHTML = `<b>🔔 New booking!</b><br><span style="font-size:13px;opacity:.85">${esc(j.service_name)} · ${esc(j.suburb)} · $${esc(j.service_price)}</span>`;
   d.onclick = () => d.remove();

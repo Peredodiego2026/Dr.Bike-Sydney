@@ -118,7 +118,7 @@ function table(name) {
 vi.mock('stripe', () => ({
   default: class {
     constructor() {
-      // $25 es la banda de Terrey Hills, que es a lo que resuelve la direccion
+      // $35 es la banda de Terrey Hills, que es a lo que resuelve la direccion
       // de abajo sin ninguna red (api/_coverage.js).
       this.paymentIntents = {
         // Lo que el cliente pago, en centavos. Sale de FEE_BANDS y no de un
