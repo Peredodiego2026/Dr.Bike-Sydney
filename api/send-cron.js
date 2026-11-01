@@ -192,9 +192,14 @@ async function handleAbandoned(req, res) {
   const { data: bookings, error } = await sb
     .from('bookings')
     .select(
-      'id, client_email, client_name, service_name, service_price, scheduled_date, scheduled_time, address'
+      'id, client_email, client_name, client_lang, service_name, service_price, scheduled_date, scheduled_time, address'
     )
     .eq('status', 'pending')
+    // Unpaid only. A paid booking also sits in 'pending' until someone
+    // confirms it, and this used to tell those clients they "didn't complete"
+    // a booking they had paid for - Andrew Madry, 28-oct-2026, $35 charged.
+    // Same line api/_slot-hold.js draws between a hold and a real booking.
+    .is('stripe_payment_intent_id', null)
     .or('abandoned_recovery_sent.is.null,abandoned_recovery_sent.eq.false')
     .lte('created_at', oneHourAgo)
     .gte('created_at', oneDayAgo);
@@ -204,13 +209,6 @@ async function handleAbandoned(req, res) {
   let sent = 0;
   for (const b of bookings || []) {
     if (!b.client_email) continue;
-    const dateLabel = b.scheduled_date
-      ? new Date(b.scheduled_date).toLocaleDateString('en-AU', {
-          weekday: 'short',
-          day: 'numeric',
-          month: 'short',
-        })
-      : '';
     const r = await fetch(`${BASE}/api/send-email`, {
       method: 'POST',
       headers: {
@@ -221,10 +219,12 @@ async function handleAbandoned(req, res) {
         to: b.client_email,
         name: b.client_name || b.client_email.split('@')[0],
         service: b.service_name,
-        date: dateLabel,
+        // Raw, so send-email writes it in the client's language.
+        date: b.scheduled_date || '',
         time: b.scheduled_time,
         price: b.service_price || 0,
         bookingId: b.id,
+        lang: b.client_lang || 'en',
         type: 'abandoned_recovery',
       }),
     }).catch((e) => ({ ok: false, _err: e.message }));
@@ -284,13 +284,6 @@ async function handleAbandonedCheckout(req, res) {
   for (const a of attempts) {
     const p = byId.get(a.client_id);
     if (!p?.email) continue;
-    const dateLabel = a.scheduled_date
-      ? new Date(a.scheduled_date).toLocaleDateString('en-AU', {
-          weekday: 'short',
-          day: 'numeric',
-          month: 'short',
-        })
-      : '';
     // Reuses the abandoned_recovery template: it already says "you started
     // booking X and didn't finish", already exists in en/es/zh, and never used
     // the booking id - it links to the site, which is exactly right here since
@@ -305,7 +298,8 @@ async function handleAbandonedCheckout(req, res) {
         to: p.email,
         name: p.full_name || p.email.split('@')[0],
         service: a.service_name || 'your service',
-        date: dateLabel,
+        // Raw, so send-email writes it in the client's language.
+        date: a.scheduled_date || '',
         time: a.scheduled_time || '',
         price: a.service_price || 0,
         lang: p.preferred_lang || 'en',
@@ -337,7 +331,7 @@ async function handleAdvanceReminders(req, res) {
   const { data: bookings, error } = await sb
     .from('bookings')
     .select(
-      'id, client_email, client_phone, client_name, service_name, scheduled_date, scheduled_time, address, suburb'
+      'id, client_email, client_phone, client_name, client_lang, service_name, scheduled_date, scheduled_time, address, suburb'
     )
     .eq('scheduled_date', targetDate)
     .in('status', ['pending', 'confirmed'])
@@ -364,9 +358,11 @@ async function handleAdvanceReminders(req, res) {
               to: b.client_email,
               name: b.client_name || b.client_email.split('@')[0],
               service: b.service_name,
-              date: dateLabel,
+              // Raw, so send-email writes it in the client's language.
+              date: b.scheduled_date,
               time: b.scheduled_time,
               bookingId: b.id,
+              lang: b.client_lang || 'en',
               type: 'upcoming',
             }),
           })

@@ -3654,7 +3654,10 @@ async function handleApplyReferral(req, res) {
 
 // Shared by handleClientReschedule and handleAdminReschedule so the two can
 // never disagree about what a reschedule is allowed to do. `bk` needs id,
-// status, google_event_id, service_name, address, van_number.
+// status, google_event_id, service_name, address, van_number, callout_fee,
+// and - for the history row and the client's email - scheduled_date,
+// scheduled_time, client_email, client_name, client_lang. RESCHEDULE_BOOKING_COLS
+// below is that list, so both callers select the same thing.
 //
 // Neither caller checked isSlotBlocked before this (docs/PENDIENTES.md 21.8
 // closed that hole for NEW bookings via handleCreateBooking, but moving an
@@ -3710,8 +3713,19 @@ async function rescheduleBookingCore(
   const { fee: reFee } = await calloutFeeForAddress(bk.address, scheduled_date);
   const newCalloutFee = reFee === null ? Number(bk.callout_fee) || 0 : reFee;
 
+  const oldDate = bk.scheduled_date || null;
+  const oldTime = bk.scheduled_time ? String(bk.scheduled_time).slice(0, 5) : null;
+  const moved = oldDate !== scheduled_date || oldTime !== scheduled_time;
+
   const updatePayload = { scheduled_date, scheduled_time, callout_fee: newCalloutFee };
   if (newServicePrice !== null) updatePayload.service_price = newServicePrice;
+  // The reminders were sent for the OLD time. Left set, a booking moved after
+  // its 3-day or 2-hour reminder went out got none for the new one.
+  if (moved) {
+    updatePayload.reminder_days_sent = false;
+    updatePayload.reminder_2h_sent = false;
+    updatePayload.noshow_alert_sent = false;
+  }
 
   const updateResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(bk.id)}`,
@@ -3749,8 +3763,76 @@ async function rescheduleBookingCore(
     }).catch(() => {});
   }
 
-  return { ok: true };
+  if (!moved) return { ok: true, emailed: false };
+
+  // History (scripts/add-booking-reschedules.sql). Run by hand, so the table
+  // can be missing for a while: that costs the record, never the reschedule.
+  const histResp = await fetch(`${SUPABASE_URL}/rest/v1/booking_reschedules`, {
+    method: 'POST',
+    headers: {
+      apikey: SERVICE_KEY,
+      Authorization: `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({
+      booking_id: bk.id,
+      old_date: oldDate,
+      old_time: oldTime,
+      new_date: scheduled_date,
+      new_time: scheduled_time,
+      changed_by: byClient ? 'client' : 'admin',
+    }),
+  }).catch((e) => ({ ok: false, status: 0, text: async () => e.message }));
+  if (!histResp.ok)
+    console.error(
+      '[reschedule] history not recorded:',
+      bk.id,
+      histResp.status,
+      (await histResp.text().catch(() => '')).slice(0, 200)
+    );
+
+  // Until 01-nov-2026 nobody was told: Diego moved Andrew Madry's booking from
+  // the admin and the client found out by asking on WhatsApp. Awaited, not
+  // fire-and-forget - Vercel can freeze the function once the response is
+  // sent - and reported back, so the admin can say whether it went.
+  let emailed = false;
+  if (bk.client_email) {
+    try {
+      const r = await fetch(`${SELF_BASE_URL}/api/send-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+        },
+        body: JSON.stringify({
+          type: 'rescheduled',
+          to: bk.client_email,
+          name: bk.client_name || bk.client_email.split('@')[0],
+          service: bk.service_name,
+          address: bk.address || '',
+          bookingId: bk.id,
+          newDate: scheduled_date,
+          newTime: scheduled_time,
+          oldDate,
+          oldTime,
+          durationMin: svcData?.[0]?.duration_max || DEFAULT_SERVICE_DURATION_MIN,
+          lang: ['en', 'es', 'zh'].includes(bk.client_lang) ? bk.client_lang : 'en',
+        }),
+      });
+      emailed = r.ok;
+      if (!r.ok) console.error('[reschedule] email failed:', bk.id, r.status);
+    } catch (e) {
+      console.error('[reschedule] email threw:', bk.id, e.message);
+    }
+  }
+
+  return { ok: true, emailed };
 }
+
+const RESCHEDULE_BOOKING_COLS =
+  'id,status,client_id,google_event_id,service_name,address,van_number,callout_fee,' +
+  'scheduled_date,scheduled_time,client_email,client_name,client_lang';
 
 async function handleClientReschedule(req, res) {
   const { access_token, booking_id, client_id, scheduled_date, scheduled_time } = req.body;
@@ -3774,7 +3856,7 @@ async function handleClientReschedule(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const bkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,google_event_id,service_name,address,van_number&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=${RESCHEDULE_BOOKING_COLS}&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
@@ -3787,7 +3869,7 @@ async function handleClientReschedule(req, res) {
     byClient: true,
   });
   if (!result.ok) return res.status(result.status).json({ error: result.error, code: result.code });
-  return res.status(200).json({ ok: true });
+  return res.status(200).json({ ok: true, emailed: result.emailed });
 }
 
 // Admin-side equivalent - the calendar's own reschedule (docs/PENDIENTES.md
@@ -3808,7 +3890,7 @@ async function handleAdminReschedule(req, res) {
 
   const { data: bk, error: bkErr } = await auth.sb
     .from('bookings')
-    .select('id,status,google_event_id,service_name,address,van_number')
+    .select(RESCHEDULE_BOOKING_COLS)
     .eq('id', booking_id)
     .maybeSingle();
   if (bkErr) return res.status(500).json({ error: 'Database error' });
@@ -3816,7 +3898,7 @@ async function handleAdminReschedule(req, res) {
 
   const result = await rescheduleBookingCore(SERVICE_KEY, bk, scheduled_date, scheduled_time);
   if (!result.ok) return res.status(result.status).json({ error: result.error });
-  return res.status(200).json({ ok: true });
+  return res.status(200).json({ ok: true, emailed: result.emailed });
 }
 
 // Admin's "Reassign van" button (docs/PENDIENTES.md 25.2) used to write

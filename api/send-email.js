@@ -110,6 +110,54 @@ async function handler(req, res) {
   const stillOwed = Math.max(0, (Number(price) || 0) - paidNow);
   const year = new Date().getFullYear();
 
+  // Dates arrive raw - YYYY-MM-DD and 24h HH:MM, the shapes the bookings table
+  // stores - and are formatted here, in the client's language: the string
+  // replacement in _email-i18n.js has no "Wed" or "Nov" to look up, so a date
+  // the caller formatted itself reached Spanish clients in English.
+  const bodyLang = normalizeLang(req.body?.lang);
+  const bodyLocale = { en: 'en-AU', es: 'es-ES', zh: 'zh-CN' }[bodyLang];
+  const slotAt = (d, t) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(d || ''))) return null;
+    const hm = /^(\d{2}):(\d{2})/.exec(String(t || ''));
+    const at = new Date(`${d}T${hm ? `${hm[1]}:${hm[2]}` : '00:00'}:00Z`);
+    return Number.isNaN(at.getTime()) ? null : { at, hasTime: !!hm };
+  };
+  // Read as UTC on purpose: these are Sydney wall-clock values, not instants.
+  const fmt = (at, opts) => at.toLocaleString(bodyLocale, { timeZone: 'UTC', ...opts });
+  const slotLabel = (s) =>
+    s
+      ? fmt(s.at, { weekday: 'short', day: 'numeric', month: 'short' }) +
+        (s.hasTime ? ' · ' + fmt(s.at, { hour: 'numeric', minute: '2-digit' }) : '')
+      : '';
+  // Every template's `date`. Anything that is not YYYY-MM-DD is left as sent.
+  const rawDay = slotAt(date, '');
+  if (rawDay) date = fmt(rawDay.at, { weekday: 'short', day: 'numeric', month: 'short' });
+
+  // Rescheduled booking (api/auth.js, rescheduleBookingCore).
+  const newSlot = slotAt(req.body.newDate, req.body.newTime);
+  const oldSlot = slotAt(req.body.oldDate, req.body.oldTime);
+  const resched = {
+    month: newSlot ? fmt(newSlot.at, { month: 'short' }).replace('.', '').toUpperCase() : '',
+    day: newSlot ? newSlot.at.getUTCDate() : '',
+    weekday: newSlot ? fmt(newSlot.at, { weekday: 'short' }) : '',
+    time: newSlot?.hasTime ? fmt(newSlot.at, { hour: 'numeric', minute: '2-digit' }) : '',
+    dateLabel: newSlot ? fmt(newSlot.at, { weekday: 'short', day: 'numeric', month: 'short' }) : '',
+    oldLabel: slotLabel(oldSlot),
+    calUrl: '',
+  };
+  if (newSlot?.hasTime) {
+    // Google Calendar's "add event" link. Wall-clock start/end plus ctz, so the
+    // event lands at the Sydney time whatever the client's own time zone is.
+    const minutes = Math.min(Math.max(Number(req.body.durationMin) || 90, 15), 600);
+    const stamp = (at) => at.toISOString().replace(/[-:]/g, '').slice(0, 15);
+    const end = new Date(newSlot.at.getTime() + minutes * 60000);
+    resched.calUrl =
+      'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+      `&amp;text=${encodeURIComponent('Dr. Bike Sydney - ' + String(req.body.service || '').slice(0, 80))}` +
+      `&amp;dates=${stamp(newSlot.at)}/${stamp(end)}&amp;ctz=Australia/Sydney` +
+      `&amp;location=${encodeURIComponent(String(req.body.address || '').slice(0, 200))}`;
+  }
+
   const header = (color, emoji, title) => `
     <div style="font-family:Inter,Arial,sans-serif;max-width:580px;margin:0 auto;background:${WHITE};border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
     <div style="background:${color};padding:32px 28px;text-align:center">
@@ -294,6 +342,41 @@ async function handler(req, res) {
           <a href="https://drbikesydney.com.au" style="display:block;background:#7C3AED;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Book a service →</a>
         </div>${footer()}`,
     },
+    // Design V04, picked by Diego on 01-nov-2026 from ten mockups. Tables, not
+    // flex: Gmail and Outlook drop display:flex, and the tile has to sit beside
+    // the text in both.
+    rescheduled: {
+      subject: `📅 New time confirmed — ${service} · ${resched.dateLabel}`,
+      html: `
+    <div style="font-family:Inter,Arial,sans-serif;max-width:580px;margin:0 auto;background:${PAPER};border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+        <div style="padding:32px 28px">
+          <div style="font-size:12px;font-weight:700;letter-spacing:0.12em;color:${INK};margin-bottom:20px">DR. BIKE SYDNEY</div>
+          <table role="presentation" style="width:100%;border-collapse:separate;background:${WHITE};border-radius:16px;margin-bottom:20px">
+            <tr>
+              <td style="padding:24px 0 24px 24px;width:104px;vertical-align:middle">
+                <div style="width:104px;border-radius:14px;background:${BLUE};color:${WHITE};text-align:center;padding:14px 0">
+                  <div style="font-size:13px;font-weight:700;letter-spacing:0.06em">${resched.month}</div>
+                  <div style="font-size:42px;font-weight:800;line-height:1.1">${resched.day}</div>
+                  <div style="font-size:13px">${resched.weekday}</div>
+                </div>
+              </td>
+              <td style="padding:24px;vertical-align:middle">
+                <div style="font-size:20px;font-weight:700;color:${INK};margin-bottom:6px">Rescheduled and confirmed</div>
+                <div style="font-size:15px;color:${MUTED};margin-bottom:4px">${resched.time ? resched.time + ' · ' : ''}${service}</div>
+                ${address ? `<div style="font-size:14px;color:${MUTED}">${address}</div>` : ''}
+              </td>
+            </tr>
+          </table>
+          <p style="color:${MUTED};font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:${INK}">${name}</strong>, your appointment has a new date and time. The previous slot is cancelled.</p>
+          <table role="presentation" style="width:100%;border-collapse:collapse;margin-bottom:20px">
+            <tr>
+              ${resched.calUrl ? `<td style="width:50%;padding-right:6px"><a href="${resched.calUrl}" style="display:block;background:${WHITE};color:${INK};text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;border:1px solid ${RULE}">Add to calendar</a></td>` : ''}
+              <td style="padding-left:${resched.calUrl ? '6px' : '0'}"><a href="tel:+61433963250" style="display:block;background:${WHITE};color:${INK};text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;border:1px solid ${RULE}">Call us</a></td>
+            </tr>
+          </table>
+          ${resched.oldLabel ? `<p style="font-size:12px;color:${MUTED};margin:0">Previous slot: <span style="text-decoration:line-through">${resched.oldLabel}</span></p>` : ''}
+        </div>${footer()}`,
+    },
     cancellation_client: {
       subject: `❌ Booking cancelled — ${service} · ${date}`,
       html: `${header('#CF2020', '❌', 'Booking cancelled')}
@@ -404,11 +487,11 @@ async function handler(req, res) {
       subject: `🚲 You left something behind, ${name}!`,
       html: `${header('#0D1F3C', '🚲', 'Still thinking about it?')}
         <div style="padding:32px 28px">
-          <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, you started booking a <strong>${service}</strong>${date ? ' for ' + date : ''} but didn't complete it. Your bike is waiting!</p>
+          <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, you started booking a <strong>${service}</strong>${date ? ` for <strong>${date}</strong>` : ''} but didn't complete it. Your bike is waiting!</p>
           <div style="background:#EEF3FC;border-radius:16px;padding:24px;margin-bottom:24px;text-align:center">
             <div style="font-size:13px;color:#2563EB;font-weight:700;margin-bottom:4px">Your booking details</div>
             <div style="font-size:20px;font-weight:800;color:#0D1F3C;margin-bottom:4px">${service}</div>
-            ${date ? `<div style="font-size:13px;color:#2563EB;margin-bottom:12px">${date}${time ? ' at ' + time : ''}</div>` : ''}
+            ${date ? `<div style="font-size:13px;color:#2563EB;margin-bottom:12px">${date}${time ? ' · ' + time : ''}</div>` : ''}
             <div style="font-size:24px;font-weight:900;color:#2563EB">$${price}</div>
           </div>
           <a href="https://drbikesydney.com.au" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:16px;border-radius:10px;font-weight:700;font-size:15px;margin-bottom:12px">Complete my booking &rarr;</a>

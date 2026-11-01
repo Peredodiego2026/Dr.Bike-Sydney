@@ -3637,7 +3637,13 @@ async function submitAdminReschedule() {
     if (!resp.ok) throw new Error(data.error || 'Could not reschedule');
     closeAdminReschedule();
     applyBookingFilters();
-    showToast('✅ Booking rescheduled');
+    // The server emails the client the new time; say whether it went, so a
+    // failed email is a phone call now instead of a confused client later.
+    showToast(
+      data.emailed
+        ? '✅ Booking rescheduled · client emailed'
+        : '✅ Booking rescheduled · client NOT emailed - let them know'
+    );
   } catch (e) {
     errEl.textContent = e.message;
     errEl.style.display = 'block';

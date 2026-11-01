@@ -28,6 +28,17 @@ consulta responde una sola pregunta - si falta correr un script - y nada mas.
 
 ---
 
+## NUEVO (01-nov-2026): historial de cambios de fecha de cada reserva
+
+**Correr `scripts/add-booking-reschedules.sql` cuando quieras: el orden da igual.**
+Crea `booking_reschedules`: una fila cada vez que una reserva cambia de fecha u
+hora, con la fecha anterior, la nueva y quien la cambio (`admin` o `client`).
+Sin la tabla todo funciona igual, incluido el correo al cliente; solo no queda
+el historial. Seguro de correr dos veces. Verificacion al pie del script: tiene
+que dar `true | true`.
+
+---
+
 ## NUEVO (25-oct-2026): una gift card usada cuenta como venta
 
 **Correr `scripts/add-gift-applied.sql` primero y mergear su PR despues.**
@@ -522,13 +533,19 @@ with
   -- que cuente como venta (Finanzas la suma; antes quedaba como descuento).
   union all select 59, 'add-gift-applied.sql', 'bookings.gift_applied (una gift card usada es venta)',
     (exists (select 1 from col where t='bookings' and c='gift_applied'))
+  -- 60 entro el 2026-11-01: el historial de cambios de fecha y hora. Si falta,
+  -- reprogramar funciona igual y el correo al cliente sale igual; solo no queda
+  -- registro de quien movio la reserva ni a que hora estaba antes.
+  union all select 60, 'add-booking-reschedules.sql', 'tabla booking_reschedules (fecha anterior, nueva, quien la cambio)',
+    (exists (select 1 from tbl where t = 'booking_reschedules')
+     and coalesce((select relrowsecurity from pg_class where oid = to_regclass('public.booking_reschedules')), false))
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado
 from chk order by n;
 ```
 
-**Como se lee el resultado:** 52 filas. Las que digan `OK` ya estan hechas y no
+**Como se lee el resultado:** 60 filas. Las que digan `OK` ya estan hechas y no
 hay que tocarlas. Las que digan `>>> FALTA <<<` se corren siguiendo el orden de
 la seccion 5, saltando las que dieron OK.
 
