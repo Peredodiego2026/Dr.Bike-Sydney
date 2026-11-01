@@ -39,8 +39,10 @@ const dict = {
     'Net amount': 'Importe neto',
     'GST (10%)': 'GST (10%)',
     'Tax Invoice': 'Factura',
-    Service: 'Servicio',
-    Address: 'Dirección',
+    // With their tags: a bare 'Service' also translated the service's own
+    // name - "Standard Servicio" in every Spanish email until 01-nov-2026.
+    '>Service<': '>Servicio<',
+    '>Address<': '>Dirección<',
 
     // ── confirmation ────────────────────────────────────────────────────────
     ', your booking is confirmed ✅ Your mechanic will contact you 30 min before arrival.':
@@ -87,18 +89,79 @@ const dict = {
     'Leave a review →': 'Dejar una reseña →',
     'Rate your experience': 'Califica tu experiencia',
 
+    // ── The big title in each header, and the half-sentences around values ──
+    // Until 01-nov-2026 these went out in English inside Spanish and Chinese
+    // emails: "Booking confirmed!" over a Spanish confirmation, and "Hola
+    // Andrew, your Standard Service está listo".
+    'Booking confirmed!': '¡Reserva confirmada!',
+    'See you soon!': '¡Nos vemos pronto!',
+    'Time for a service!': '¡Es hora de un servicio!',
+    'How was your service?': '¿Qué tal el servicio?',
+    'You received a gift card!': '¡Recibiste una gift card!',
+    'Booking cancelled': 'Reserva cancelada',
+    'Referral successful!': '¡Referido exitoso!',
+    'On the waitlist!': '¡En la lista de espera!',
+    'Payment failed': 'Pago rechazado',
+    'Payment verification needed': 'Hay que verificar tu pago',
+    'We miss you!': '¡Te extrañamos!',
+    'Still thinking about it?': '¿Lo sigues pensando?',
+    'Happy Birthday!': '¡Feliz cumpleaños!',
+    ' The rest is paid on completion, by card or EFTPOS - and if the repair turns out not to be possible, they tell you on the spot and it is not charged.':
+      ' El resto se paga al terminar, con tarjeta o EFTPOS - y si la reparación no es posible, te lo dice en el momento y no se cobra.',
+    'Visit &amp; diagnosis &mdash; already paid: &minus;$':
+      'Visita y diagnóstico &mdash; ya pagado: &minus;$',
+    'To pay the mechanic on completion: $': 'A pagar al mecánico al terminar: $',
+    ', your <strong>': ', tu <strong>',
+    ', great news — ': ', buenas noticias — ',
+    ' just used your referral code!': ' acaba de usar tu código de referido.',
+    'View my dashboard →': 'Ver mi panel →',
+    'What happens next?': '¿Qué sigue ahora?',
+    '. This is attempt ': '. Intento número ',
+    ", it's been a while since your last service with us":
+      ', hace tiempo que no te vemos para un servicio',
+    ' months ago)': ' meses)',
+    ' months': ' meses',
+    '. Your bike misses the open road!': '. ¡Tu bici extraña la calle!',
+    '🔧 Your bike may need some love after': '🔧 Tu bici puede necesitar cariño después de',
+    '$15 OFF': '$15 DE DESCUENTO',
+    '$20 OFF': '$20 DE DESCUENTO',
+    " but didn't complete it. Your bike is waiting!": ' pero no la terminaste. ¡Tu bici te espera!',
+
+    // ── rescheduled ─────────────────────────────────────────────────────────
+    // The buttons keep their tags: a bare "Call us" would also hit the longer
+    // "Questions? Call us on..." line of every other template.
+    'Rescheduled and confirmed': 'Reprogramada y confirmada',
+    'New time received': 'Recibimos tu nuevo horario',
+    ', your appointment has a new date and time. The previous slot is cancelled.':
+      ', tu cita tiene nueva fecha y hora. El horario anterior quedó cancelado.',
+    ", we've moved your appointment to the new date and time. We'll confirm it shortly. The previous slot is cancelled.":
+      ', movimos tu cita a la nueva fecha y hora. Te la confirmamos en breve. El horario anterior quedó cancelado.',
+    '>Add to calendar<': '>Agregar al calendario<',
+    '>Call us<': '>Llámanos<',
+    'Previous slot:': 'Horario anterior:',
+
     // ── cancellation_client ─────────────────────────────────────────────────
     ', your booking has been cancelled as requested.': ', tu reserva fue cancelada como pediste.',
-    'Refund information': 'Información del reembolso',
-    'If you paid online, your refund will be processed within 5–7 business days. For questions contact contact@drbikesydney.com.au':
-      'Si pagaste en línea, el reembolso se procesa en 5–7 días hábiles. Ante cualquier duda escribe a contact@drbikesydney.com.au',
+    ", we're sorry: we had to cancel your booking because no mechanic is available at that time.":
+      ', lo sentimos: tuvimos que cancelar tu reserva porque no hay un mecánico disponible a esa hora.',
+    ", we're sorry: we had to cancel your booking because of the weather.":
+      ', lo sentimos: tuvimos que cancelar tu reserva por el clima.',
+    ', your booking has been cancelled.': ', tu reserva fue cancelada.',
+    '>Visit fee<': '>Tarifa de visita<',
+    "We've refunded your ": 'Te devolvimos los ',
+    ' visit fee. It can take 5–10 business days to show on your card.':
+      ' de la tarifa de visita. Puede tardar de 5 a 10 días hábiles en verse en tu tarjeta.',
+    'It was cancelled less than 24 hours before the appointment, so the visit fee is not refundable under our terms.':
+      'Se canceló con menos de 24 horas de anticipación, así que según nuestros términos la tarifa de visita no se reembolsa.',
+    "We'll be in touch about the ": 'Te contactaremos por los ',
+    ' visit fee you paid.': ' de la tarifa de visita que pagaste.',
     'Book a service →': 'Reservar un servicio →',
     'Book a service now →': 'Reservar un servicio ahora →',
 
     // ── waitlist_confirmation ───────────────────────────────────────────────
     ", you're on the waitlist for": ', estás en la lista de espera para',
-    "We'll send you an email the moment a slot opens up on that day. You'll have 30 minutes to complete your booking before it's offered to the next person on the list.":
-      'Te escribiremos apenas se libere un turno ese día. Tendrás 30 minutos para completar tu reserva antes de ofrecérsela a la siguiente persona de la lista.',
+    "If a slot opens up that day, we'll email you straight away. It goes to whoever books first, so book as soon as you get our email.":
+      'Si se libera un horario ese día, te escribimos de inmediato. Se lo lleva quien reserve primero, así que reserva apenas te llegue nuestro correo.',
     'Check other dates →': 'Ver otras fechas →',
 
     // ── referral_success ────────────────────────────────────────────────────
@@ -156,6 +219,8 @@ const dict = {
 
     // ── abandoned_recovery ──────────────────────────────────────────────────
     ', you started booking a': ', empezaste a reservar un',
+    // Its own tag so it can't match a "for" anywhere else.
+    ' for <strong>': ' para el <strong>',
     'Complete my booking &rarr;': 'Completar mi reserva &rarr;',
 
     // ── birthday_promo ──────────────────────────────────────────────────────
@@ -218,8 +283,8 @@ const dict = {
     'Net amount': '不含税金额',
     'GST (10%)': 'GST（10%）',
     'Tax Invoice': '税务发票',
-    Service: '服务',
-    Address: '地址',
+    '>Service<': '>服务<',
+    '>Address<': '>地址<',
 
     ', your booking is confirmed ✅ Your mechanic will contact you 30 min before arrival.':
       '，您的预订已确认 ✅ 技师会在到达前 30 分钟与您联系。',
@@ -257,16 +322,68 @@ const dict = {
     'Leave a review →': '去留下评价 →',
     'Rate your experience': '为您的体验评分',
 
+    'Booking confirmed!': '预订已确认！',
+    'See you soon!': '期待与您见面！',
+    'Time for a service!': '该做保养啦！',
+    'How was your service?': '服务体验如何？',
+    'You received a gift card!': '您收到了一张礼品卡！',
+    'Booking cancelled': '预订已取消',
+    'Referral successful!': '推荐成功！',
+    'On the waitlist!': '已加入候补名单！',
+    'Payment failed': '扣款失败',
+    'Payment verification needed': '需要验证付款',
+    'We miss you!': '我们想念您！',
+    'Still thinking about it?': '还在考虑吗？',
+    'Happy Birthday!': '生日快乐！',
+    ' The rest is paid on completion, by card or EFTPOS - and if the repair turns out not to be possible, they tell you on the spot and it is not charged.':
+      '余款在服务完成后以银行卡或 EFTPOS 支付；如果无法维修，技师会当场告知，不收取费用。',
+    'Visit &amp; diagnosis &mdash; already paid: &minus;$': '上门检测费 &mdash; 已支付：&minus;$',
+    'To pay the mechanic on completion: $': '完成后支付给技师：$',
+    ', your <strong>': '，您的 <strong>',
+    ', great news — ': '，好消息 — ',
+    ' just used your referral code!': ' 刚刚使用了您的邀请码！',
+    'View my dashboard →': '查看我的账户 →',
+    'What happens next?': '接下来会怎样？',
+    '. This is attempt ': '。尝试次数：',
+    ", it's been a while since your last service with us": '，您已经有一段时间没有来保养了',
+    ' months ago)': ' 个月前)',
+    ' months': ' 个月',
+    '. Your bike misses the open road!': '。您的自行车想念骑行了！',
+    '🔧 Your bike may need some love after': '🔧 您的自行车可能需要保养了，已过去',
+    '$15 OFF': '立减 $15',
+    '$20 OFF': '立减 $20',
+    " but didn't complete it. Your bike is waiting!": '，但还没有完成。您的自行车在等您！',
+
+    'Rescheduled and confirmed': '已改期并确认',
+    'New time received': '已收到您的新时间',
+    ', your appointment has a new date and time. The previous slot is cancelled.':
+      '，您的预约已改到新的日期和时间。原来的时段已取消。',
+    ", we've moved your appointment to the new date and time. We'll confirm it shortly. The previous slot is cancelled.":
+      '，我们已把您的预约改到新的日期和时间，稍后会为您确认。原来的时段已取消。',
+    '>Add to calendar<': '>添加到日历<',
+    '>Call us<': '>致电我们<',
+    'Previous slot:': '原时段：',
+
     ', your booking has been cancelled as requested.': '，您的预订已按要求取消。',
-    'Refund information': '退款说明',
-    'If you paid online, your refund will be processed within 5–7 business days. For questions contact contact@drbikesydney.com.au':
-      '如果您已在线付款，退款将在 5–7 个工作日内处理。如有疑问请联系 contact@drbikesydney.com.au',
+    ", we're sorry: we had to cancel your booking because no mechanic is available at that time.":
+      '，非常抱歉：该时段没有可用的技师，我们不得不取消您的预订。',
+    ", we're sorry: we had to cancel your booking because of the weather.":
+      '，非常抱歉：由于天气原因，我们不得不取消您的预订。',
+    ', your booking has been cancelled.': '，您的预订已取消。',
+    '>Visit fee<': '>上门费<',
+    "We've refunded your ": '我们已退还您支付的 ',
+    ' visit fee. It can take 5–10 business days to show on your card.':
+      ' 上门费。款项可能需要 5 到 10 个工作日才会显示在您的卡上。',
+    'It was cancelled less than 24 hours before the appointment, so the visit fee is not refundable under our terms.':
+      '此预订在预约前不到 24 小时取消，根据我们的条款，上门费不予退还。',
+    "We'll be in touch about the ": '关于您已支付的 ',
+    ' visit fee you paid.': ' 上门费，我们会与您联系。',
     'Book a service →': '预订服务 →',
     'Book a service now →': '立即预订服务 →',
 
     ", you're on the waitlist for": '，您已加入候补名单：',
-    "We'll send you an email the moment a slot opens up on that day. You'll have 30 minutes to complete your booking before it's offered to the next person on the list.":
-      '当天一有空位我们就会发邮件通知您。您有 30 分钟完成预订，逾期将让给名单上的下一位。',
+    "If a slot opens up that day, we'll email you straight away. It goes to whoever books first, so book as soon as you get our email.":
+      '当天一有空位，我们会立即发邮件通知您。名额先到先得，收到邮件后请尽快预订。',
     'Check other dates →': '查看其他日期 →',
 
     '$15 credit earned': '获得 $15 抵扣',
@@ -312,6 +429,7 @@ const dict = {
     'your next service — valid 14 days': '您的下次服务 — 14 天内有效',
 
     ', you started booking a': '，您开始预订了',
+    ' for <strong>': '，日期 <strong>',
     'Complete my booking &rarr;': '完成我的预订 &rarr;',
 
     ', wishing you an amazing birthday from the whole Dr. Bike team! 🚲':
@@ -357,6 +475,8 @@ const subjectDict = {
     '⏰ Reminder — your Dr. Bike service is in ~2 hours':
       '⏰ Recordatorio — tu servicio Dr. Bike es en ~2 horas',
     '📅 Your Dr. Bike service is coming up': '📅 Tu servicio Dr. Bike se acerca',
+    '📅 New time confirmed —': '📅 Nueva hora confirmada —',
+    '📅 Booking rescheduled —': '📅 Reserva reprogramada —',
     '🚲 Time for a bike check-up,': '🚲 Es hora de revisar tu bici,',
     '⭐ How was your': '⭐ ¿Cómo estuvo tu',
     'with Dr. Bike?': 'con Dr. Bike?',
@@ -386,6 +506,8 @@ const subjectDict = {
     '⏰ Reminder — your Dr. Bike service is in ~2 hours':
       '⏰ 提醒 — 您的 Dr. Bike 服务约在 2 小时后',
     '📅 Your Dr. Bike service is coming up': '📅 您的 Dr. Bike 服务即将到来',
+    '📅 New time confirmed —': '📅 新时间已确认 —',
+    '📅 Booking rescheduled —': '📅 预约已改期 —',
     '🚲 Time for a bike check-up,': '🚲 该给自行车做保养了，',
     '⭐ How was your': '⭐ 您的',
     'with Dr. Bike?': '体验如何？',

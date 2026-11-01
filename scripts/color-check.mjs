@@ -89,10 +89,14 @@ const BUDGET = {
   // send-cron.js and auth.js were outside the budget until 2026-08-09, which is
   // how auth.js kept 3 occurrences of the retired blue while everything else
   // was cleaned.
-  'api/send-email.js': 204,
+  'api/send-email.js': 197,
   'api/send-invoice.js': 107,
-  'api/send-cron.js': 49,
-  'api/auth.js': 39,
+  // 49 -> 10 and 39 -> 31 on 2026-11-01: the emails these two send straight to
+  // Resend now share api/_email-frame.js, whose 7 constants are the palette
+  // they used to each write out by hand.
+  'api/send-cron.js': 10,
+  'api/auth.js': 31,
+  'api/_email-frame.js': 7,
   // These 7 were outside the ratchet entirely until 2026-08-16 (docs/PENDIENTES.md
   // 19.3) - not urgent, nothing here is broken, but it is exactly how #1848C8
   // got into 74 files before 2026-08-09: one unwatched line at a time. terms.html,

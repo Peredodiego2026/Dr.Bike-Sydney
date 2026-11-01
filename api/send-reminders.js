@@ -58,7 +58,7 @@ async function handle2hReminders(req, res) {
   const { data: bookings, error } = await sb
     .from('bookings')
     .select(
-      'id, client_email, client_name, service_name, service_price, scheduled_date, scheduled_time, address'
+      'id, client_email, client_name, client_lang, service_name, service_price, scheduled_date, scheduled_time, address'
     )
     .in('status', ['confirmed', 'pending'])
     .gte('scheduled_date', today)
@@ -73,11 +73,6 @@ async function handle2hReminders(req, res) {
     const when = sydneyLocalToUtc(b.scheduled_date, b.scheduled_time);
     if (!when || when.getTime() < lo || when.getTime() > hi) continue;
     if (!b.client_email) continue;
-    const dateLabel = new Date(b.scheduled_date).toLocaleDateString('en-AU', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-    });
     const r = await fetch(`${base}/api/send-email`, {
       method: 'POST',
       headers: {
@@ -88,12 +83,14 @@ async function handle2hReminders(req, res) {
         to: b.client_email,
         name: b.client_name || b.client_email.split('@')[0],
         service: b.service_name,
-        date: dateLabel,
+        // Raw, so send-email writes it in the client's language.
+        date: b.scheduled_date,
         time: b.scheduled_time,
         address: b.address || '',
         price: b.service_price || 0,
         type: 'reminder2h',
         bookingId: b.id,
+        lang: b.client_lang || 'en',
       }),
     }).catch((e) => ({ ok: false, _err: e.message }));
     if (!r.ok) logSendFailure('reminder-2h', r, b.id);
