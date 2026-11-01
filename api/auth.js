@@ -7049,6 +7049,36 @@ export async function handleAdminCancelBooking(req, res) {
     return res.status(409).json({ error: 'Booking not found or already cancelled' });
   const returned = await revertJobStock(id, SERVICE_KEY, String(auth.user?.email || 'admin'));
   const bk = rows[0];
+  const reasons = {
+    'Client request': 'client',
+    'Mechanic unavailable': 'mechanic',
+    Weather: 'weather',
+  };
+  const cancelReason = Object.hasOwn(reasons, req.body?.reason_code)
+    ? reasons[req.body.reason_code]
+    : '';
+
+  // The visit fee goes back only when the admin ticked "Refund" - the modal
+  // ticks it by the same rule the client's own cancel follows (terms.html
+  // section 6), and Diego can untick it. Never for a finished job. Runs after
+  // the cancel matched, so a double click cannot refund twice: the second
+  // click finds the booking already cancelled and stops at the 409 above.
+  // null = not asked for, so the toast only speaks when a refund was tried.
+  let refunded = null;
+  let refundAmount = Number(bk.callout_fee) || 0;
+  if (req.body?.refund === true && bk.stripe_payment_intent_id && !bk.completed_at) {
+    refunded = false;
+    try {
+      const refund = await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
+        payment_intent: bk.stripe_payment_intent_id,
+      });
+      refunded = true;
+      if (Number(refund?.amount) > 0) refundAmount = refund.amount / 100;
+    } catch (e) {
+      console.error('[admin-cancel] Stripe refund failed:', bk.id, e.message);
+    }
+  }
+
   // Only a visit that was still ahead is news to the client: cancelling a
   // finished job to put its parts back, or a past one, is bookkeeping. null =
   // not attempted, so the admin's toast only speaks when an email was tried.
@@ -7059,21 +7089,25 @@ export async function handleAdminCancelBooking(req, res) {
     !bk.completed_at &&
     String(bk.scheduled_date || '') >= sydneyToday()
   ) {
-    const reasons = {
-      'Client request': 'client',
-      'Mechanic unavailable': 'mechanic',
-      Weather: 'weather',
-    };
+    const late =
+      cancelReason === 'client' && hoursUntilAppointment(bk.scheduled_date, bk.scheduled_time) < 24;
     emailed = await emailClientCancellation(bk, {
-      cancelReason: Object.hasOwn(reasons, req.body?.reason_code)
-        ? reasons[req.body.reason_code]
-        : '',
-      // An admin cancel refunds nothing by itself - Diego does it by hand.
-      refundState: bk.stripe_payment_intent_id ? 'contact' : '',
-      refundAmount: Number(bk.callout_fee) || 0,
+      cancelReason,
+      // What happened to the fee. Not refunded and not a late cancel by the
+      // client: "we'll be in touch", and Diego sorts it out by hand.
+      refundState: !bk.stripe_payment_intent_id
+        ? ''
+        : refunded
+          ? 'refunded'
+          : late && refunded === null
+            ? 'late'
+            : 'contact',
+      refundAmount,
     });
   }
-  return res.status(200).json({ booking: bk, parts_returned: returned, emailed });
+  return res
+    .status(200)
+    .json({ booking: bk, parts_returned: returned, emailed, refunded, refund_amount: refundAmount });
 }
 
 // Cleans up a booking's synced calendar event after an admin-side cancel

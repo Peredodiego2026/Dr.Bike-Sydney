@@ -82,6 +82,7 @@ function byId(id) {
   byId('auto-wire-5').addEventListener('click', function (event) {
     document.getElementById('cancel-modal').style.display = 'none';
   });
+  byId('cancel-reason').addEventListener('change', syncCancelRefund);
   byId('auto-wire-6').addEventListener('click', function (event) {
     doReassign(1);
   });
@@ -3428,7 +3429,30 @@ function openCancel(id) {
   document.getElementById('cancel-booking-id').value = id;
   document.getElementById('cancel-notes').value = '';
   document.getElementById('cancel-notify').checked = true;
+  // The refund box only for a visit fee charged through Stripe on a job that
+  // is not finished. A booking opened from a screen that did not load it
+  // shows no box, and the cancel refunds nothing - the old behaviour.
+  const b = allBookings.find((x) => x.id === id);
+  const fee = Number(b?.callout_fee) || 0;
+  document.getElementById('cancel-refund-row').style.display =
+    b?.stripe_payment_intent_id && !b.completed_at ? 'flex' : 'none';
+  document.getElementById('cancel-refund-label').textContent = fee
+    ? `Refund the $${fee} visit fee`
+    : 'Refund the visit fee';
+  syncCancelRefund();
   document.getElementById('cancel-modal').style.display = 'flex';
+}
+
+// Ticked by the same rule as the client's own cancel (terms.html section 6):
+// the fee goes back, unless the client is the one cancelling with less than
+// 24 hours to go. Re-applied when the reason changes; Diego can still untick.
+function syncCancelRefund() {
+  const id = document.getElementById('cancel-booking-id').value;
+  const b = allBookings.find((x) => x.id === id);
+  const reason = document.getElementById('cancel-reason').value;
+  const at = b ? new Date(`${b.scheduled_date}T${(b.scheduled_time || '00:00').slice(0, 5)}:00`) : null;
+  const late = at && !Number.isNaN(at.getTime()) && at.getTime() - Date.now() < 24 * 3600 * 1000;
+  document.getElementById('cancel-refund').checked = !(reason === 'Client request' && late);
 }
 
 async function confirmCancel() {
@@ -3442,6 +3466,8 @@ async function confirmCancel() {
   let upd;
   let partsBack = 0;
   let emailed = null;
+  let refunded = null;
+  let refundAmount = 0;
   try {
     // reason_code picks the line the client reads; the notes stay internal.
     const d = await photosApi('admin-cancel-booking', {
@@ -3449,10 +3475,15 @@ async function confirmCancel() {
       reason: fullReason,
       reason_code: reason,
       notify_client: document.getElementById('cancel-notify').checked,
+      refund:
+        document.getElementById('cancel-refund-row').style.display !== 'none' &&
+        document.getElementById('cancel-refund').checked,
     });
     upd = [d.booking];
     partsBack = Object.values(d.parts_returned || {}).reduce((s, q) => s + q, 0);
     emailed = d.emailed ?? null;
+    refunded = d.refunded ?? null;
+    refundAmount = Number(d.refund_amount) || 0;
   } catch (e) {
     showToast('Could not cancel: ' + e.message);
     return;
@@ -3468,6 +3499,11 @@ async function confirmCancel() {
     (partsBack
       ? `Booking cancelled · ${partsBack} part${partsBack === 1 ? '' : 's'} back in stock`
       : 'Booking cancelled') +
+      (refunded === true
+        ? ` · $${refundAmount} refunded`
+        : refunded === false
+          ? ' · refund FAILED - do it in Stripe'
+          : '') +
       (emailed === true
         ? ' · client emailed'
         : emailed === false
