@@ -15,6 +15,7 @@ import {
   MAX_JSON_BYTES,
 } from './_backup.js';
 import { withSentry } from './_sentry.js';
+import { emailFrame, emailButton, INK, MUTED, RULE, PAPER, BLUE } from './_email-frame.js';
 
 // api/send-cron.js — All scheduled/cron email jobs in one function
 // Routes: ?type=birthday | reengagement | abandoned | service
@@ -875,7 +876,11 @@ async function handleServiceReminders(req, res) {
       (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' })[c]
     );
 
-  async function sendReminder(email, name, serviceName, subject, bodyHtml) {
+  // The tip under the text, the same box in both reminders.
+  const tip = (text) =>
+    `<div style="background:${PAPER};border-left:3px solid ${BLUE};padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:${INK}">${text}</div>`;
+
+  async function sendReminder(email, subject, title, bodyHtml) {
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -886,21 +891,10 @@ async function handleServiceReminders(req, res) {
         from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
         to: email,
         subject,
-        html: `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;background:#fff">
-          <div style="background:#0D1F3C;padding:28px 32px;display:flex;align-items:center;gap:12px">
-            <img src="https://drbikesydney.com.au/images/logo-db.png" alt="Dr. Bike Sydney" height="28" style="width:auto;display:block">
-            <span style="color:#fff;font-size:18px;font-weight:700">Dr. Bike Sydney</span>
-          </div>
-          <div style="padding:32px">
-            ${bodyHtml}
-            <div style="margin-top:28px">
-              <a href="https://drbikesydney.com.au" style="display:inline-block;background:#2563EB;color:#fff;padding:13px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:700">Book Your Next Service →</a>
-            </div>
-          </div>
-          <div style="padding:16px 32px;background:#F8FAFC;font-size:12px;color:#94A3B8;text-align:center">
-            Dr. Bike Sydney · <a href="mailto:contact@drbikesydney.com.au" style="color:#475569;text-decoration:none">contact@drbikesydney.com.au</a> · 0433 963 250
-          </div>
-        </div>`,
+        html: emailFrame({
+          title,
+          body: `${bodyHtml}<p style="margin:26px 0 0">${emailButton('https://drbikesydney.com.au', 'Book your next service →')}</p>`,
+        }),
       }),
     }).catch((e) => ({ ok: false, _err: e.message }));
     if (!r.ok) logSendFailure('service-reminder', r, email);
@@ -938,17 +932,13 @@ async function handleServiceReminders(req, res) {
       const daysLeft = Math.ceil((new Date(b.next_service_date) - now) / (1000 * 60 * 60 * 24));
       const ok = await sendReminder(
         email,
-        name,
-        svc,
         `Your mechanic recommends a service soon — ${dateLabel}`,
-        `<h2 style="color:#0D1F3C;margin:0 0 12px">Hi ${name}!</h2>
-         <p style="color:#475569;line-height:1.7;margin:0 0 16px">
-           Your mechanic recommended scheduling your next <strong>${svc}</strong> service soon.
+        `Hi ${name}!`,
+        `<p style="margin:0 0 16px">
+           Your mechanic recommended scheduling your next <strong style="color:${INK}">${svc}</strong> service soon.
            ${daysLeft <= 2 ? '<br><span style="color:#CF2020;font-weight:600">Your recommended service date is in ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + '.</span>' : 'The recommended date is in <strong>' + daysLeft + ' days</strong> (' + dateLabel + ').'}
          </p>
-         <div style="background:#EEF3FC;border-left:3px solid #2563EB;padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#2563EB">
-           Regular servicing keeps your bike safe and extends the life of components.
-         </div>`
+         ${tip('Regular servicing keeps your bike safe and extends the life of components.')}`
       );
       if (ok) {
         await sb
@@ -998,17 +988,13 @@ async function handleServiceReminders(req, res) {
         const svc = esc(b.service_name || 'service');
         const ok = await sendReminder(
           email,
-          name,
-          svc,
           `Time for your next bike service — ${months} months since your ${svc}`,
-          `<h2 style="color:#0D1F3C;margin:0 0 12px">Hi ${name}, time for a service! 🔧</h2>
-           <p style="color:#475569;line-height:1.7;margin:0 0 16px">
-             It's been about <strong>${months} months</strong> since your <strong>${svc}</strong>.
+          `Hi ${name}, time for a service!`,
+          `<p style="margin:0 0 16px">
+             It's been about <strong style="color:${INK}">${months} months</strong> since your <strong style="color:${INK}">${svc}</strong>.
              Regular servicing keeps your bike running smoothly and prevents costly repairs.
            </p>
-           <div style="background:#EEF3FC;border-left:3px solid #2563EB;padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#2563EB">
-             Book now and we'll come to you — home, office or local park across Sydney.
-           </div>`
+           ${tip("Book now and we'll come to you — home, office or local park across Sydney.")}`
         );
         if (ok) {
           await sb
@@ -1095,7 +1081,7 @@ async function handleUpsell(req, res) {
     .filter((i) => ITEMS[i])
     .map((i) => {
       const u = ITEMS[i];
-      return `<tr><td style="padding:10px 12px;border-bottom:1px solid #E2E8F0"><strong>${u.label}</strong><br><span style="font-size:12px;color:#475569">${u.desc}</span></td><td style="padding:10px 12px;border-bottom:1px solid #E2E8F0;text-align:right;font-weight:700;color:#0A58CA">$${u.price}</td></tr>`;
+      return `<tr><td style="padding:12px;border-top:1px solid ${RULE};color:${INK}"><strong>${u.label}</strong><br><span style="font-size:12px;color:${MUTED}">${u.desc}</span></td><td style="padding:12px;border-top:1px solid ${RULE};text-align:right;font-weight:700;color:${BLUE};white-space:nowrap">$${u.price}</td></tr>`;
     })
     .join('');
   if (!rows) return res.status(200).json({ success: true, sent: false });
@@ -1110,16 +1096,15 @@ async function handleUpsell(req, res) {
       from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
       to: email,
       subject: `Your mechanic found items needing attention — ${booking.service_name || 'your service'}`,
-      html: `<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto">
-        <div style="background:#0D1F3C;padding:24px;text-align:center"><h1 style="color:#fff;font-size:20px;margin:0">DR BIKE SYDNEY</h1></div>
-        <div style="padding:32px 24px">
-          <h2 style="color:#0D1F3C">Hi ${name}, your mechanic found some things that need attention 🔧</h2>
-          <table style="width:100%;border-collapse:collapse;margin:20px 0;border:1px solid #E2E8F0"><thead><tr style="background:#F8FAFC"><th style="padding:10px 12px;text-align:left;font-size:13px;color:#475569">Recommended Service</th><th style="padding:10px 12px;text-align:right;font-size:13px;color:#475569">Price</th></tr></thead><tbody>${rows}</tbody></table>
-          <p style="color:#475569;line-height:1.7;font-size:14px">Call <a href="tel:+61433963250">0433 963 250</a> to add these to your current service.</p>
-          <a href="https://drbikesydney.com.au" style="display:inline-block;background:#0A58CA;color:#fff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:700">Book Follow-Up →</a>
-        </div>
-        <div style="padding:16px;background:#F8FAFC;font-size:12px;color:#94A3B8;text-align:center">Dr. Bike Sydney · contact@drbikesydney.com.au</div>
-      </div>`,
+      html: emailFrame({
+        title: `Hi ${name}, your mechanic found a few things that need attention`,
+        body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid ${RULE};margin:0 0 20px">
+            <tr><th bgcolor="${PAPER}" style="padding:10px 12px;background:${PAPER};text-align:left;font-size:12px;color:${MUTED}">Recommended service</th><th bgcolor="${PAPER}" style="padding:10px 12px;background:${PAPER};text-align:right;font-size:12px;color:${MUTED}">Price</th></tr>
+            ${rows}
+          </table>
+          <p style="margin:0 0 24px">Call <a href="tel:+61433963250" style="color:${BLUE};font-weight:600">0433 963 250</a> to add these to your current service.</p>
+          <p style="margin:0">${emailButton('https://drbikesydney.com.au', 'Book a follow-up →')}</p>`,
+      }),
     }),
   });
   return res.status(resp.ok ? 200 : 500).json({ success: resp.ok, sent: resp.ok });
@@ -1180,14 +1165,10 @@ async function handleB2B(req, res) {
       from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
       to: email,
       subject: `We received your fleet enquiry — Dr. Bike Sydney`,
-      html: `<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto">
-        <div style="background:#0D1F3C;padding:24px;text-align:center"><h1 style="color:#fff;font-size:20px;margin:0">DR BIKE SYDNEY</h1></div>
-        <div style="padding:32px 24px">
-          <h2>Thanks for your enquiry, ${contactName}!</h2>
-          <p style="color:#475569;line-height:1.7">We received your fleet enquiry for <strong>${businessName}</strong> (${fleetSize} bikes). We'll get back to you within <strong>2 business hours</strong> (every day 8am–5pm, Sydney time).</p>
-        </div>
-        <div style="padding:16px;background:#F8FAFC;font-size:12px;color:#94A3B8;text-align:center">Dr. Bike Sydney · contact@drbikesydney.com.au</div>
-      </div>`,
+      html: emailFrame({
+        title: `Thanks for your enquiry, ${contactName}!`,
+        body: `<p style="margin:0">We received your fleet enquiry for <strong style="color:${INK}">${businessName}</strong> (${fleetSize} bikes). We'll get back to you within <strong style="color:${INK}">2 business hours</strong> (every day 8am–5pm, Sydney time).</p>`,
+      }),
     });
   } catch (e) {
     console.error('[b2b]', e.message);

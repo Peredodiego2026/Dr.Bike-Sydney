@@ -212,6 +212,10 @@ function buildWAMessage(template, data, lang) {
           : `⚠️ Debía reembolsarse ${amount} (más de 24h de anticipación) pero no se pudo procesar automáticamente. Revisa manualmente en Stripe.`;
       return `⚠️ Cancelación de cliente\n\n${status}\n\n👤 ${d.clientName || 'Cliente'}\n🔧 ${d.service || 'Servicio'}\n📅 ${d.date || ''} a las ${d.time || ''}\n⏱️ Canceló con ${d.hours ?? '—'} horas de anticipación (más de 24h)`;
     }
+    case 'client_rescheduled':
+      // A move made by the client waits for Diego: the booking is 'pending'
+      // until he confirms it from the admin (api/auth.js rescheduleBookingCore).
+      return `📅 Un cliente reprogramó su reserva\n\nDiego, la reserva queda PENDIENTE hasta que la confirmes en Admin.\n\n👤 ${d.clientName || 'Cliente'}\n🔧 ${d.service || 'Servicio'}\n❌ Antes: ${d.oldDate || '—'} a las ${d.oldTime || '—'}\n✅ Ahora: ${d.newDate || ''} a las ${d.newTime || ''}\n\nConfirmar: https://drbikesydney.com.au/admin.html`;
     case 'invoice_pdf_failed':
       return `⚠️ Factura sin PDF adjunto\n\nDiego, el PDF de la factura no se pudo generar. El cliente igual recibió el email con el resumen del servicio, pero sin el adjunto.\n\n👤 ${d.clientName || 'Cliente'}\n🔧 ${d.service || 'Servicio'}\n🧾 ${d.invoiceNumber || '—'}\n\nRevisar: https://drbikesydney.com.au/admin.html`;
     case 'shop_order': {
@@ -245,6 +249,7 @@ async function handleWhatsApp(req, res) {
       'reminder',
       'new_booking',
       'client_cancelled',
+      'client_rescheduled',
       'noshow_alert',
       'invoice_pdf_failed',
       'shop_order',

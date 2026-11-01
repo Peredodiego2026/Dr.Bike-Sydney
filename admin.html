@@ -392,10 +392,15 @@
             <option value="Other">Other</option>
           </select>
         </div>
-        <div style="margin-bottom:16px">
+        <div style="margin-bottom:8px">
           <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Notes (optional)</div>
           <textarea id="cancel-notes" class="inp" style="height:70px;resize:none" placeholder="Additional notes..."></textarea>
         </div>
+        <!-- The client gets the reason, never the notes. -->
+        <label style="display:flex;align-items:center;gap:10px;min-height:44px;margin-bottom:12px;font-size:13px;color:var(--navy);cursor:pointer">
+          <input type="checkbox" id="cancel-notify" checked style="width:18px;height:18px;accent-color:var(--blue);cursor:pointer">
+          <span>Email the client <span style="color:var(--gray)">(upcoming bookings only)</span></span>
+        </label>
         <div style="display:flex;gap:10px">
           <button style="flex:1;background:var(--red);color:#fff;border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans)" id="auto-wire-4">Cancel booking</button>
           <button style="flex:1;background:var(--off);color:var(--navy);border:1.5px solid var(--border);border-radius:8px;padding:11px;font-size:14px;font-weight:500;cursor:pointer;font-family:var(--sans)" id="auto-wire-5">Go back</button>
@@ -1701,5 +1706,5 @@
 
 
 <script type="module" src="js/shop-import.js?v=bfc77bc7e1"></script>
-<script src="js/admin.js?v=6630ea1664"></script>
+<script src="js/admin.js?v=637079d13a"></script>
 </body></html>

@@ -3199,7 +3199,7 @@ export async function handleClientCancel(req, res) {
   if (userData.id !== client_id) return res.status(403).json({ error: 'Forbidden' });
 
   const bkResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_name,service_name,scheduled_date,scheduled_time,stripe_payment_intent_id,callout_fee,google_event_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
+    `${SUPABASE_URL}/rest/v1/bookings?select=id,status,client_id,client_name,client_email,client_lang,service_name,address,scheduled_date,scheduled_time,stripe_payment_intent_id,callout_fee,google_event_id&id=eq.${encodeURIComponent(booking_id)}&limit=1`,
     { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
   );
   if (!bkResp.ok) return res.status(500).json({ error: 'Database error' });
@@ -3325,29 +3325,76 @@ async function notifyAdminCancellation(bk, SERVICE_KEY) {
   }
 
   const base = SELF_BASE_URL;
-  await fetch(`${base}/api/send-message?channel=whatsapp`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-internal-token': process.env.INTERNAL_API_SECRET || '',
-    },
-    body: JSON.stringify({
-      to: '0433963250',
-      template: 'client_cancelled',
-      data: {
-        clientName: bk.client_name || 'Cliente',
-        service: bk.service_name || 'Servicio',
-        date: bk.scheduled_date,
-        time: bk.scheduled_time,
-        hours,
-        refund: eligibleForRefund,
-        refunded,
-        refundAttempted,
-        amount: refundAmount,
-        charged: !!bk.stripe_payment_intent_id,
+  const charged = !!bk.stripe_payment_intent_id;
+  // Side by side, so a WhatsApp that fails cannot keep the client's email
+  // from going out, nor the other way round.
+  await Promise.allSettled([
+    fetch(`${base}/api/send-message?channel=whatsapp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-token': process.env.INTERNAL_API_SECRET || '',
       },
+      body: JSON.stringify({
+        to: '0433963250',
+        template: 'client_cancelled',
+        data: {
+          clientName: bk.client_name || 'Cliente',
+          service: bk.service_name || 'Servicio',
+          date: bk.scheduled_date,
+          time: bk.scheduled_time,
+          hours,
+          refund: eligibleForRefund,
+          refunded,
+          refundAttempted,
+          amount: refundAmount,
+          charged,
+        },
+      }),
     }),
-  });
+    emailClientCancellation(bk, {
+      cancelReason: 'client',
+      // What happened to the fee, not what the policy says should: a refund
+      // Stripe refused is 'contact' - Diego does it by hand.
+      refundState: !charged ? '' : !eligibleForRefund ? 'late' : refunded ? 'refunded' : 'contact',
+      refundAmount,
+    }),
+  ]);
+}
+
+// The client's copy of a cancellation, in their language. Until 01-nov-2026
+// the template existed and nothing sent it: a cancelled client heard nothing.
+// Returns whether Resend took it, so the admin can be told when it did not.
+async function emailClientCancellation(bk, { cancelReason, refundState, refundAmount }) {
+  if (!bk.client_email) return false;
+  try {
+    const r = await fetch(`${SELF_BASE_URL}/api/send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+      },
+      body: JSON.stringify({
+        type: 'cancellation_client',
+        to: bk.client_email,
+        name: bk.client_name || bk.client_email.split('@')[0],
+        service: bk.service_name || '',
+        date: bk.scheduled_date || '',
+        time: bk.scheduled_time || '',
+        address: bk.address || '',
+        bookingId: bk.id,
+        lang: ['en', 'es', 'zh'].includes(bk.client_lang) ? bk.client_lang : 'en',
+        cancelReason,
+        refundState,
+        refundAmount,
+      }),
+    });
+    if (!r.ok) console.error('[cancel] client email failed:', bk.id, r.status);
+    return r.ok;
+  } catch (e) {
+    console.error('[cancel] client email threw:', bk.id, e.message);
+    return false;
+  }
 }
 
 async function notifyWaitlist(SERVICE_KEY, date, time) {
@@ -3365,24 +3412,35 @@ async function notifyWaitlist(SERVICE_KEY, date, time) {
   const entry = entries[0];
   const RESEND_KEY = process.env.RESEND_API_KEY;
   if (!RESEND_KEY) return;
+  // The name and service were typed by the client when they joined the list.
+  const esc = (s) =>
+    String(s || '').replace(
+      /[<>&"']/g,
+      (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' })[c]
+    );
+  // "Wed, 11 Nov", not the "2026-11-11" the column stores.
+  const day = /^\d{4}-\d{2}-\d{2}$/.test(date)
+    ? new Date(`${date}T00:00:00Z`).toLocaleDateString('en-AU', {
+        timeZone: 'UTC',
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+      })
+    : esc(date);
+  const svc = esc(entry.service_name);
   await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
       to: [entry.client_email],
-      subject: `A slot just opened up for ${date}!`,
-      html: `<div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;padding:24px">
-        <div style="background:#0D1F3C;border-radius:12px 12px 0 0;padding:20px 24px">
-          <span style="color:#fff;font-weight:800;font-size:18px">Dr. Bike Sydney</span>
-        </div>
-        <div style="border:1px solid #E2E8F0;border-top:none;border-radius:0 0 12px 12px;padding:28px 24px">
-          <p style="font-size:16px;font-weight:700;color:#0D1F3C;margin:0 0 8px">Good news, ${entry.client_name || 'there'}!</p>
-          <p style="color:#475569;margin:0 0 20px">A slot just opened up on <strong>${date}</strong> at <strong>${time}</strong>${entry.service_name ? ' for ' + entry.service_name : ''}. Book now before it fills up again.</p>
-          <a href="https://drbikesydney.com.au" style="display:inline-block;background:#2563EB;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700">Book Now</a>
-          <p style="color:#94A3B8;font-size:12px;margin-top:24px">You're receiving this because you joined the waitlist for ${date}.</p>
-        </div>
-      </div>`,
+      subject: `A slot just opened up for ${day}!`,
+      html: emailFrame({
+        title: `Good news, ${esc(entry.client_name) || 'there'}!`,
+        body: `<p style="margin:0 0 24px">A slot just opened up on <strong style="color:${INK}">${day}</strong> at <strong style="color:${INK}">${esc(time)}</strong>${svc ? ' for ' + svc : ''}. Book now before it fills up again.</p>
+          <p style="margin:0 0 24px">${emailButton('https://drbikesydney.com.au', 'Book now')}</p>
+          <p style="margin:0;font-size:12px;color:${FAINT}">You're receiving this because you joined the waitlist for ${day}.</p>`,
+      }),
     }),
   });
   await sb
@@ -3391,7 +3449,7 @@ async function notifyWaitlist(SERVICE_KEY, date, time) {
     .eq('id', entry.id);
 }
 
-async function handleJoinWaitlist(req, res) {
+export async function handleJoinWaitlist(req, res) {
   const { access_token, client_id, email, name, date, preferred_times, service_name } = req.body;
   if (!email || !date || !Array.isArray(preferred_times) || !preferred_times.length)
     return res.status(400).json({ error: 'email, date, preferred_times required' });
@@ -3400,6 +3458,7 @@ async function handleJoinWaitlist(req, res) {
 
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
   let uid = null;
+  let authEmail = '';
   let clientName = name || '';
 
   if (access_token) {
@@ -3409,6 +3468,7 @@ async function handleJoinWaitlist(req, res) {
     if (userResp.ok) {
       const u = await userResp.json();
       uid = u.id || null;
+      authEmail = u.email || '';
       clientName = clientName || u.user_metadata?.full_name || u.user_metadata?.name || '';
     }
   }
@@ -3425,7 +3485,7 @@ async function handleJoinWaitlist(req, res) {
     if (existing?.length) return res.status(200).json({ ok: true, already: true });
   }
 
-  await sb.from('waitlist').insert([
+  const { error: insErr } = await sb.from('waitlist').insert([
     {
       client_id: uid,
       client_name: clientName,
@@ -3436,6 +3496,42 @@ async function handleJoinWaitlist(req, res) {
       status: 'waiting',
     },
   ]);
+  if (insErr) {
+    console.error('[waitlist] insert failed:', insErr.message);
+    return res.status(500).json({ error: 'Could not join the waitlist - please try again.' });
+  }
+
+  // The confirmation template existed and nothing sent it until 01-nov-2026.
+  // It goes to the signed-in account's own address, never to the body's
+  // `email`: that is whatever the caller typed, and this must not become a way
+  // to make us mail strangers. Awaited - Vercel can freeze the function once
+  // the response is out.
+  if (uid && authEmail) {
+    const { data: prof } = await sb
+      .from('profiles')
+      .select('preferred_lang')
+      .eq('id', uid)
+      .limit(1);
+    const lang = prof?.[0]?.preferred_lang;
+    await fetch(`${SELF_BASE_URL}/api/send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+      },
+      body: JSON.stringify({
+        type: 'waitlist_confirmation',
+        to: authEmail,
+        name: clientName || authEmail.split('@')[0],
+        date,
+        lang: ['en', 'es', 'zh'].includes(lang) ? lang : 'en',
+      }),
+    })
+      .then((r) => {
+        if (!r.ok) console.error('[waitlist] confirmation email failed:', r.status);
+      })
+      .catch((e) => console.error('[waitlist] confirmation email threw:', e.message));
+  }
 
   return res.status(200).json({ ok: true });
 }
@@ -3593,7 +3689,7 @@ async function handleRequestPasswordReset(req, res) {
   return genericOk();
 }
 
-async function handleApplyReferral(req, res) {
+export async function handleApplyReferral(req, res) {
   const { access_token, referral_code } = req.body;
   if (!access_token || !referral_code)
     return res.status(400).json({ error: 'access_token and referral_code required' });
@@ -3648,6 +3744,43 @@ async function handleApplyReferral(req, res) {
       })
       .eq('id', user.id),
   ]);
+
+  // Tell the referrer. The template existed and nothing sent it until
+  // 01-nov-2026. Read apart from the lookup above and allowed to fail: a
+  // missing column here must cost the email, never the referral itself.
+  const { data: refRows } = await sb
+    .from('profiles')
+    .select('email, full_name, preferred_lang')
+    .eq('id', referrer.id)
+    .limit(1);
+  const ref = refRows?.[0];
+  if (ref?.email) {
+    await fetch(`${SELF_BASE_URL}/api/send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+      },
+      body: JSON.stringify({
+        type: 'referral_success',
+        to: ref.email,
+        name: String(ref.full_name || '').split(' ')[0] || ref.email.split('@')[0],
+        // "Maria G.", not the friend's full name or address.
+        // No name: the template says "a friend" - not shortClientName's
+        // "Dr. Bike client", which is meant for public reviews.
+        friendName:
+          user.user_metadata?.full_name || user.user_metadata?.name
+            ? shortClientName(user.user_metadata?.full_name || user.user_metadata?.name)
+            : '',
+        referralCount: (referrer.referral_count || 0) + 1,
+        lang: ['en', 'es', 'zh'].includes(ref.preferred_lang) ? ref.preferred_lang : 'en',
+      }),
+    })
+      .then((r) => {
+        if (!r.ok) console.error('[referral] referrer email failed:', r.status);
+      })
+      .catch((e) => console.error('[referral] referrer email threw:', e.message));
+  }
 
   return res.status(200).json({ ok: true, credit: CREDIT });
 }
@@ -3726,6 +3859,11 @@ async function rescheduleBookingCore(
     updatePayload.reminder_2h_sent = false;
     updatePayload.noshow_alert_sent = false;
   }
+  // Diego, 01-nov-2026: confirmed only when the admin accepts the time. A move
+  // made from the admin IS that acceptance; one made by the client goes back
+  // to 'pending' until he confirms it.
+  if (!byClient) updatePayload.status = 'confirmed';
+  else if (moved) updatePayload.status = 'pending';
 
   const updateResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?id=eq.${encodeURIComponent(bk.id)}`,
@@ -3818,6 +3956,7 @@ async function rescheduleBookingCore(
           oldTime,
           durationMin: svcData?.[0]?.duration_max || DEFAULT_SERVICE_DURATION_MIN,
           lang: ['en', 'es', 'zh'].includes(bk.client_lang) ? bk.client_lang : 'en',
+          confirmed: !byClient,
         }),
       });
       emailed = r.ok;
@@ -3825,6 +3964,33 @@ async function rescheduleBookingCore(
     } catch (e) {
       console.error('[reschedule] email threw:', bk.id, e.message);
     }
+  }
+
+  // The client's move is now waiting on Diego, so he has to hear about it.
+  if (byClient) {
+    await fetch(`${SELF_BASE_URL}/api/send-message?channel=whatsapp`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-token': process.env.INTERNAL_API_SECRET || '',
+      },
+      body: JSON.stringify({
+        to: '0433963250',
+        template: 'client_rescheduled',
+        data: {
+          clientName: bk.client_name || 'Cliente',
+          service: bk.service_name || 'Servicio',
+          oldDate,
+          oldTime,
+          newDate: scheduled_date,
+          newTime: scheduled_time,
+        },
+      }),
+    })
+      .then((r) => {
+        if (!r.ok) console.error('[reschedule] WhatsApp to admin failed:', bk.id, r.status);
+      })
+      .catch((e) => console.error('[reschedule] WhatsApp to admin threw:', bk.id, e.message));
   }
 
   return { ok: true, emailed };
@@ -6816,7 +6982,32 @@ export async function handleAdminCancelBooking(req, res) {
   if (!Array.isArray(rows) || !rows.length)
     return res.status(409).json({ error: 'Booking not found or already cancelled' });
   const returned = await revertJobStock(id, SERVICE_KEY, String(auth.user?.email || 'admin'));
-  return res.status(200).json({ booking: rows[0], parts_returned: returned });
+  const bk = rows[0];
+  // Only a visit that was still ahead is news to the client: cancelling a
+  // finished job to put its parts back, or a past one, is bookkeeping. null =
+  // not attempted, so the admin's toast only speaks when an email was tried.
+  let emailed = null;
+  if (
+    req.body?.notify_client !== false &&
+    bk.client_email &&
+    !bk.completed_at &&
+    String(bk.scheduled_date || '') >= sydneyToday()
+  ) {
+    const reasons = {
+      'Client request': 'client',
+      'Mechanic unavailable': 'mechanic',
+      Weather: 'weather',
+    };
+    emailed = await emailClientCancellation(bk, {
+      cancelReason: Object.hasOwn(reasons, req.body?.reason_code)
+        ? reasons[req.body.reason_code]
+        : '',
+      // An admin cancel refunds nothing by itself - Diego does it by hand.
+      refundState: bk.stripe_payment_intent_id ? 'contact' : '',
+      refundAmount: Number(bk.callout_fee) || 0,
+    });
+  }
+  return res.status(200).json({ booking: bk, parts_returned: returned, emailed });
 }
 
 // Cleans up a booking's synced calendar event after an admin-side cancel
@@ -7484,6 +7675,7 @@ async function readPostHog(days) {
 import { handleShop } from './_shop.js';
 import { handleShopAdmin } from './_shop-admin.js';
 import { withSentry, captureMessage } from './_sentry.js';
+import { emailFrame, emailButton, INK, FAINT } from './_email-frame.js';
 export default withSentry(handler, 'auth');
 async function handler(req, res) {
   const role = req.body?.type || req.body?.role || req.query?.role || 'admin';

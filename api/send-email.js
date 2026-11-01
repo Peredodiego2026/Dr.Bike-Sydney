@@ -157,6 +157,31 @@ async function handler(req, res) {
       `&amp;dates=${stamp(newSlot.at)}/${stamp(end)}&amp;ctz=Australia/Sydney` +
       `&amp;location=${encodeURIComponent(String(req.body.address || '').slice(0, 200))}`;
   }
+  // Moved by the admin: the new time is accepted. Moved by the client: it waits
+  // for the admin to confirm it, so the email does not say "confirmed".
+  const reschedConfirmed = req.body.confirmed !== false;
+
+  // Cancellation (api/auth.js). Why it was cancelled - the admin's reason, never
+  // their notes - and what happened to the visit fee, as it actually happened.
+  // Object.hasOwn, not a bare lookup: 'constructor' would find a function.
+  const cancelLines = {
+    client: ', your booking has been cancelled as requested.',
+    mechanic:
+      ", we're sorry: we had to cancel your booking because no mechanic is available at that time.",
+    weather: ", we're sorry: we had to cancel your booking because of the weather.",
+  };
+  const cancelLine = Object.hasOwn(cancelLines, req.body.cancelReason)
+    ? cancelLines[req.body.cancelReason]
+    : ', your booking has been cancelled.';
+  const feeAmount = `$${(Number(req.body.refundAmount) || 0).toFixed(2)}`;
+  const feeTexts = {
+    refunded: `We've refunded your ${feeAmount} visit fee. It can take 5–10 business days to show on your card.`,
+    late: 'It was cancelled less than 24 hours before the appointment, so the visit fee is not refundable under our terms.',
+    contact: `We'll be in touch about the ${feeAmount} visit fee you paid.`,
+  };
+  const feeText = Object.hasOwn(feeTexts, req.body.refundState)
+    ? feeTexts[req.body.refundState]
+    : '';
 
   const header = (color, emoji, title) => `
     <div style="font-family:Inter,Arial,sans-serif;max-width:580px;margin:0 auto;background:${WHITE};border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
@@ -346,7 +371,7 @@ async function handler(req, res) {
     // flex: Gmail and Outlook drop display:flex, and the tile has to sit beside
     // the text in both.
     rescheduled: {
-      subject: `📅 New time confirmed — ${service} · ${resched.dateLabel}`,
+      subject: `${reschedConfirmed ? '📅 New time confirmed —' : '📅 Booking rescheduled —'} ${service} · ${resched.dateLabel}`,
       html: `
     <div style="font-family:Inter,Arial,sans-serif;max-width:580px;margin:0 auto;background:${PAPER};border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
         <div style="padding:32px 28px">
@@ -361,13 +386,13 @@ async function handler(req, res) {
                 </div>
               </td>
               <td style="padding:24px;vertical-align:middle">
-                <div style="font-size:20px;font-weight:700;color:${INK};margin-bottom:6px">Rescheduled and confirmed</div>
+                <div style="font-size:20px;font-weight:700;color:${INK};margin-bottom:6px">${reschedConfirmed ? 'Rescheduled and confirmed' : 'New time received'}</div>
                 <div style="font-size:15px;color:${MUTED};margin-bottom:4px">${resched.time ? resched.time + ' · ' : ''}${service}</div>
                 ${address ? `<div style="font-size:14px;color:${MUTED}">${address}</div>` : ''}
               </td>
             </tr>
           </table>
-          <p style="color:${MUTED};font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:${INK}">${name}</strong>, your appointment has a new date and time. The previous slot is cancelled.</p>
+          <p style="color:${MUTED};font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:${INK}">${name}</strong>${reschedConfirmed ? ', your appointment has a new date and time. The previous slot is cancelled.' : ", we've moved your appointment to the new date and time. We'll confirm it shortly. The previous slot is cancelled."}</p>
           <table role="presentation" style="width:100%;border-collapse:collapse;margin-bottom:20px">
             <tr>
               ${resched.calUrl ? `<td style="width:50%;padding-right:6px"><a href="${resched.calUrl}" style="display:block;background:${WHITE};color:${INK};text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px;border:1px solid ${RULE}">Add to calendar</a></td>` : ''}
@@ -381,13 +406,17 @@ async function handler(req, res) {
       subject: `❌ Booking cancelled — ${service} · ${date}`,
       html: `${header('#CF2020', '❌', 'Booking cancelled')}
         <div style="padding:32px 28px">
-          <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, your booking has been cancelled as requested.</p>
+          <p style="color:${MUTED};font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:${INK}">${name}</strong>${cancelLine}</p>
           ${bookingTable()}
-          <div style="background:#FEF2F2;border-radius:12px;padding:16px;margin-bottom:20px">
-            <p style="font-size:13px;color:#CF2020;font-weight:600;margin:0 0 4px">Refund information</p>
-            <p style="font-size:12px;color:#CF2020;margin:0;opacity:0.8">If you paid online, your refund will be processed within 5–7 business days. For questions contact contact@drbikesydney.com.au</p>
-          </div>
-          <a href="https://drbikesydney.com.au" style="display:block;background:#0D1F3C;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Book again →</a>
+          ${
+            feeText
+              ? `<div style="background:${PAPER};border-left:3px solid ${BLUE};border-radius:0 10px 10px 0;padding:14px 16px;margin-bottom:20px">
+            <p style="font-size:13px;color:${INK};font-weight:600;margin:0 0 4px">Visit fee</p>
+            <p style="font-size:13px;color:${MUTED};margin:0;line-height:1.6">${feeText}</p>
+          </div>`
+              : ''
+          }
+          <a href="https://drbikesydney.com.au" style="display:block;background:${INK};color:${WHITE};text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Book again →</a>
         </div>${footer()}`,
     },
     cancellation_admin: {
@@ -406,7 +435,7 @@ async function handler(req, res) {
       subject: `🎉 Your referral worked — $15 credit earned!`,
       html: `${header('#15803D', '🎉', 'Referral successful!')}
         <div style="padding:32px 28px">
-          <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, great news — ${friendName || 'a friend'} just booked using your referral code!</p>
+          <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, great news — ${friendName || 'a friend'} just used your referral code!</p>
           <div style="background:#ECFDF5;border-radius:12px;padding:20px;margin-bottom:20px;text-align:center">
             <div style="font-size:32px;margin-bottom:8px">🎁</div>
             <div style="font-size:20px;font-weight:800;color:#15803D">$15 credit earned</div>
@@ -427,7 +456,7 @@ async function handler(req, res) {
           <p style="color:#475569;font-size:14px;margin:0 0 20px;line-height:1.6">Hi <strong style="color:#0D1F3C">${name}</strong>, you're on the waitlist for <strong>${date}</strong>.</p>
           <div style="background:#EEF3FC;border-radius:12px;padding:16px;margin-bottom:20px">
             <p style="font-size:13px;color:#2563EB;font-weight:600;margin:0 0 4px">What happens next?</p>
-            <p style="font-size:12px;color:#2563EB;margin:0;line-height:1.6">We'll send you an email the moment a slot opens up on that day. You'll have 30 minutes to complete your booking before it's offered to the next person on the list.</p>
+            <p style="font-size:12px;color:#2563EB;margin:0;line-height:1.6">If a slot opens up that day, we'll email you straight away. It goes to whoever books first, so book as soon as you get our email.</p>
           </div>
           <a href="https://drbikesydney.com.au/?action=book" style="display:block;background:#2563EB;color:#fff;text-decoration:none;text-align:center;padding:14px;border-radius:10px;font-weight:700;font-size:14px">Check other dates →</a>
         </div>${footer()}`,
