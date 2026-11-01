@@ -2235,21 +2235,30 @@ async function unblockSelected() {
   // van_number filter entirely, so choosing "All vans" deleted every van's
   // blocks (0, 1 AND 2) for that date/slot instead of just the "all vans"
   // ones. Found by Diego in production, 2026-08-23.
-  const { error } = await sb
+  //
+  // .select() returns the rows actually deleted. A delete that matches nothing
+  // is not an error, so without it a wrong van (the select defaults to Van 1)
+  // still said "unblocked" while the block stayed - Diego, 2026-11-01.
+  const { data: removed, error } = await sb
     .from('availability')
     .delete()
     .eq('date', date)
     .eq('available', false)
     .eq('van_number', van)
-    .in('time_slot', slots);
+    .in('time_slot', slots)
+    .select('time_slot');
   if (error) {
     showToast('Error: ' + error.message);
+    return;
+  }
+  if (!removed?.length) {
+    showToast('Nothing unblocked - no block for that van and time. Check the Van field.');
     return;
   }
 
   document.getElementById('block-modal').remove();
   showToast(
-    `✅ ${slots.length} slot${slots.length > 1 ? 's' : ''} unblocked for ${new Date(date + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}`
+    `✅ ${removed.length} slot${removed.length > 1 ? 's' : ''} unblocked for ${new Date(date + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}`
   );
   loadCalendar();
 }
@@ -2265,14 +2274,19 @@ async function unblockDate() {
   // Same column as saveBlocks writes. This filtered on `blocked` too, so
   // Unblock could not have worked even if Block had. `van` is always 0/1/2
   // (see unblockSelected() above for why `if (van)` was wrong to skip 0).
-  const { error } = await sb
+  const { data: removed, error } = await sb
     .from('availability')
     .delete()
     .eq('date', date)
     .eq('available', false)
-    .eq('van_number', van);
+    .eq('van_number', van)
+    .select('time_slot');
   if (error) {
     showToast('Error: ' + error.message);
+    return;
+  }
+  if (!removed?.length) {
+    showToast('Nothing unblocked - no block for that van on this date. Check the Van field.');
     return;
   }
 
