@@ -5,7 +5,7 @@
 // not throw. The row then fell back to `svc?.name || md.bk_service_name`, and
 // bk_service_name is 120 characters copied straight out of the page
 // (api/create-payment-session.js:46). js/mechanic.js rendered that field into
-// innerHTML unescaped, so one $25 call-out bought persistent script execution
+// innerHTML unescaped, so one visit fee bought persistent script execution
 // in the mechanic's app.
 //
 // This runs the function rather than reading its source: the earlier
