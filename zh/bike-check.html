@@ -39,6 +39,8 @@
   <script type="text/plain" data-consent="analytics" async src="https://www.googletagmanager.com/gtag/js?id=G-GXYD68JXZW"></script>
   <script type="text/plain" data-consent="analytics">window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-GXYD68JXZW');</script>
   <link rel="stylesheet" href="/css/variables.css">
+  <!-- Cloudflare Turnstile (bot protection on the newsletter form) -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:system-ui,-apple-system,sans-serif;background:#fff;color:#0D1F3C}
@@ -341,14 +343,35 @@ function restart(){
         加入
       </button>
     </div>
+    <div id="bcc-nl-turnstile" class="cf-turnstile" data-sitekey="0x4AAAAAAD46XeEV_Dvk2GA9"
+      style="display:flex;justify-content:center;margin-top:14px"></div>
+    <div id="bcc-nl-error" style="display:none;color:var(--red-edge);font-weight:600;font-size:13px;padding:10px">订阅失败，请重试。</div>
     <div id="bcc-nl-ok" style="display:none;color:#fff;font-weight:600;padding:12px">✅ 订阅成功！</div>
   </div>
   <script>
   async function bcNL(){
     const e=document.getElementById('bcc-nl-email').value.trim();
     if(!e)return;
-    try{await fetch('/api/subscribe-newsletter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,source:'bike_check',lang:document.documentElement.lang})})}catch(ex){}
+    // The server rejects a subscribe without the widget's token (403).
+    const t=document.querySelector('#bcc-nl-turnstile input[name="cf-turnstile-response"]');
+    const turnstileToken=t?t.value:'';
+    if(!turnstileToken){alert('请稍等安全验证完成后再试一次。');return;}
+    const btn=document.querySelector('#bcc-nl-form button');
+    const err=document.getElementById('bcc-nl-error');
+    btn.disabled=true;btn.style.opacity='.6';err.style.display='none';
+    try{
+      const r=await fetch('/api/subscribe-newsletter',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:e,source:'bike_check',lang:document.documentElement.lang,turnstileToken})});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+    }catch(ex){
+      // Until 2026-11-02 this said "You're subscribed!" whatever happened.
+      console.error('[newsletter] subscribe failed:',ex.message);
+      btn.disabled=false;btn.style.opacity='';err.style.display='block';
+      // Turnstile tokens are single-use - refresh so a retry gets a new one
+      try{if(window.turnstile)turnstile.reset('#bcc-nl-turnstile')}catch(e2){console.warn('[turnstile] reset failed:',e2.message)}
+      return;
+    }
     document.getElementById('bcc-nl-form').style.display='none';
+    document.getElementById('bcc-nl-turnstile').style.display='none';
     document.getElementById('bcc-nl-ok').style.display='block';
     if(window.gtag)gtag('event','newsletter_subscribe',{page:'bike_check'});
   }

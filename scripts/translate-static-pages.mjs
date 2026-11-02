@@ -143,6 +143,8 @@ const DICT = {
       'Privacy Policy': 'Política de Privacidad',
       Terms: 'Términos',
       'Please fill in all required fields.': 'Completá todos los campos obligatorios.',
+      'Please wait a moment for the security check to finish, then try again.':
+        'Esperá un momento a que termine la verificación de seguridad e intentá de nuevo.',
       'Sending...': 'Enviando...',
       'Something went wrong. Please email us at contact@drbikesydney.com.au':
         'Algo salió mal. Escribinos a contact@drbikesydney.com.au',
@@ -245,6 +247,8 @@ const DICT = {
       'Privacy Policy': '隐私政策',
       Terms: '条款',
       'Please fill in all required fields.': '请填写所有必填字段。',
+      'Please wait a moment for the security check to finish, then try again.':
+        '请稍等安全验证完成后再试一次。',
       'Sending...': '发送中……',
       'Something went wrong. Please email us at contact@drbikesydney.com.au':
         '出了点问题。请发邮件至 contact@drbikesydney.com.au',
@@ -377,6 +381,9 @@ const DICT = {
       'Email address': 'Correo electrónico',
       Join: 'Unirme',
       '✅ You\'re subscribed!': '✅ ¡Ya estás suscripto!',
+      'Could not subscribe. Please try again.': 'No se pudo suscribir. Por favor, intentá de nuevo.',
+      'Please wait a moment for the security check to finish, then try again.':
+        'Esperá un momento a que termine la verificación de seguridad e intentá de nuevo.',
       'Bike Safety Check': 'Chequeo de Seguridad',
     },
     zh: {
@@ -502,6 +509,9 @@ const DICT = {
       'Email address': '电子邮箱',
       Join: '加入',
       '✅ You\'re subscribed!': '✅ 订阅成功！',
+      'Could not subscribe. Please try again.': '订阅失败，请重试。',
+      'Please wait a moment for the security check to finish, then try again.':
+        '请稍等安全验证完成后再试一次。',
       'Bike Safety Check': '自行车安全检测',
     },
   },
