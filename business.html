@@ -170,6 +170,12 @@
       </select>
     </div>
     <div class="field"><label>Tell us more (optional)</label><textarea id="biz-notes" placeholder="Type of bikes, location, any specific issues..."></textarea></div>
+    <!-- Cloudflare Turnstile: the server rejects an enquiry without its token -->
+    <div id="biz-turnstile" class="cf-turnstile" data-sitekey="0x4AAAAAAD46XeEV_Dvk2GA9"></div>
+    <!-- The 300px widget is wider than this card on a phone. The script tag
+         comes after this line so the size is set before the widget renders. -->
+    <script>if (innerWidth < 420) document.getElementById('biz-turnstile').dataset.size = 'compact';</script>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <button class="submit-btn" onclick="submitB2B()">Send Enquiry →</button>
     <div class="success-msg" id="success-msg">✅ Enquiry sent! We'll be in touch within 2 business hours.</div>
   </div>
@@ -192,13 +198,19 @@ async function submitB2B() {
   const email = document.getElementById('biz-email').value.trim();
   const fleet = document.getElementById('biz-fleet').value;
   if (!name || !contact || !email || !fleet) { alert('Please fill in all required fields.'); return; }
+  // The widget solves in the background on page load; the token lands in a
+  // hidden input inside its container.
+  const tokenInput = document.querySelector('#biz-turnstile input[name="cf-turnstile-response"]');
+  const token = tokenInput ? tokenInput.value : '';
+  if (!token) { alert('Please wait a moment for the security check to finish, then try again.'); return; }
   const btn = document.querySelector('.submit-btn');
   btn.textContent = 'Sending...'; btn.disabled = true;
   try {
-    await fetch('/api/send-b2b-inquiry', {
+    const resp = await fetch('/api/send-b2b-inquiry', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
+        'cf-turnstile-response': token,
         businessName: name, contactName: contact, email,
         phone: document.getElementById('biz-phone').value,
         fleetSize: fleet,
@@ -206,11 +218,17 @@ async function submitB2B() {
         notes: document.getElementById('biz-notes').value
       })
     });
+    // fetch only throws on a network error. Until 2026-11-02 a 403 fell
+    // through to the success message and the enquiry went nowhere.
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
     document.getElementById('success-msg').style.display = 'block';
     btn.style.display = 'none';
     if(window.gtag) gtag('event','generate_lead',{page:'business_form', fleet_size: fleet});
   } catch(e) {
+    console.error('[fleet] enquiry failed:', e.message);
     btn.textContent = 'Send Enquiry →'; btn.disabled = false;
+    // Turnstile tokens are single-use - refresh so a retry gets a new one
+    try { if (window.turnstile) turnstile.reset('#biz-turnstile'); } catch(e2) { console.warn('[turnstile] reset failed:', e2.message); }
     alert('Something went wrong. Please email us at contact@drbikesydney.com.au');
   }
 }
