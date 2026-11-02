@@ -9,7 +9,7 @@
 // find/replace over the rendered HTML, hreflang + <html lang> get injected
 // into all 3 versions including the English source. See that file for the
 // full rationale - this one adds blog/ as a subdirectory and a wider set of
-// cross-link targets (blog-to-blog, plus business/bike-check/suburbs, all of
+// cross-link targets (blog-to-blog, plus business/suburbs, all of
 // which already have es/zh by the time this runs).
 
 import fs from 'node:fs';
@@ -44,11 +44,11 @@ const SUBURB_SLUGS = [
   'northern-beaches', 'parramatta', 'penrith', 'ryde', 'st-george',
   'strathfield', 'surry-hills', 'sutherland-shire',
 ];
-const ROOT_SLUGS = ['business', 'bike-check'];
+const ROOT_SLUGS = ['business'];
 
 // Shared boilerplate: header/footer/nav/category labels/related-card titles
 // repeated across all 5 posts (and, for Book Now/footer links, shared with
-// business.html/bike-check.html too - kept separate per file on purpose,
+// business.html too - kept separate per file on purpose,
 // duplication here is cheaper than a cross-script shared-dictionary import
 // for five short strings).
 const SHARED = {
@@ -59,14 +59,14 @@ const SHARED = {
     'Mobile bike repair, at your home, office or park. Pick your area:':
       'Reparación de bicicletas a domicilio, en tu casa, oficina o el parque. Elegí tu zona:',
     Home: 'Inicio',
-    'Bike Check': 'Chequeo de Bici',
+    'Book a Service': 'Reservar Servicio',
     'Cycling Map': 'Mapa de Ciclismo',
     'For Business': 'Para Empresas',
     Guide: 'Guía',
     Maintenance: 'Mantenimiento',
     Safety: 'Seguridad',
     Legal: 'Legal',
-    Tool: 'Herramienta',
+    'Book Online': 'Reservar Online',
     Explore: 'Explorar',
     'Best Bikes for Sydney Commuting 2026': 'Las Mejores Bicis para Moverte por Sídney en 2026',
     'Best Cycling Routes in Sydney': 'Las Mejores Rutas de Ciclismo en Sídney',
@@ -75,8 +75,7 @@ const SHARED = {
     'E-Bike Laws NSW 2026': 'Leyes de E-Bikes en NSW 2026',
     'How to Clean Your Bike Chain in Sydney': 'Cómo Limpiar la Cadena de tu Bici en Sídney',
     'How to Clean Your Bike Chain': 'Cómo Limpiar la Cadena de tu Bici',
-    'Is My Bike Safe to Ride? Free Check': '¿Mi Bici es Segura? Chequeo Gratis',
-    'Free Bike Safety Check': 'Chequeo de Seguridad Gratis',
+    'Book a Mobile Bike Mechanic': 'Reservar un Mecánico a Domicilio',
     'How to Choose a Bike Mechanic in Sydney': 'Cómo Elegir un Mecánico de Bicicletas en Sídney',
     'Book a Tune-Up — $119 →': 'Reservar un Ajuste — $119 →',
   },
@@ -87,14 +86,14 @@ const SHARED = {
     'Mobile bike repair, at your home, office or park. Pick your area:':
       '上门自行车维修，可在您的家中、办公室或公园进行。请选择您所在的区域：',
     Home: '首页',
-    'Bike Check': '自行车检测',
+    'Book a Service': '预约服务',
     'Cycling Map': '骑行地图',
     'For Business': '企业服务',
     Guide: '指南',
     Maintenance: '保养',
     Safety: '安全',
     Legal: '法律',
-    Tool: '工具',
+    'Book Online': '在线预约',
     Explore: '探索',
     'Best Bikes for Sydney Commuting 2026': '2026年悉尼通勤自行车推荐',
     'Best Cycling Routes in Sydney': '悉尼最佳骑行路线',
@@ -103,8 +102,7 @@ const SHARED = {
     'E-Bike Laws NSW 2026': '2026年新州电动自行车法规',
     'How to Clean Your Bike Chain in Sydney': '如何在悉尼清洁自行车链条',
     'How to Clean Your Bike Chain': '如何清洁自行车链条',
-    'Is My Bike Safe to Ride? Free Check': '我的自行车安全吗？免费检测',
-    'Free Bike Safety Check': '免费自行车安全检测',
+    'Book a Mobile Bike Mechanic': '预约上门自行车技师',
     'How to Choose a Bike Mechanic in Sydney': '如何在悉尼选择自行车技师',
     'Book a Tune-Up — $119 →': '预订基础保养 — $119 →',
   },

@@ -4,7 +4,7 @@
 // Run: node scripts/add-blog-area-links.mjs   (idempotent - re-running does
 // nothing once the block is present)
 //
-// The posts already cross-link to each other and to /bike-check, but nothing
+// The posts already cross-link to each other and to the booking wizard, but nothing
 // pointed at the 20 suburb pages, so the traffic and authority the articles
 // attract never reached the pages that actually rank for "bike mechanic
 // <suburb>". Links only, no copy duplication.

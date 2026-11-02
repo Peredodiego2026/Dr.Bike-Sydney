@@ -105,7 +105,6 @@ const BUDGET = {
   // a raw grep of the file: this script does not count a custom property's own
   // definition as a "use" of hand-written colour.
   'business.html': 41,
-  'bike-check.html': 40,
   'cycling-map.html': 32,
   'terms.html': 16,
   'privacy.html': 13,
@@ -129,15 +128,15 @@ const BUDGET = {
 // looked at the root blog/ folder, because es/blog and zh/blog did not exist
 // yet - it would have silently kept ignoring the new translations otherwise.
 //
-// business.html and bike-check.html got es/zh translations too (4.1,
+// business.html got es/zh translations too (4.1,
 // scripts/translate-static-pages.mjs), which live in the same es/ and zh/
 // directories as the suburb pages and would otherwise be swept in here by
-// name alone. Their root English file is NOT one of the "three copies":
+// name alone. Its root English file is NOT one of the "three copies":
 // it is the hand-authored source those two translations are generated FROM,
 // already tracked in its own BUDGET entry above - counting it here too would
 // budget the same file in two places at once.
-const GENERATED_BUDGET = 1479;
-const INDIVIDUALLY_BUDGETED_ROOT = new Set(['business.html', 'bike-check.html']);
+const GENERATED_BUDGET = 1399;
+const INDIVIDUALLY_BUDGETED_ROOT = new Set(['business.html']);
 
 function generatedPages() {
   const suburbs = readdirSync('es').filter(f => f.endsWith('.html'));

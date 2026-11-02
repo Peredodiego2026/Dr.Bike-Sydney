@@ -25,13 +25,13 @@ const LANGS = ['', 'es/', 'zh/'];
 
 const CORE_PAGES = [
   '/', '/landing.html', '/admin.html', '/mechanic.html', '/track.html',
-  '/terms.html', '/privacy.html', '/business', '/bike-check', '/cycling-map',
+  '/terms.html', '/privacy.html', '/business', '/cycling-map',
   '/applepay.html', '/claims.html',
 ];
 
 // The 75 suburb and blog pages are static marketing: one pass a day is enough
 // to know they load. The 6-hourly run (SMOKE_SCOPE=core, set by
-// .github/workflows/e2e-smoke.yml) checks the 12 pages the business runs on.
+// .github/workflows/e2e-smoke.yml) checks the 11 pages the business runs on.
 // Every run is real traffic against the live Supabase - see ./fixtures.js.
 const MARKETING_PAGES = [
   ...LANGS.flatMap((l) => SUBURBS.map((s) => `/${l}${s}`)),

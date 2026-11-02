@@ -107,11 +107,11 @@
       "destination": "/track.html"
     },
     {
-      "source": "/(bike-check|bondi|business|cbd|chatswood|cycling-map|eastern-suburbs|hills-district|hornsby|inner-west|manly|marrickville|mosman|newtown|north-shore|northern-beaches|parramatta|penrith|privacy|ryde|st-george|strathfield|surry-hills|sutherland-shire|terms)",
+      "source": "/(bondi|business|cbd|chatswood|cycling-map|eastern-suburbs|hills-district|hornsby|inner-west|manly|marrickville|mosman|newtown|north-shore|northern-beaches|parramatta|penrith|privacy|ryde|st-george|strathfield|surry-hills|sutherland-shire|terms)",
       "destination": "/$1.html"
     },
     {
-      "source": "/(es|zh)/(bike-check|bondi|business|cbd|chatswood|eastern-suburbs|hills-district|hornsby|inner-west|manly|marrickville|mosman|newtown|north-shore|northern-beaches|parramatta|penrith|ryde|st-george|strathfield|surry-hills|sutherland-shire)",
+      "source": "/(es|zh)/(bondi|business|cbd|chatswood|eastern-suburbs|hills-district|hornsby|inner-west|manly|marrickville|mosman|newtown|north-shore|northern-beaches|parramatta|penrith|ryde|st-george|strathfield|surry-hills|sutherland-shire)",
       "destination": "/$1/$2.html"
     },
     {
@@ -390,6 +390,26 @@
     {
       "source": "/zh/:slug(parramatta|penrith|st-george|sutherland-shire).html",
       "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(bike-check)",
+      "destination": "/#book-service",
+      "permanent": true
+    },
+    {
+      "source": "/:slug(bike-check).html",
+      "destination": "/#book-service",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(es|zh)/:slug(bike-check)",
+      "destination": "/#book-service",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(es|zh)/:slug(bike-check).html",
+      "destination": "/#book-service",
       "permanent": true
     }
   ]
