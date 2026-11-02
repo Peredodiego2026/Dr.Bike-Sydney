@@ -59,6 +59,10 @@ const ALLOWED = new Set([
   'Shaun Murphy',
   'Amazing service! Super friendly, professional and efficient. They fixed my bike brakes perfectly and did a great job with the service. Highly recommend!',
   'Our electric bike has been regularly serviced and highly recommended these guys. Quick and courteous.',
+  'Sofia Etchart',
+  'The best fixing bikes! I didn’t know what happened but he figured out in 20 minutes! I strongly recommend him',
+  'Quentin Darcheville',
+  'J’ai contacté Dr Bike Sydney pour un problème de frein sur mon vélo. Le rendez-vous a été facile à organiser et le technicien est venu directement chez moi avec tout le matériel nécessaire. Il a rapidement identifié le problème, fait les réglages et vérifié que tout fonctionnait correctement avant de repartir. Très pratique de ne pas avoir à transporter le vélo jusqu’à un magasin. Service rapide et professionnel, je recommande.',
   // Brand and people
   'Dr. Bike Sydney',
   'Dr. Bike',
