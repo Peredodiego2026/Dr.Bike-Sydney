@@ -21,7 +21,7 @@
 // months.
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { IGNORED_DIRS } from './lib/ignored-dirs.mjs';
+import { IGNORED_DIRS, isNestedCheckout } from './lib/ignored-dirs.mjs';
 
 // ── what counts as a colour ────────────────────────────────────────────────
 // 3, 4, 6 or 8 hex digits. Not 5 or 7: those are only ever HTML entities
@@ -257,7 +257,9 @@ function sweep(dir, acc = []) {
   for (const name of readdirSync(dir)) {
     if (SWEEP_SKIP_DIR.has(name)) continue;
     const p = join(dir, name);
-    if (statSync(p).isDirectory()) sweep(p, acc);
+    if (statSync(p).isDirectory()) {
+      if (!isNestedCheckout(p)) sweep(p, acc);
+    }
     else if (/\.(html|css|js|mjs|json)$/.test(name)) acc.push(p.replace(/\\/g, '/').replace(/^\.\//, ''));
   }
   return acc;
