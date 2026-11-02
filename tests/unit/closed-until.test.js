@@ -102,6 +102,12 @@ const call = (over = {}) => {
   ).then(() => res);
 };
 
+// The dates above are fixed, so "today" has to be too. closedUntil() drops any
+// return date that is not after Sydney's today, and on 3-nov-2026 the real clock
+// caught up with '2026-11-03' and turned these into failures on every PR.
+vi.useFakeTimers({ toFake: ['Date'] });
+vi.setSystemTime(new Date('2026-10-01T00:00:00Z'));
+
 beforeEach(() => {
   setting = null;
   rows = [];
