@@ -110,8 +110,12 @@ section[id] {
   font-family: inherit;
   cursor: pointer;
 }
+/* Every entry in the menu turns blue on hover and keyboard focus, the same
+   way. The Services <button> and the <a> links share this rule. */
 .nav-links a:hover,
-.nav-links button:hover {
+.nav-links a:focus-visible,
+.nav-links button:hover,
+.nav-links button:focus-visible {
   color: var(--blue-text);
 }
 .nav-lang-btn {
