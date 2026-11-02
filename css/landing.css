@@ -110,8 +110,12 @@ section[id] {
   font-family: inherit;
   cursor: pointer;
 }
+/* Every entry in the menu turns blue on hover and keyboard focus, the same
+   way. The Services <button> and the <a> links share this rule. */
 .nav-links a:hover,
-.nav-links button:hover {
+.nav-links a:focus-visible,
+.nav-links button:hover,
+.nav-links button:focus-visible {
   color: var(--blue-text);
 }
 .nav-lang-btn {
@@ -1017,10 +1021,13 @@ html.drbike-wizard-open #faqbot-win {
      here is the value the cards already used as its maximum, so a tall screen
      is unchanged and a laptop tightens instead of overflowing. */
   body[data-surface='landing'] #memberships .plan-card {
-    padding: clamp(14px, 2vh, 22px) clamp(14px, 1.4vw, 20px);
+    padding: clamp(12px, 1.8vh, 22px) clamp(14px, 1.4vw, 20px);
+  }
+  body[data-surface='landing'] #memberships .plan-card h3 {
+    line-height: 1.2;
   }
   body[data-surface='landing'] #memberships .plan-price {
-    margin: clamp(4px, 0.8vh, 8px) 0 clamp(6px, 1.2vh, 12px);
+    margin: clamp(2px, 0.6vh, 8px) 0 clamp(4px, 1vh, 12px);
   }
   body[data-surface='landing'] #memberships .plan-price .amount {
     font-size: clamp(1.45rem, 2.6vh, 1.9rem);
@@ -1030,7 +1037,62 @@ html.drbike-wizard-open #faqbot-win {
     font-size: clamp(12px, 1.5vh, 13px);
   }
   body[data-surface='landing'] #memberships .plan-card .lp-get-started {
-    margin-top: clamp(8px, 1.6vh, 16px) !important;
+    margin-top: clamp(6px, 1.4vh, 16px) !important;
     padding: clamp(7px, 1.1vh, 10px) !important;
+  }
+  body[data-surface='landing'] #memberships .plan-card .lp-learn-more {
+    margin-top: 2px !important;
+    padding: 2px !important;
+    line-height: 1.2;
+  }
+
+  /* The reviews carousel, same complaint (2-nov): "al 60% se ve perfecto, asi
+     se tiene que ver pero al 100%". js/reviews-carousel.js sizes it for the
+     phone, where Diego signed it off as it is - so the desktop sizes live here,
+     scoped to the landing, and index.html never sees them. A wider, shorter
+     card is what lets the longest review (Quentin's) fit a laptop screen.
+     !important only where the card markup sets the value inline. */
+  body[data-surface='landing'] #reviews .section-center {
+    margin-bottom: 0;
+  }
+  body[data-surface='landing'] #reviews .section-sub {
+    font-size: 15px;
+    margin: 4px auto 12px;
+  }
+  body[data-surface='landing'] #reviews #reviews-grid:empty {
+    display: none;
+  }
+  body[data-surface='landing'] .rv-viewport {
+    height: 320px;
+  }
+  body[data-surface='landing'] .rv-orb {
+    width: 310px;
+  }
+  body[data-surface='landing'] .rv-track > .review-card {
+    width: 440px;
+    padding: 14px 18px;
+    gap: 6px;
+  }
+  body[data-surface='landing'] .rv-track > .review-card > div {
+    margin-bottom: 0 !important;
+  }
+  body[data-surface='landing'] .rv-track > .review-card > div:first-child > div:first-child {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 13px !important;
+  }
+  body[data-surface='landing'] .rv-track > .review-card > div:first-child > div:last-child {
+    font-size: 14px !important;
+  }
+  body[data-surface='landing'] .rv-track > .review-card > div[aria-label] {
+    font-size: 13px !important;
+  }
+  body[data-surface='landing'] .rv-track > .review-card p {
+    font-size: 13px !important;
+    line-height: 1.45 !important;
+  }
+  body[data-surface='landing'] .rv-track > .review-card img {
+    height: 120px !important;
+    margin-top: 2px !important;
   }
 }

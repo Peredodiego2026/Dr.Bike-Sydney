@@ -229,7 +229,7 @@ describe('the plans fit, and the gift card mark is not clipped', () => {
   });
 
   it('and the cards tighten on a short screen instead of overflowing', () => {
-    expect(landingCss).toMatch(/#memberships \.plan-card \{\s*\r?\n?\s*padding: clamp\(14px, 2vh, 22px\)/s);
+    expect(landingCss).toMatch(/#memberships \.plan-card \{\s*\r?\n?\s*padding: clamp\(12px, 1\.8vh, 22px\)/s);
     expect(landingCss).toMatch(/#memberships \.plan-card ul \{[^}]*font-size: clamp\(12px, 1\.5vh, 13px\)/s);
   });
 
