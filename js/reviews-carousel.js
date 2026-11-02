@@ -100,6 +100,12 @@
     .rv-track > .review-card p { font-size: 14px !important; line-height: 1.5 !important; }
     .rv-track > .review-card img { height: 150px !important; }
     @media (max-width: 640px) { .rv-viewport { height: 520px; } }
+    @media (min-width: 641px) {
+      .rv-viewport { height: 500px; }
+      .rv-track > .review-card { width: 300px; padding: 16px; }
+      .rv-track > .review-card p { font-size: 14px !important; line-height: 1.45 !important; }
+      .rv-track > .review-card img { height: 140px !important; }
+    }
     .rv-controls { position: absolute; top: 50%; left: 8px; right: 8px; transform: translateY(-50%); display: flex; justify-content: space-between; pointer-events: none; z-index: 200; }
     .rv-btn { pointer-events: auto; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--white); color: var(--navy); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(13, 31, 60, 0.08); }
     .rv-btn[hidden] { display: none; }
