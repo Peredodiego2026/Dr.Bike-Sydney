@@ -205,36 +205,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://drbikesydney.com.au/bike-check</loc>
-    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/bike-check"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/bike-check"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/bike-check"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/bike-check"/>
-    <lastmod>2026-08-17</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://drbikesydney.com.au/es/bike-check</loc>
-    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/bike-check"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/bike-check"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/bike-check"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/bike-check"/>
-    <lastmod>2026-08-17</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://drbikesydney.com.au/zh/bike-check</loc>
-    <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/bike-check"/>
-    <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/bike-check"/>
-    <xhtml:link rel="alternate" hreflang="zh-Hans" href="https://drbikesydney.com.au/zh/bike-check"/>
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://drbikesydney.com.au/bike-check"/>
-    <lastmod>2026-08-17</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://drbikesydney.com.au/bondi</loc>
     <xhtml:link rel="alternate" hreflang="en-AU" href="https://drbikesydney.com.au/bondi"/>
     <xhtml:link rel="alternate" hreflang="es" href="https://drbikesydney.com.au/es/bondi"/>

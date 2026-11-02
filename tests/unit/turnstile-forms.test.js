@@ -24,20 +24,24 @@ function htmlFiles(dir = '.', acc = []) {
   return acc;
 }
 
-// Each endpoint, the body field the page must send, and where the server
-// reads it from.
+// Each endpoint, the body field the page must send, where the server reads it
+// from, and how many static pages post to it today. bike-check.html (x3) was
+// the newsletter's only static page until it was retired on 2026-11-02; the
+// landing's newsletter lives in js/landing-inline.js, not here.
 const FORMS = [
   {
     endpoint: '/api/send-b2b-inquiry',
     field: "'cf-turnstile-response': token",
     server: 'api/send-cron.js',
     reads: "verifyTurnstile(req, req.body?.['cf-turnstile-response'])",
+    minPages: 3,
   },
   {
     endpoint: '/api/subscribe-newsletter',
     field: 'turnstileToken',
     server: 'api/subscribe-newsletter.js',
     reads: 'verifyTurnstile(req, req.body?.turnstileToken)',
+    minPages: 0,
   },
 ];
 
@@ -52,11 +56,11 @@ for (const p of htmlFiles()) {
   }
 }
 
-describe.each(FORMS)('every page that posts to $endpoint', ({ endpoint, field, server, reads }) => {
+describe.each(FORMS)('every page that posts to $endpoint', ({ endpoint, field, server, reads, minPages }) => {
   const posting = pages.filter(([, html]) => html.includes(`fetch('${endpoint}'`));
 
   it('is found in all three languages', () => {
-    expect(posting.length).toBeGreaterThanOrEqual(3);
+    expect(posting.length).toBeGreaterThanOrEqual(minPages);
   });
 
   it('the server still reads the token from that field', () => {

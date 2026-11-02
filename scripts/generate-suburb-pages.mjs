@@ -736,14 +736,12 @@ const BLOG_SLUGS = [
   'how-to-clean-your-bike-chain-sydney',
 ];
 
-// business.html and bike-check.html got es/zh siblings from
-// scripts/translate-static-pages.mjs (docs/PENDIENTES.md 4.1). They used to be
-// single English-only STATIC_PAGES entries with no alternates - now they need
-// the same 3-URL-with-alternates treatment as a suburb, just not a suburb.
-const TRANSLATED_STATIC_PAGES = [
-  { slug: 'business', priority: '0.9' },
-  { slug: 'bike-check', priority: '0.9' },
-];
+// business.html got es/zh siblings from scripts/translate-static-pages.mjs
+// (docs/PENDIENTES.md 4.1). It used to be a single English-only STATIC_PAGES
+// entry with no alternates - now it needs the same 3-URL-with-alternates
+// treatment as a suburb, just not a suburb. bike-check was here too until
+// 2026-11-02: it 301s to the booking wizard now.
+const TRANSLATED_STATIC_PAGES = [{ slug: 'business', priority: '0.9' }];
 
 function alternatesXml(slug) {
   return Object.entries(LANGS)
