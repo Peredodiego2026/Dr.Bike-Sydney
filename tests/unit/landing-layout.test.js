@@ -66,7 +66,7 @@ describe('the two big sections land as one screenful', () => {
   it('and the spacing inside them follows the viewport', () => {
     expect(landing).toMatch(/padding:clamp\(36px,5vh,72px\) 0 clamp\(40px,6vh,80px\)/);
     expect(landing).toMatch(/height:clamp\(300px,42vh,420px\);perspective:1400px/);
-    expect(landing).toMatch(/<section id="memberships"[^>]*padding:clamp\(28px,4vh,44px\) 0/);
+    expect(landing).toMatch(/<section id="memberships"[^>]*padding:clamp\(12px,2vh,44px\) 0/);
     expect(landing).toMatch(/gap:clamp\(12px,1\.6vw,24px\)/);
   });
 
