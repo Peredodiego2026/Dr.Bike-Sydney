@@ -44,10 +44,6 @@
       card.classList.toggle('is-active', abs === 0);
       card.setAttribute('aria-hidden', abs === 0 ? 'false' : 'true');
     });
-    // The box is as tall as the front card needs, so a short review does not
-    // sit in a big empty frame and a photo review is not cut off.
-    const front = cards[active];
-    viewport.style.height = Math.max(300, front.offsetHeight + 110) + 'px';
   }
 
   function go(step) {
@@ -95,13 +91,17 @@
 
   const style = document.createElement('style');
   style.textContent = `
-    .rv-viewport { position: relative; height: 300px; transition: height 0.45s ease; perspective: 1400px; touch-action: pan-y; overflow: hidden; }
+    .rv-viewport { position: relative; height: 540px; perspective: 1400px; touch-action: pan-y; overflow: hidden; }
     .rv-orb { position: absolute; left: 50%; top: 50%; width: min(440px, 78%); aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: var(--blue-lt); opacity: 0.85; pointer-events: none; z-index: 0; }
     .rv-track { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; z-index: 1; }
-    .rv-track > .review-card { position: absolute; left: 50%; top: 50%; width: clamp(260px, 30vw, 340px); margin: 0; background: var(--white); border: 1px solid var(--border); border-radius: 18px; padding: 20px; box-shadow: 0 24px 50px -22px rgba(13, 31, 60, 0.35); cursor: pointer; transition: transform 0.45s cubic-bezier(.22,.61,.36,1), opacity 0.45s ease; will-change: transform; backface-visibility: hidden; }
+    .rv-track > .review-card { position: absolute; left: 50%; top: 50%; margin: 0; background: var(--white); border: 1px solid var(--border); border-radius: 18px; padding: 20px; box-shadow: 0 24px 50px -22px rgba(13, 31, 60, 0.35); cursor: pointer; transition: transform 0.45s cubic-bezier(.22,.61,.36,1), opacity 0.45s ease; will-change: transform; backface-visibility: hidden; }
     .rv-track > .review-card.is-active { cursor: default; }
-    .rv-controls { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 16px; }
-    .rv-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--white); color: var(--navy); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(13, 31, 60, 0.08); }
+    .rv-track > .review-card { width: clamp(260px, 26vw, 320px); padding: 16px; }
+    .rv-track > .review-card p { font-size: 14px !important; line-height: 1.5 !important; }
+    .rv-track > .review-card img { height: 150px !important; }
+    @media (max-width: 640px) { .rv-viewport { height: 520px; } }
+    .rv-controls { position: absolute; top: 50%; left: 8px; right: 8px; transform: translateY(-50%); display: flex; justify-content: space-between; pointer-events: none; z-index: 200; }
+    .rv-btn { pointer-events: auto; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--border); background: var(--white); color: var(--navy); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 8px rgba(13, 31, 60, 0.08); }
     .rv-btn[hidden] { display: none; }
     .rv-btn:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) { .rv-track > .review-card { transition: none; } }
