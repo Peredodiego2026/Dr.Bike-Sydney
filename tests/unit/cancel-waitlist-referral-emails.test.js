@@ -16,11 +16,13 @@ process.env.INTERNAL_API_SECRET = 'internal-secret';
 process.env.RESEND_API_KEY = 'resend-test';
 
 let refundFails;
+let refundCalls;
 vi.mock('stripe', () => ({
   default: class {
     constructor() {
       this.refunds = {
         create: async () => {
+          refundCalls++;
           if (refundFails) throw new Error('card_declined');
           return { id: 're_1', amount: 4500 };
         },
@@ -98,8 +100,13 @@ globalThis.fetch = async (url, init = {}) => {
   return json([]);
 };
 
-const { handleClientCancel, handleAdminCancelBooking, handleJoinWaitlist, handleApplyReferral } =
-  await import('../../api/auth.js');
+const {
+  handleClientCancel,
+  handleAdminCancelBooking,
+  handleJoinWaitlist,
+  handleApplyReferral,
+  handleClientReschedule,
+} = await import('../../api/auth.js');
 const sendEmail = (await import('../../api/send-email.js')).default;
 
 const run = async (handler, body) => {
@@ -112,6 +119,7 @@ const run = async (handler, body) => {
 
 beforeEach(() => {
   refundFails = false;
+  refundCalls = 0;
   insertError = null;
   emailFails = false;
   inserts = [];
@@ -141,7 +149,8 @@ beforeEach(() => {
   };
 });
 
-// The client's cancel answers first; the refund and both messages follow.
+// The refund and both messages are done by the time the client's cancel
+// answers: Vercel can freeze the function once the response is sent.
 const clientCancel = async () => {
   const r = await run(handleClientCancel, {
     access_token: 'tok',
@@ -149,7 +158,6 @@ const clientCancel = async () => {
     client_id: 'client-1',
   });
   expect(r.statusCode, JSON.stringify(r.body)).toBe(200);
-  for (let i = 0; i < 100 && !whatsapps.length; i++) await new Promise((s) => setTimeout(s, 0));
   expect(whatsapps).toHaveLength(1);
   return emails;
 };
@@ -212,7 +220,7 @@ describe('the admin cancels', () => {
       type: 'cancellation_client',
       to: 'ana@example.com',
       cancelReason: 'mechanic',
-      // An admin cancel refunds nothing by itself.
+      // Without the "Refund" box ticked, nothing goes back.
       refundState: 'contact',
       refundAmount: 45,
     });
@@ -242,6 +250,60 @@ describe('the admin cancels', () => {
   it('a send that fails is reported, so the admin toast can say it', async () => {
     emailFails = true;
     expect((await adminCancel()).body.emailed).toBe(false);
+  });
+
+  it('"Refund" ticked: Stripe gives the fee back and the email says refunded', async () => {
+    const r = await adminCancel({ refund: true });
+    expect(refundCalls).toBe(1);
+    expect(r.body).toMatchObject({ refunded: true, refund_amount: 45 });
+    expect(emails[0]).toMatchObject({ refundState: 'refunded', refundAmount: 45 });
+  });
+
+  it('"Refund" unticked: no refund, "we will be in touch"', async () => {
+    const r = await adminCancel({ refund: false });
+    expect(refundCalls).toBe(0);
+    expect(r.body.refunded).toBe(null);
+    expect(emails[0].refundState).toBe('contact');
+  });
+
+  it('Stripe refuses: reported as failed, and the client is told we will be in touch', async () => {
+    refundFails = true;
+    const r = await adminCancel({ refund: true });
+    expect(r.body.refunded).toBe(false);
+    expect(emails[0].refundState).toBe('contact');
+  });
+
+  it('never refunds a finished job, or a booking nothing was charged for', async () => {
+    booking.completed_at = '2099-03-10T11:00:00Z';
+    expect((await adminCancel({ refund: true })).body.refunded).toBe(null);
+    booking.completed_at = null;
+    booking.stripe_payment_intent_id = null;
+    expect((await adminCancel({ refund: true })).body.refunded).toBe(null);
+    expect(refundCalls).toBe(0);
+  });
+
+  it('the client asked to cancel within 24h and no refund: "not refundable"', async () => {
+    booking.scheduled_date = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Australia/Sydney',
+    }).format(new Date());
+    booking.scheduled_time = '23:59';
+    await adminCancel({ reason_code: 'Client request' });
+    expect(emails[0]).toMatchObject({ cancelReason: 'client', refundState: 'late' });
+  });
+
+  it('already cancelled: a second click refunds nothing', async () => {
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = async (url, init = {}) =>
+      String(url).includes('/rest/v1/bookings') && init.method === 'PATCH'
+        ? { ok: true, status: 200, json: async () => [] }
+        : realFetch(url, init);
+    try {
+      const r = await adminCancel({ refund: true });
+      expect(r.statusCode).toBe(409);
+      expect(refundCalls).toBe(0);
+    } finally {
+      globalThis.fetch = realFetch;
+    }
   });
 });
 
@@ -486,5 +548,42 @@ describe('reschedule: confirmed only when the admin did it', () => {
     const msg = readFileSync(new URL('../../api/send-message.js', import.meta.url), 'utf8');
     expect(msg).toContain("'client_rescheduled',");
     expect(msg).toContain("case 'client_rescheduled':");
+  });
+});
+
+// The app used to change only the date and time on its card, so a confirmed
+// booking the client had just moved still said "Confirmed" until a reload.
+describe("a client reschedules: the answer carries the booking's new state", () => {
+  const reschedule = (time) =>
+    run(handleClientReschedule, {
+      access_token: 'tok',
+      booking_id: 'bk-1',
+      client_id: 'client-1',
+      scheduled_date: '2099-03-11',
+      scheduled_time: time,
+    });
+
+  it('moved: pending, with the new time and the fee it was saved with', async () => {
+    const r = await reschedule('11:00');
+    expect(r.statusCode, JSON.stringify(r.body)).toBe(200);
+    expect(r.body.booking).toEqual({
+      status: 'pending',
+      scheduled_date: '2099-03-11',
+      scheduled_time: '11:00',
+      callout_fee: 45,
+    });
+  });
+
+  it('same slot sent again: the status it already had', async () => {
+    booking.scheduled_date = '2099-03-11';
+    const r = await reschedule('10:00');
+    expect(r.body.booking.status).toBe('confirmed');
+  });
+
+  it('the app applies it to the card', () => {
+    const app = readFileSync(new URL('../../js/app.js', import.meta.url), 'utf8');
+    expect(app).toMatch(
+      /Object\.assign\(\s*booking,\s*\{ scheduled_date: newDate, scheduled_time: newTime \},\s*d\.booking\s*\);/
+    );
   });
 });

@@ -129,6 +129,8 @@ export function buildCompletionCalls({
         mechNotes: mechanicNotes || null,
         mechName: mechanicName || '',
         nextService: nextServiceMessage(nextServiceDate),
+        // Raw too, so send-invoice can write the date in the client's language.
+        nextServiceDate: nextServiceDate || null,
         bookingRef: id.slice(0, 8).toUpperCase(),
       },
     });

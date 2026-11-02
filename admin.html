@@ -396,6 +396,12 @@
           <div style="font-size:11px;font-weight:600;color:var(--mgray);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px">Notes (optional)</div>
           <textarea id="cancel-notes" class="inp" style="height:70px;resize:none" placeholder="Additional notes..."></textarea>
         </div>
+        <!-- Only for a booking paid through Stripe and not finished; ticked by
+             the client-cancel rule (refund unless the client asks within 24h). -->
+        <label id="cancel-refund-row" style="display:none;align-items:center;gap:10px;min-height:44px;font-size:13px;color:var(--navy);cursor:pointer">
+          <input type="checkbox" id="cancel-refund" style="width:18px;height:18px;accent-color:var(--blue);cursor:pointer">
+          <span id="cancel-refund-label">Refund the visit fee</span>
+        </label>
         <!-- The client gets the reason, never the notes. -->
         <label style="display:flex;align-items:center;gap:10px;min-height:44px;margin-bottom:12px;font-size:13px;color:var(--navy);cursor:pointer">
           <input type="checkbox" id="cancel-notify" checked style="width:18px;height:18px;accent-color:var(--blue);cursor:pointer">
@@ -1712,5 +1718,5 @@
 
 
 <script type="module" src="js/shop-import.js?v=bfc77bc7e1"></script>
-<script src="js/admin.js?v=114b4e5759"></script>
+<script src="js/admin.js?v=ca3535b096"></script>
 </body></html>

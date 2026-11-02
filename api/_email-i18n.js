@@ -1,6 +1,8 @@
 // api/_email-i18n.js — server-side counterpart of js/i18n.js, for outgoing mail.
 //
-// The templates in send-email.js are authored in English and stay that way; the
+// The templates in send-email.js - and, since 01-nov-2026, the emails that go
+// straight to Resend from send-cron.js, auth.js, subscribe-newsletter.js and
+// send-invoice.js - are authored in English and stay that way; the
 // translation is a final pass over the already-rendered subject and HTML. Every
 // key below is the exact text that sits between two tags (or the literal part of
 // a subject line), so a straight string replacement leaves the markup, the
@@ -261,6 +263,169 @@ const dict = {
     '. The money goes back to the card you paid with; banks usually take 5 to 10 business days to show it.':
       '. El dinero vuelve a la tarjeta con la que pagaste; los bancos suelen tardar de 5 a 10 días hábiles en mostrarlo.',
     '>Refunded<': '>Reembolsado<',
+
+    // ── The emails that go straight to Resend (send-cron.js, auth.js,
+    // subscribe-newsletter.js, send-invoice.js) ──────────────────────────────
+    // greeting() in _email-frame.js with no name: "Hola there" is worse than
+    // no name at all.
+    'Hi <strong>there</strong>': 'Hola',
+    ', your next service is coming up': ', tu próximo servicio se acerca',
+    ', time for a service!': ', ¡es hora de un servicio!',
+    'Your mechanic recommended booking your next ': 'Tu mecánico recomendó reservar tu próximo ',
+    '</strong> by <strong': '</strong> antes del <strong',
+    'That date is almost here.': 'Esa fecha ya está muy cerca.',
+    'Regular servicing keeps your bike safe and extends the life of components.':
+      'El mantenimiento regular mantiene tu bici segura y alarga la vida de sus componentes.',
+    "It's been about ": 'Ya pasaron unos ',
+    '</strong> since your <strong': '</strong> desde tu <strong',
+    'Regular servicing keeps your bike running smoothly and prevents costly repairs.':
+      'El mantenimiento regular mantiene tu bici andando suave y evita reparaciones caras.',
+    "Book now and we'll come to you — home, office or local park across Sydney.":
+      'Reserva ahora y vamos a donde estés — casa, oficina o un parque de Sídney.',
+    'Book your next service →': 'Reservar mi próximo servicio →',
+
+    // mechanic_upsell
+    ', your mechanic found a few things that need attention':
+      ', tu mecánico encontró algunas cosas que necesitan atención',
+    '>Recommended service<': '>Servicio recomendado<',
+    '>Price<': '>Precio<',
+    '>Front brake pads<': '>Pastillas de freno delanteras<',
+    '>Rear brake pads<': '>Pastillas de freno traseras<',
+    '>Chain replacement<': '>Cambio de cadena<',
+    '>Cassette replacement<': '>Cambio de cassette<',
+    '>Cable set (gear + brake)<': '>Juego de cables (cambios + freno)<',
+    '>Tyre replacement (pair)<': '>Cambio de neumáticos (par)<',
+    '>Wheel true & tension<': '>Centrado y tensión de ruedas<',
+    '>Bottom bracket service<': '>Servicio de eje pedalier<',
+    '>Headset overhaul<': '>Revisión de la dirección<',
+    'Worn front brake pads — replacing now prevents rotor damage.':
+      'Pastillas delanteras gastadas — cambiarlas ahora evita dañar el disco.',
+    'Rear brake pads are due for replacement.': 'Hay que cambiar las pastillas traseras.',
+    'Chain is stretched and will damage cassette soon.':
+      'La cadena está estirada y pronto dañará el cassette.',
+    'Cassette cogs are worn — best replaced with new chain.':
+      'Los piñones del cassette están gastados — conviene cambiarlos junto con la cadena.',
+    'Cables are frayed — replacing improves shifting and braking.':
+      'Los cables están deshilachados — cambiarlos mejora los cambios y el frenado.',
+    'Tyres cracked or worn — safety concern.':
+      'Neumáticos agrietados o gastados — es un riesgo de seguridad.',
+    'Wheels out of true — affects handling.': 'Ruedas descentradas — afecta el manejo.',
+    'Bottom bracket has play — replace before it seizes.':
+      'El eje pedalier tiene juego — conviene cambiarlo antes de que se trabe.',
+    'Headset has play — affects steering safety.':
+      'La dirección tiene juego — afecta la seguridad al girar.',
+    'To add these to your current service, call ': 'Para sumarlos a tu servicio actual, llama al ',
+    'Book a follow-up →': 'Reservar una visita de seguimiento →',
+
+    // b2b echo
+    'Thanks for your enquiry, ': 'Gracias por tu consulta, ',
+    'We received your fleet enquiry for ': 'Recibimos tu consulta de flota para ',
+    " bikes). We'll get back to you within ": ' bicis). Te respondemos en menos de ',
+    '2 business hours': '2 horas hábiles',
+    ' (every day 8am–5pm, Sydney time).': ' (todos los días de 8 a 17 h, hora de Sídney).',
+
+    // newsletter welcome
+    'Thanks for subscribing': '¡Gracias por suscribirte',
+    "You'll receive cycling tips, maintenance reminders and exclusive offers for Dr. Bike Sydney members.":
+      'Vas a recibir consejos de ciclismo, recordatorios de mantenimiento y ofertas exclusivas para miembros de Dr. Bike Sydney.',
+    'Use code <strong': 'Usa el código <strong',
+    ' for 10% off your first booking.': ' y obtén 10% de descuento en tu primera reserva.',
+    '>Unsubscribe<': '>Darse de baja<',
+
+    // waitlist slot open
+    'Good news, ': '¡Buenas noticias, ',
+    'Good news!': '¡Buenas noticias!',
+    'A slot just opened up on ': 'Se liberó un horario el ',
+    '</strong> at <strong': '</strong> a las <strong',
+    '. Book now before it fills up again.': '. Reserva ahora antes de que se vuelva a ocupar.',
+    '>Book now<': '>Reservar ahora<',
+    "You're receiving this because you joined the waitlist for ":
+      'Recibes este correo porque te anotaste en la lista de espera del ',
+
+    // password reset
+    'Reset your password': 'Cambia tu contraseña',
+    'We received a request to reset the password for your Dr. Bike Sydney account. Click below to choose a new one.':
+      'Recibimos una solicitud para cambiar la contraseña de tu cuenta de Dr. Bike Sydney. Haz clic abajo para elegir una nueva.',
+    '>Reset password<': '>Cambiar contraseña<',
+    'This link expires in 1 hour, for your security.':
+      'Por tu seguridad, este enlace vence en 1 hora.',
+    'Button not working? Paste this link into your browser:':
+      '¿El botón no funciona? Pega este enlace en tu navegador:',
+    "Didn't request this? No action needed - you can safely ignore this email and your password will stay the same.":
+      '¿No lo pediste tú? No tienes que hacer nada: puedes ignorar este correo y tu contraseña seguirá igual.',
+
+    // tracking links
+    'Your booking links': 'Tus enlaces de reserva',
+    "Here's every active booking on file for this email:":
+      'Estas son todas las reservas activas con este correo:',
+    'Track this booking →': 'Seguir esta reserva →',
+    "Didn't request this? You can safely ignore this email.":
+      '¿No lo pediste tú? Puedes ignorar este correo.',
+    '>Pending<': '>Pendiente<',
+    '>Quote requested<': '>Presupuesto pedido<',
+    '>Confirmed<': '>Confirmada<',
+    '>On the way<': '>En camino<',
+    '>In progress<': '>En curso<',
+    '>Completed<': '>Completada<',
+
+    // receipt & service report (send-invoice.js). The PDF stays in English:
+    // pdfkit's built-in fonts have no Chinese glyphs.
+    'Tax Invoice &amp; Service Report': 'Factura e informe de servicio',
+    '>Billed to<': '>Facturado a<',
+    '>Invoice details<': '>Detalles de la factura<',
+    '>Date:<': '>Fecha:<',
+    '>Ref:<': '>Ref.:<',
+    '✓ Paid': '✓ Pagado',
+    '>Service details<': '>Detalles del servicio<',
+    '>Date<': '>Fecha<',
+    '>Location<': '>Lugar<',
+    '>Mechanic<': '>Mecánico<',
+    '>Duration<': '>Duración<',
+    '>Bike<': '>Bici<',
+    'Visit & diagnosis (paid at booking)': 'Visita y diagnóstico (pagado al reservar)',
+    '>Discount (at booking)<': '>Descuento (al reservar)<',
+    'Discount (': 'Descuento (',
+    '>Discount<': '>Descuento<',
+    '>GST included<': '>GST incluido<',
+    '>Total general (AUD)<': '>Total (AUD)<',
+    '💚 Tip for your mechanic': '💚 Propina para tu mecánico',
+    '>Total charged (AUD)<': '>Total cobrado (AUD)<',
+    'Next service reminder:': 'Recordatorio del próximo servicio:',
+    'Rate your mechanic →': 'Califica a tu mecánico →',
+    'Thank you for choosing Dr. Bike Sydney!': '¡Gracias por elegir Dr. Bike Sydney!',
+    'We come to you — home, office or park across Sydney.':
+      'Vamos a donde estés — casa, oficina o parque, en todo Sídney.',
+    'Book next service →': 'Reservar el próximo servicio →',
+    'Service Report — ': 'Informe de servicio — ',
+    '>Client<': '>Cliente<',
+    'Mechanic: <strong': 'Mecánico: <strong',
+    '>Pre-Service Inspection<': '>Inspección previa<',
+    '>Inspection Notes<': '>Notas de la inspección<',
+    '>Work Completed<': '>Trabajo realizado<',
+    '>Photos<': '>Fotos<',
+    '>Before<': '>Antes<',
+    '>After<': '>Después<',
+    'Next service recommendation:': 'Recomendación para el próximo servicio:',
+    '>Front brakes<': '>Frenos delanteros<',
+    '>Rear brakes<': '>Frenos traseros<',
+    '>Chain<': '>Cadena<',
+    '>Cassette<': '>Cassette<',
+    '>Chainrings<': '>Platos<',
+    '>Cables<': '>Cables<',
+    '>Wheels<': '>Ruedas<',
+    '>Tyres<': '>Neumáticos<',
+    '>Handlebar & stem<': '>Manubrio y potencia<',
+    '>Seat & seatpost<': '>Asiento y tija<',
+    '>Headset<': '>Dirección<',
+    '>Bottom bracket<': '>Eje pedalier<',
+    '>Lights<': '>Luces<',
+    '>Frame condition<': '>Estado del cuadro<',
+    '✅ OK': '✅ Bien',
+    '⚠️ Warn': '⚠️ Revisar',
+    '🔴 Critical': '🔴 Crítico',
+    'Your next recommended service is on ': 'Tu próximo servicio recomendado es el ',
+    'We recommend a service check every 3–6 months.':
+      'Recomendamos una revisión cada 3 a 6 meses.',
   },
 
   zh: {
@@ -463,6 +628,147 @@ const dict = {
     '. The money goes back to the card you paid with; banks usually take 5 to 10 business days to show it.':
       '。款项将退回您付款时使用的银行卡；银行通常需要 5 到 10 个工作日才会显示。',
     '>Refunded<': '>已退款<',
+
+    'Hi <strong>there</strong>': '您好',
+    ', your next service is coming up': '，您的下次保养快到了',
+    ', time for a service!': '，该做保养啦！',
+    'Your mechanic recommended booking your next ': '您的技师建议您预约下一次 ',
+    '</strong> by <strong': '</strong>，建议日期 <strong',
+    'That date is almost here.': '这个日期快到了。',
+    'Regular servicing keeps your bike safe and extends the life of components.':
+      '定期保养能让您的自行车更安全，也能延长零件的寿命。',
+    "It's been about ": '距离上次已经过了大约 ',
+    '</strong> since your <strong': '</strong>，上次的服务是 <strong',
+    'Regular servicing keeps your bike running smoothly and prevents costly repairs.':
+      '定期保养能让车子骑得顺畅，也能避免昂贵的维修。',
+    "Book now and we'll come to you — home, office or local park across Sydney.":
+      '立即预订，我们上门服务 — 家里、办公室或悉尼各地的公园。',
+    'Book your next service →': '预订下一次服务 →',
+
+    ', your mechanic found a few things that need attention': '，您的技师发现了几处需要处理的问题',
+    '>Recommended service<': '>建议服务<',
+    '>Price<': '>价格<',
+    '>Front brake pads<': '>前刹车皮<',
+    '>Rear brake pads<': '>后刹车皮<',
+    '>Chain replacement<': '>更换链条<',
+    '>Cassette replacement<': '>更换飞轮<',
+    '>Cable set (gear + brake)<': '>线缆套装（变速 + 刹车）<',
+    '>Tyre replacement (pair)<': '>更换轮胎（一对）<',
+    '>Wheel true & tension<': '>车轮校正和张力调整<',
+    '>Bottom bracket service<': '>中轴保养<',
+    '>Headset overhaul<': '>车头碗组大修<',
+    'Worn front brake pads — replacing now prevents rotor damage.':
+      '前刹车皮已磨损 — 现在更换可避免损伤碟片。',
+    'Rear brake pads are due for replacement.': '后刹车皮需要更换了。',
+    'Chain is stretched and will damage cassette soon.': '链条已拉长，很快会损坏飞轮。',
+    'Cassette cogs are worn — best replaced with new chain.': '飞轮齿片已磨损 — 最好和新链条一起更换。',
+    'Cables are frayed — replacing improves shifting and braking.':
+      '线缆已磨损起毛 — 更换后变速和刹车都会更好。',
+    'Tyres cracked or worn — safety concern.': '轮胎开裂或磨损 — 存在安全隐患。',
+    'Wheels out of true — affects handling.': '车轮不正 — 影响操控。',
+    'Bottom bracket has play — replace before it seizes.': '中轴有旷量 — 请在卡死前更换。',
+    'Headset has play — affects steering safety.': '车头碗组有旷量 — 影响转向安全。',
+    'To add these to your current service, call ': '如需加入本次服务，请致电 ',
+    'Book a follow-up →': '预约后续服务 →',
+
+    'Thanks for your enquiry, ': '感谢您的咨询，',
+    'We received your fleet enquiry for ': '我们已收到您为 ',
+    " bikes). We'll get back to you within ": ' 辆车) 提交的车队咨询。我们会在 ',
+    '2 business hours': '2 个工作小时',
+    ' (every day 8am–5pm, Sydney time).': ' 内回复您（每天 8:00–17:00，悉尼时间）。',
+
+    'Thanks for subscribing': '感谢订阅',
+    "You'll receive cycling tips, maintenance reminders and exclusive offers for Dr. Bike Sydney members.":
+      '您将收到骑行小贴士、保养提醒，以及 Dr. Bike Sydney 会员专属优惠。',
+    'Use code <strong': '使用优惠码 <strong',
+    ' for 10% off your first booking.': '，首次预订可享 9 折优惠。',
+    '>Unsubscribe<': '>退订<',
+
+    'Good news, ': '好消息，',
+    'Good news!': '好消息！',
+    'A slot just opened up on ': '有空位了：',
+    '</strong> at <strong': '</strong> <strong',
+    '. Book now before it fills up again.': '。请尽快预订，以免再次被订满。',
+    '>Book now<': '>立即预订<',
+    "You're receiving this because you joined the waitlist for ":
+      '您收到这封邮件，是因为您加入了以下日期的候补名单：',
+
+    'Reset your password': '重设密码',
+    'We received a request to reset the password for your Dr. Bike Sydney account. Click below to choose a new one.':
+      '我们收到了重设您 Dr. Bike Sydney 账户密码的请求。请点击下方设置新密码。',
+    '>Reset password<': '>重设密码<',
+    'This link expires in 1 hour, for your security.': '为了您的安全，此链接将在 1 小时后失效。',
+    'Button not working? Paste this link into your browser:':
+      '按钮无法使用？请把此链接粘贴到浏览器中：',
+    "Didn't request this? No action needed - you can safely ignore this email and your password will stay the same.":
+      '不是您本人操作？无需处理，忽略此邮件即可，您的密码不会改变。',
+
+    'Your booking links': '您的预订链接',
+    "Here's every active booking on file for this email:": '以下是此邮箱名下所有有效的预订：',
+    'Track this booking →': '跟踪此预订 →',
+    "Didn't request this? You can safely ignore this email.": '不是您本人操作？忽略此邮件即可。',
+    '>Pending<': '>待确认<',
+    '>Quote requested<': '>已申请报价<',
+    '>Confirmed<': '>已确认<',
+    '>On the way<': '>技师已出发<',
+    '>In progress<': '>服务中<',
+    '>Completed<': '>已完成<',
+
+    'Tax Invoice &amp; Service Report': '税务发票和服务报告',
+    '>Billed to<': '>开票对象<',
+    '>Invoice details<': '>发票详情<',
+    '>Date:<': '>日期：<',
+    '>Ref:<': '>编号：<',
+    '✓ Paid': '✓ 已付款',
+    '>Service details<': '>服务详情<',
+    '>Date<': '>日期<',
+    '>Location<': '>地点<',
+    '>Mechanic<': '>技师<',
+    '>Duration<': '>用时<',
+    '>Bike<': '>自行车<',
+    'Visit & diagnosis (paid at booking)': '上门检测费（预订时已付）',
+    '>Discount (at booking)<': '>折扣（预订时）<',
+    'Discount (': '折扣 (',
+    '>Discount<': '>折扣<',
+    '>GST included<': '>含 GST<',
+    '>Total general (AUD)<': '>总计（AUD）<',
+    '💚 Tip for your mechanic': '💚 给技师的小费',
+    '>Total charged (AUD)<': '>实收总额（AUD）<',
+    'Next service reminder:': '下次保养提醒：',
+    'Rate your mechanic →': '为技师评分 →',
+    'Thank you for choosing Dr. Bike Sydney!': '感谢您选择 Dr. Bike Sydney！',
+    'We come to you — home, office or park across Sydney.':
+      '我们上门服务 — 悉尼各地的家里、办公室或公园。',
+    'Book next service →': '预订下一次服务 →',
+    'Service Report — ': '服务报告 — ',
+    '>Client<': '>客户<',
+    'Mechanic: <strong': '技师：<strong',
+    '>Pre-Service Inspection<': '>服务前检查<',
+    '>Inspection Notes<': '>检查备注<',
+    '>Work Completed<': '>已完成的工作<',
+    '>Photos<': '>照片<',
+    '>Before<': '>维修前<',
+    '>After<': '>维修后<',
+    'Next service recommendation:': '下次保养建议：',
+    '>Front brakes<': '>前刹车<',
+    '>Rear brakes<': '>后刹车<',
+    '>Chain<': '>链条<',
+    '>Cassette<': '>飞轮<',
+    '>Chainrings<': '>牙盘<',
+    '>Cables<': '>线缆<',
+    '>Wheels<': '>车轮<',
+    '>Tyres<': '>轮胎<',
+    '>Handlebar & stem<': '>车把和把立<',
+    '>Seat & seatpost<': '>座垫和座管<',
+    '>Headset<': '>车头碗组<',
+    '>Bottom bracket<': '>中轴<',
+    '>Lights<': '>车灯<',
+    '>Frame condition<': '>车架状况<',
+    '✅ OK': '✅ 正常',
+    '⚠️ Warn': '⚠️ 注意',
+    '🔴 Critical': '🔴 严重',
+    'Your next recommended service is on ': '建议下次保养日期：',
+    'We recommend a service check every 3–6 months.': '我们建议每 3–6 个月做一次检查。',
   },
 };
 
@@ -500,6 +806,19 @@ const subjectDict = {
     '📦 Order received —': '📦 Pedido recibido —',
     '🚚 Your order is on its way —': '🚚 Tu pedido va en camino —',
     '↩️ Refund for order': '↩️ Reembolso del pedido',
+    'Your mechanic recommends a service soon —': 'Tu mecánico recomienda un servicio pronto —',
+    'Time for your next bike service —': 'Es hora de tu próximo servicio —',
+    ' months since your ': ' meses desde tu ',
+    'Your mechanic found items needing attention —':
+      'Tu mecánico encontró cosas que necesitan atención —',
+    'We received your fleet enquiry — Dr. Bike Sydney':
+      'Recibimos tu consulta de flota — Dr. Bike Sydney',
+    "You're subscribed — Dr. Bike Sydney 🚲": 'Ya estás suscrito — Dr. Bike Sydney 🚲',
+    'A slot just opened up for ': '¡Se liberó un horario para el ',
+    '🔐 Reset your Dr. Bike Sydney password': '🔐 Cambia tu contraseña de Dr. Bike Sydney',
+    'Your Dr. Bike Sydney booking tracking links': 'Tus enlaces de seguimiento de Dr. Bike Sydney',
+    'Your Dr. Bike Sydney receipt & service report —':
+      'Tu recibo e informe de servicio de Dr. Bike Sydney —',
   },
   zh: {
     '✅ Booking confirmed —': '✅ 预订已确认 —',
@@ -527,6 +846,16 @@ const subjectDict = {
     '📦 Order received —': '📦 订单已收到 —',
     '🚚 Your order is on its way —': '🚚 您的订单已发货 —',
     '↩️ Refund for order': '↩️ 订单退款',
+    'Your mechanic recommends a service soon —': '您的技师建议尽快保养 —',
+    'Time for your next bike service —': '该做下一次保养了 —',
+    ' months since your ': ' 个月前您做了 ',
+    'Your mechanic found items needing attention —': '您的技师发现了需要处理的问题 —',
+    'We received your fleet enquiry — Dr. Bike Sydney': '我们已收到您的车队咨询 — Dr. Bike Sydney',
+    "You're subscribed — Dr. Bike Sydney 🚲": '订阅成功 — Dr. Bike Sydney 🚲',
+    'A slot just opened up for ': '有空位了：',
+    '🔐 Reset your Dr. Bike Sydney password': '🔐 重设您的 Dr. Bike Sydney 密码',
+    'Your Dr. Bike Sydney booking tracking links': '您的 Dr. Bike Sydney 预订跟踪链接',
+    'Your Dr. Bike Sydney receipt & service report —': '您的 Dr. Bike Sydney 收据和服务报告 —',
   },
 };
 
@@ -555,6 +884,12 @@ function replaceAll(text, table) {
     out = out.split(key).join(table[key]);
   }
   return out;
+}
+
+// For the dates a template formats itself: the dictionary has no "Wed" or
+// "Nov" to look up.
+export function emailLocale(lang) {
+  return { en: 'en-AU', es: 'es-ES', zh: 'zh-CN' }[normalizeLang(lang)];
 }
 
 // Translates a rendered email body (HTML) into `lang`. Unknown phrases are left

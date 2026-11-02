@@ -15,7 +15,8 @@ import {
   MAX_JSON_BYTES,
 } from './_backup.js';
 import { withSentry } from './_sentry.js';
-import { emailFrame, emailButton, INK, MUTED, RULE, PAPER, BLUE } from './_email-frame.js';
+import { emailFrame, emailButton, greeting, INK, MUTED, RULE, PAPER, BLUE } from './_email-frame.js';
+import { translateEmailHtml, translateEmailSubject, emailLocale } from './_email-i18n.js';
 
 // api/send-cron.js — All scheduled/cron email jobs in one function
 // Routes: ?type=birthday | reengagement | abandoned | service
@@ -880,7 +881,7 @@ async function handleServiceReminders(req, res) {
   const tip = (text) =>
     `<div style="background:${PAPER};border-left:3px solid ${BLUE};padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;color:${INK}">${text}</div>`;
 
-  async function sendReminder(email, subject, title, bodyHtml) {
+  async function sendReminder(email, lang, subject, title, bodyHtml) {
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -890,11 +891,14 @@ async function handleServiceReminders(req, res) {
       body: JSON.stringify({
         from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
         to: email,
-        subject,
-        html: emailFrame({
-          title,
-          body: `${bodyHtml}<p style="margin:26px 0 0">${emailButton('https://drbikesydney.com.au', 'Book your next service →')}</p>`,
-        }),
+        subject: translateEmailSubject(subject, lang),
+        html: translateEmailHtml(
+          emailFrame({
+            title,
+            body: `${bodyHtml}<p style="margin:26px 0 0">${emailButton('https://drbikesydney.com.au', 'Book your next service →')}</p>`,
+          }),
+          lang
+        ),
       }),
     }).catch((e) => ({ ok: false, _err: e.message }));
     if (!r.ok) logSendFailure('service-reminder', r, email);
@@ -911,7 +915,7 @@ async function handleServiceReminders(req, res) {
     const { data: dateBased } = await sb
       .from('bookings')
       .select(
-        'id, service_name, scheduled_date, next_service_date, client_email, client_name, client_id'
+        'id, service_name, scheduled_date, next_service_date, client_email, client_name, client_id, client_lang'
       )
       .eq('status', 'completed')
       .not('next_service_date', 'is', null)
@@ -922,22 +926,21 @@ async function handleServiceReminders(req, res) {
     for (const b of dateBased || []) {
       const email = b.client_email;
       if (!email) continue;
-      const name = esc(b.client_name?.split(' ')[0] || 'there');
+      const name = esc(b.client_name?.split(' ')[0] || '');
       const svc = esc(b.service_name || 'service');
-      const dateLabel = new Date(b.next_service_date).toLocaleDateString('en-AU', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-      });
+      const dateLabel = new Date(b.next_service_date).toLocaleDateString(
+        emailLocale(b.client_lang),
+        { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long' }
+      );
       const daysLeft = Math.ceil((new Date(b.next_service_date) - now) / (1000 * 60 * 60 * 24));
+      // No day count in the copy: "in 1 day / 2 days" is a plural the string
+      // replacement cannot translate.
       const ok = await sendReminder(
         email,
+        b.client_lang,
         `Your mechanic recommends a service soon — ${dateLabel}`,
-        `Hi ${name}!`,
-        `<p style="margin:0 0 16px">
-           Your mechanic recommended scheduling your next <strong style="color:${INK}">${svc}</strong> service soon.
-           ${daysLeft <= 2 ? '<br><span style="color:#CF2020;font-weight:600">Your recommended service date is in ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's') + '.</span>' : 'The recommended date is in <strong>' + daysLeft + ' days</strong> (' + dateLabel + ').'}
-         </p>
+        `${greeting(name)}, your next service is coming up`,
+        `<p style="margin:0 0 16px">Your mechanic recommended booking your next <strong style="color:${INK}">${svc}</strong> by <strong style="color:${INK}">${dateLabel}</strong>.${daysLeft <= 2 ? '<br><span style="color:#CF2020;font-weight:600">That date is almost here.</span>' : ''}</p>
          ${tip('Regular servicing keeps your bike safe and extends the life of components.')}`
       );
       if (ok) {
@@ -973,7 +976,7 @@ async function handleServiceReminders(req, res) {
 
       const { data } = await sb
         .from('bookings')
-        .select('id, service_name, scheduled_date, client_email, client_name')
+        .select('id, service_name, scheduled_date, client_email, client_name, client_lang')
         .eq('status', 'completed')
         .is('next_service_date', null)
         .is('next_service_reminder_sent', null)
@@ -984,12 +987,13 @@ async function handleServiceReminders(req, res) {
       for (const b of data || []) {
         const email = b.client_email;
         if (!email) continue;
-        const name = esc(b.client_name?.split(' ')[0] || 'there');
+        const name = esc(b.client_name?.split(' ')[0] || '');
         const svc = esc(b.service_name || 'service');
         const ok = await sendReminder(
           email,
+          b.client_lang,
           `Time for your next bike service — ${months} months since your ${svc}`,
-          `Hi ${name}, time for a service!`,
+          `${greeting(name)}, time for a service!`,
           `<p style="margin:0 0 16px">
              It's been about <strong style="color:${INK}">${months} months</strong> since your <strong style="color:${INK}">${svc}</strong>.
              Regular servicing keeps your bike running smoothly and prevents costly repairs.
@@ -1070,13 +1074,14 @@ async function handleUpsell(req, res) {
   const sb = makeSb();
   const { data: booking } = await sb
     .from('bookings')
-    .select('service_name, profiles(email, full_name)')
+    .select('service_name, client_lang, profiles(email, full_name)')
     .eq('id', bookingId)
     .single();
   if (!booking?.profiles?.email) return res.status(404).json({ error: 'Booking not found' });
 
   const email = booking.profiles.email;
-  const name = (booking.profiles.full_name?.split(' ')[0] || 'there').replace(/[<>&"']/g, '');
+  const lang = booking.client_lang;
+  const name = (booking.profiles.full_name?.split(' ')[0] || '').replace(/[<>&"']/g, '');
   const rows = criticalItems
     .filter((i) => ITEMS[i])
     .map((i) => {
@@ -1095,16 +1100,22 @@ async function handleUpsell(req, res) {
     body: JSON.stringify({
       from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
       to: email,
-      subject: `Your mechanic found items needing attention — ${booking.service_name || 'your service'}`,
-      html: emailFrame({
-        title: `Hi ${name}, your mechanic found a few things that need attention`,
-        body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid ${RULE};margin:0 0 20px">
+      subject: translateEmailSubject(
+        `Your mechanic found items needing attention — ${booking.service_name || 'your service'}`,
+        lang
+      ),
+      html: translateEmailHtml(
+        emailFrame({
+          title: `${greeting(name)}, your mechanic found a few things that need attention`,
+          body: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid ${RULE};margin:0 0 20px">
             <tr><th bgcolor="${PAPER}" style="padding:10px 12px;background:${PAPER};text-align:left;font-size:12px;color:${MUTED}">Recommended service</th><th bgcolor="${PAPER}" style="padding:10px 12px;background:${PAPER};text-align:right;font-size:12px;color:${MUTED}">Price</th></tr>
             ${rows}
           </table>
-          <p style="margin:0 0 24px">Call <a href="tel:+61433963250" style="color:${BLUE};font-weight:600">0433 963 250</a> to add these to your current service.</p>
+          <p style="margin:0 0 24px">To add these to your current service, call <a href="tel:+61433963250" style="color:${BLUE};font-weight:600">0433 963 250</a>.</p>
           <p style="margin:0">${emailButton('https://drbikesydney.com.au', 'Book a follow-up →')}</p>`,
-      }),
+        }),
+        lang
+      ),
     }),
   });
   return res.status(resp.ok ? 200 : 500).json({ success: resp.ok, sent: resp.ok });
@@ -1161,14 +1172,20 @@ async function handleB2B(req, res) {
         <tr><td style="padding:8px;font-weight:600">Notes</td><td style="padding:8px">${notes || 'N/A'}</td></tr>
       </table><p style="color:#475569;margin-top:16px">Reply within 2 business hours.</p>`,
     });
+    // The form sends the page's language: business.html and its es/ and zh/
+    // copies, and the landing's fleet form.
+    const lang = req.body?.lang;
     await send({
       from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
       to: email,
-      subject: `We received your fleet enquiry — Dr. Bike Sydney`,
-      html: emailFrame({
-        title: `Thanks for your enquiry, ${contactName}!`,
-        body: `<p style="margin:0">We received your fleet enquiry for <strong style="color:${INK}">${businessName}</strong> (${fleetSize} bikes). We'll get back to you within <strong style="color:${INK}">2 business hours</strong> (every day 8am–5pm, Sydney time).</p>`,
-      }),
+      subject: translateEmailSubject(`We received your fleet enquiry — Dr. Bike Sydney`, lang),
+      html: translateEmailHtml(
+        emailFrame({
+          title: `Thanks for your enquiry, ${contactName}`,
+          body: `<p style="margin:0">We received your fleet enquiry for <strong style="color:${INK}">${businessName}</strong> (${fleetSize} bikes). We'll get back to you within <strong style="color:${INK}">2 business hours</strong> (every day 8am–5pm, Sydney time).</p>`,
+        }),
+        lang
+      ),
     });
   } catch (e) {
     console.error('[b2b]', e.message);

@@ -215,7 +215,8 @@ async function submitB2B() {
         phone: document.getElementById('biz-phone').value,
         fleetSize: fleet,
         frequency: document.getElementById('biz-freq').value,
-        notes: document.getElementById('biz-notes').value
+        notes: document.getElementById('biz-notes').value,
+        lang: document.documentElement.lang
       })
     });
     // fetch only throws on a network error. Until 2026-11-02 a 403 fell

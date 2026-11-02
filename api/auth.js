@@ -3248,18 +3248,18 @@ export async function handleClientCancel(req, res) {
     });
   }
 
-  // Notify first person on waitlist for this slot (fire-and-forget)
-  notifyWaitlist(SERVICE_KEY, bk.scheduled_date, bk.scheduled_time).catch(() => {});
-
-  // Remove the mechanic's calendar event, if one was ever created (fire-and-forget)
-  if (bk.google_event_id) deleteCalendarEvent(bk.google_event_id).catch(() => {});
-
-  // Auto-refund the visit fee for >=24h notice (per terms.html section 6),
-  // then tell Diego the outcome (fire-and-forget - never block the client's
-  // cancel response on this).
-  notifyAdminCancellation(bk, SERVICE_KEY).catch((e) =>
-    console.error('[client-cancel] refund/notify failed:', e.message)
-  );
+  // The waitlist, the mechanic's calendar event, and the refund (>=24h notice,
+  // terms.html section 6) with Diego's WhatsApp and the client's email.
+  // Awaited, not fire-and-forget: Vercel can freeze the function once the
+  // response is sent, and a frozen one loses the refund and both messages.
+  // The client's button says "Cancelling..." for the second or two this takes.
+  await Promise.allSettled([
+    notifyWaitlist(SERVICE_KEY, bk.scheduled_date, bk.scheduled_time),
+    bk.google_event_id ? deleteCalendarEvent(bk.google_event_id) : null,
+    notifyAdminCancellation(bk, SERVICE_KEY).catch((e) =>
+      console.error('[client-cancel] refund/notify failed:', e.message)
+    ),
+  ]);
 
   return res.status(200).json({ ok: true });
 }
@@ -3402,7 +3402,7 @@ async function notifyWaitlist(SERVICE_KEY, date, time) {
   const sb = createClient(SUPABASE_URL, SERVICE_KEY);
   const { data: entries } = await sb
     .from('waitlist')
-    .select('id, client_email, client_name, service_name, preferred_date')
+    .select('id, client_id, client_email, client_name, service_name, preferred_date')
     .eq('preferred_date', date)
     .eq('status', 'waiting')
     .contains('preferred_times', [time])
@@ -3412,6 +3412,17 @@ async function notifyWaitlist(SERVICE_KEY, date, time) {
   const entry = entries[0];
   const RESEND_KEY = process.env.RESEND_API_KEY;
   if (!RESEND_KEY) return;
+  // A guest on the list has no profile and gets English.
+  let lang = 'en';
+  if (entry.client_id) {
+    const { data: prof } = await sb
+      .from('profiles')
+      .select('preferred_lang')
+      .eq('id', entry.client_id)
+      .limit(1);
+    lang = prof?.[0]?.preferred_lang || 'en';
+  }
+  const locale = emailLocale(lang);
   // The name and service were typed by the client when they joined the list.
   const esc = (s) =>
     String(s || '').replace(
@@ -3420,27 +3431,40 @@ async function notifyWaitlist(SERVICE_KEY, date, time) {
     );
   // "Wed, 11 Nov", not the "2026-11-11" the column stores.
   const day = /^\d{4}-\d{2}-\d{2}$/.test(date)
-    ? new Date(`${date}T00:00:00Z`).toLocaleDateString('en-AU', {
+    ? new Date(`${date}T00:00:00Z`).toLocaleDateString(locale, {
         timeZone: 'UTC',
         weekday: 'short',
         day: 'numeric',
         month: 'short',
       })
     : esc(date);
+  // "2:30 pm" in English, "14:30" in Spanish - the slot is a 24h HH:MM.
+  const hm = /^(\d{2}):(\d{2})$/.exec(String(time));
+  const at = hm
+    ? new Date(Date.UTC(2000, 0, 1, Number(hm[1]), Number(hm[2]))).toLocaleTimeString(locale, {
+        timeZone: 'UTC',
+        hour: 'numeric',
+        minute: '2-digit',
+      })
+    : esc(time);
   const svc = esc(entry.service_name);
+  const name = esc(entry.client_name);
   await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
       from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
       to: [entry.client_email],
-      subject: `A slot just opened up for ${day}!`,
-      html: emailFrame({
-        title: `Good news, ${esc(entry.client_name) || 'there'}!`,
-        body: `<p style="margin:0 0 24px">A slot just opened up on <strong style="color:${INK}">${day}</strong> at <strong style="color:${INK}">${esc(time)}</strong>${svc ? ' for ' + svc : ''}. Book now before it fills up again.</p>
+      subject: translateEmailSubject(`A slot just opened up for ${day}!`, lang),
+      html: translateEmailHtml(
+        emailFrame({
+          title: name ? `Good news, ${name}!` : 'Good news!',
+          body: `<p style="margin:0 0 24px">A slot just opened up on <strong style="color:${INK}">${day}</strong> at <strong style="color:${INK}">${at}</strong>${svc ? ` &middot; ${svc}` : ''}. Book now before it fills up again.</p>
           <p style="margin:0 0 24px">${emailButton('https://drbikesydney.com.au', 'Book now')}</p>
           <p style="margin:0;font-size:12px;color:${FAINT}">You're receiving this because you joined the waitlist for ${day}.</p>`,
-      }),
+        }),
+        lang
+      ),
     }),
   });
   await sb
@@ -3642,6 +3666,8 @@ async function handleRequestPasswordReset(req, res) {
     }
 
     const actionLink = data.properties.action_link;
+    // The language of the page the reset was asked from.
+    const lang = req.body?.lang;
     const emailResp = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
@@ -3651,8 +3677,9 @@ async function handleRequestPasswordReset(req, res) {
       body: JSON.stringify({
         from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
         to: [cleanEmail],
-        subject: '🔐 Reset your Dr. Bike Sydney password',
-        html: `<div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+        subject: translateEmailSubject('🔐 Reset your Dr. Bike Sydney password', lang),
+        html: translateEmailHtml(
+          `<div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
           <div style="background:#2563EB;padding:32px 28px;text-align:center">
             <div style="display:inline-block;background:#fff;border-radius:14px;padding:10px 18px;margin-bottom:14px">
               <img src="https://drbikesydney.com.au/images/logo-db.png" alt="Dr. Bike Sydney" height="26" style="display:block;width:auto">
@@ -3679,6 +3706,8 @@ async function handleRequestPasswordReset(req, res) {
             <p style="font-size:11px;color:#D1D5DB;margin:0">ABN: 87 654 025 287 · contact@drbikesydney.com.au</p>
           </div>
         </div>`,
+          lang
+        ),
       }),
     });
     if (!emailResp.ok)
@@ -3901,7 +3930,17 @@ async function rescheduleBookingCore(
     }).catch(() => {});
   }
 
-  if (!moved) return { ok: true, emailed: false };
+  // What was saved, so the client's app can show it without a reload: a
+  // client's move is 'pending' now, and the fees are the new day's.
+  const saved = {
+    status: updatePayload.status || bk.status,
+    scheduled_date,
+    scheduled_time,
+    callout_fee: newCalloutFee,
+    ...(newServicePrice !== null ? { service_price: newServicePrice } : {}),
+  };
+
+  if (!moved) return { ok: true, emailed: false, booking: saved };
 
   // History (scripts/add-booking-reschedules.sql). Run by hand, so the table
   // can be missing for a while: that costs the record, never the reschedule.
@@ -3993,14 +4032,14 @@ async function rescheduleBookingCore(
       .catch((e) => console.error('[reschedule] WhatsApp to admin threw:', bk.id, e.message));
   }
 
-  return { ok: true, emailed };
+  return { ok: true, emailed, booking: saved };
 }
 
 const RESCHEDULE_BOOKING_COLS =
   'id,status,client_id,google_event_id,service_name,address,van_number,callout_fee,' +
   'scheduled_date,scheduled_time,client_email,client_name,client_lang';
 
-async function handleClientReschedule(req, res) {
+export async function handleClientReschedule(req, res) {
   const { access_token, booking_id, client_id, scheduled_date, scheduled_time } = req.body;
   if (!access_token || !booking_id || !client_id || !scheduled_date || !scheduled_time)
     return res.status(400).json({
@@ -4035,7 +4074,7 @@ async function handleClientReschedule(req, res) {
     byClient: true,
   });
   if (!result.ok) return res.status(result.status).json({ error: result.error, code: result.code });
-  return res.status(200).json({ ok: true, emailed: result.emailed });
+  return res.status(200).json({ ok: true, emailed: result.emailed, booking: result.booking });
 }
 
 // Admin-side equivalent - the calendar's own reschedule (docs/PENDIENTES.md
@@ -5480,12 +5519,46 @@ async function handlePublicBookingList(req, res) {
     const bookings = await resp.json();
     if (!Array.isArray(bookings) || !bookings.length) return genericOk();
 
+    // The language of the page the links were asked from (track.html).
+    const lang = req.body?.lang;
+    const locale = emailLocale(lang);
+    const esc = (s) =>
+      String(s || '').replace(
+        /[<>&"']/g,
+        (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' })[c]
+      );
+    // The status as a word the dictionary knows, not the raw column value.
+    const STATUS = {
+      pending: 'Pending',
+      quote_requested: 'Quote requested',
+      confirmed: 'Confirmed',
+      enroute: 'On the way',
+      inprogress: 'In progress',
+      in_progress: 'In progress',
+      arrived: 'In progress',
+      completed: 'Completed',
+    };
+    const when = (d, t) => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(d || ''))) return esc(d);
+      const hm = /^(\d{2}):(\d{2})/.exec(String(t || ''));
+      const at = new Date(`${d}T${hm ? `${hm[1]}:${hm[2]}` : '00:00'}:00Z`);
+      const day = at.toLocaleDateString(locale, {
+        timeZone: 'UTC',
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+      });
+      return hm
+        ? `${day} · ${at.toLocaleTimeString(locale, { timeZone: 'UTC', hour: 'numeric', minute: '2-digit' })}`
+        : day;
+    };
+
     const rows = bookings
       .map(
         (b) => `
         <div style="padding:14px 0;border-top:1px solid #E2E8F0">
-          <div style="font-weight:700;color:#0D1F3C;font-size:14px">${b.service_name || 'Service'}</div>
-          <div style="color:#475569;font-size:13px;margin:2px 0 8px">${b.scheduled_date || ''}${b.scheduled_time ? ' · ' + b.scheduled_time : ''} · ${b.status}</div>
+          <div style="font-weight:700;color:#0D1F3C;font-size:14px">${esc(b.service_name) || 'Service'}</div>
+          <div style="color:#475569;font-size:13px;margin:2px 0 8px">${when(b.scheduled_date, b.scheduled_time)} · <span>${Object.hasOwn(STATUS, b.status) ? STATUS[b.status] : esc(b.status)}</span></div>
           <a href="https://drbikesydney.com.au/track.html?token=${b.tracking_token}" style="color:#2563EB;font-size:13px;font-weight:600">Track this booking →</a>
         </div>`
       )
@@ -5500,8 +5573,9 @@ async function handlePublicBookingList(req, res) {
       body: JSON.stringify({
         from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
         to: [cleanEmail],
-        subject: 'Your Dr. Bike Sydney booking tracking links',
-        html: `<div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
+        subject: translateEmailSubject('Your Dr. Bike Sydney booking tracking links', lang),
+        html: translateEmailHtml(
+          `<div style="font-family:Inter,Arial,sans-serif;max-width:480px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08)">
           <div style="background:#2563EB;padding:32px 28px;text-align:center">
             <div style="display:inline-block;background:#fff;border-radius:14px;padding:10px 18px;margin-bottom:14px">
               <img src="https://drbikesydney.com.au/images/logo-db.png" alt="Dr. Bike Sydney" height="26" style="display:block;width:auto">
@@ -5519,6 +5593,8 @@ async function handlePublicBookingList(req, res) {
             <p style="font-size:11px;color:#D1D5DB;margin:0">ABN: 87 654 025 287 · contact@drbikesydney.com.au</p>
           </div>
         </div>`,
+          lang
+        ),
       }),
     });
     if (!emailResp.ok)
@@ -6983,6 +7059,36 @@ export async function handleAdminCancelBooking(req, res) {
     return res.status(409).json({ error: 'Booking not found or already cancelled' });
   const returned = await revertJobStock(id, SERVICE_KEY, String(auth.user?.email || 'admin'));
   const bk = rows[0];
+  const reasons = {
+    'Client request': 'client',
+    'Mechanic unavailable': 'mechanic',
+    Weather: 'weather',
+  };
+  const cancelReason = Object.hasOwn(reasons, req.body?.reason_code)
+    ? reasons[req.body.reason_code]
+    : '';
+
+  // The visit fee goes back only when the admin ticked "Refund" - the modal
+  // ticks it by the same rule the client's own cancel follows (terms.html
+  // section 6), and Diego can untick it. Never for a finished job. Runs after
+  // the cancel matched, so a double click cannot refund twice: the second
+  // click finds the booking already cancelled and stops at the 409 above.
+  // null = not asked for, so the toast only speaks when a refund was tried.
+  let refunded = null;
+  let refundAmount = Number(bk.callout_fee) || 0;
+  if (req.body?.refund === true && bk.stripe_payment_intent_id && !bk.completed_at) {
+    refunded = false;
+    try {
+      const refund = await new Stripe(process.env.STRIPE_SECRET_KEY).refunds.create({
+        payment_intent: bk.stripe_payment_intent_id,
+      });
+      refunded = true;
+      if (Number(refund?.amount) > 0) refundAmount = refund.amount / 100;
+    } catch (e) {
+      console.error('[admin-cancel] Stripe refund failed:', bk.id, e.message);
+    }
+  }
+
   // Only a visit that was still ahead is news to the client: cancelling a
   // finished job to put its parts back, or a past one, is bookkeeping. null =
   // not attempted, so the admin's toast only speaks when an email was tried.
@@ -6993,21 +7099,29 @@ export async function handleAdminCancelBooking(req, res) {
     !bk.completed_at &&
     String(bk.scheduled_date || '') >= sydneyToday()
   ) {
-    const reasons = {
-      'Client request': 'client',
-      'Mechanic unavailable': 'mechanic',
-      Weather: 'weather',
-    };
+    const late =
+      cancelReason === 'client' && hoursUntilAppointment(bk.scheduled_date, bk.scheduled_time) < 24;
     emailed = await emailClientCancellation(bk, {
-      cancelReason: Object.hasOwn(reasons, req.body?.reason_code)
-        ? reasons[req.body.reason_code]
-        : '',
-      // An admin cancel refunds nothing by itself - Diego does it by hand.
-      refundState: bk.stripe_payment_intent_id ? 'contact' : '',
-      refundAmount: Number(bk.callout_fee) || 0,
+      cancelReason,
+      // What happened to the fee. Not refunded and not a late cancel by the
+      // client: "we'll be in touch", and Diego sorts it out by hand.
+      refundState: !bk.stripe_payment_intent_id
+        ? ''
+        : refunded
+          ? 'refunded'
+          : late && refunded === null
+            ? 'late'
+            : 'contact',
+      refundAmount,
     });
   }
-  return res.status(200).json({ booking: bk, parts_returned: returned, emailed });
+  return res.status(200).json({
+    booking: bk,
+    parts_returned: returned,
+    emailed,
+    refunded,
+    refund_amount: refundAmount,
+  });
 }
 
 // Cleans up a booking's synced calendar event after an admin-side cancel
@@ -7697,6 +7811,7 @@ import { handleShop } from './_shop.js';
 import { handleShopAdmin } from './_shop-admin.js';
 import { withSentry, captureMessage } from './_sentry.js';
 import { emailFrame, emailButton, INK, FAINT } from './_email-frame.js';
+import { translateEmailHtml, translateEmailSubject, emailLocale } from './_email-i18n.js';
 export default withSentry(handler, 'auth');
 async function handler(req, res) {
   const role = req.body?.type || req.body?.role || req.query?.role || 'admin';
