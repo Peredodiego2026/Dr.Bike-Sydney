@@ -53,7 +53,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SURFACES = ['js/app.js', 'js/landing-inline.js', 'landing.html', 'index.html'];
 const sources = SURFACES.map((f) => ({ file: f, src: readFileSync(join(root, f), 'utf8') }));
 
-const LINK_RE = /https:\/\/(?:maps\.app\.goo\.gl|g\.page|search\.google\.com)\/[^\s"'<)]+/g;
+const LINK_RE = /https:\/\/(?:maps\.app\.goo\.gl|g\.page|search\.google\.com|www\.google\.com\.au\/maps)\/[^\s\"'<)]+/g;
 
 // Which job each occurrence is doing, decided by the label that follows the
 // href rather than by a hand-kept list of file:line - a list like that goes
@@ -121,7 +121,7 @@ describe('the Google review link', () => {
   it('every WRITE cta opens the review box, not the listing', () => {
     for (const o of all.filter((x) => x.role === 'write')) {
       expect(o.url, `${o.file} sends a review-writer to the listing`).toMatch(
-        /^https:\/\/(g\.page\/r\/[^/]+\/review|search\.google\.com\/local\/writereview\?)/
+        /^https:\/\/(g\.page\/r\/[^/]+\/review|search\.google\.com\/local\/writereview\?|www\.google\.com\.au\/maps\/place\/[^?]*!9m1!1b1)/
       );
     }
   });
