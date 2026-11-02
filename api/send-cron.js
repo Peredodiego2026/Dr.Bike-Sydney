@@ -15,7 +15,16 @@ import {
   MAX_JSON_BYTES,
 } from './_backup.js';
 import { withSentry } from './_sentry.js';
-import { emailFrame, emailButton, greeting, INK, MUTED, RULE, PAPER, BLUE } from './_email-frame.js';
+import {
+  emailFrame,
+  emailButton,
+  greeting,
+  INK,
+  MUTED,
+  RULE,
+  PAPER,
+  BLUE,
+} from './_email-frame.js';
 import { translateEmailHtml, translateEmailSubject, emailLocale } from './_email-i18n.js';
 
 // api/send-cron.js — All scheduled/cron email jobs in one function
@@ -1159,8 +1168,12 @@ async function handleB2B(req, res) {
       body: JSON.stringify(payload),
     });
 
+  // The email to Diego IS the lead - nothing else stores it. Until 2026-11-02
+  // this answered 200 whatever Resend said (fetch only throws on a network
+  // error), so a refused send left the client on "Enquiry sent!" and the
+  // enquiry nowhere. Now the page hears about it and shows its error.
   try {
-    await send({
+    const r = await send({
       from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
       to: 'contact@drbikesydney.com.au',
       subject: `New B2B Fleet Enquiry — ${businessName} (${fleetSize} bikes)`,
@@ -1172,10 +1185,22 @@ async function handleB2B(req, res) {
         <tr><td style="padding:8px;font-weight:600">Notes</td><td style="padding:8px">${notes || 'N/A'}</td></tr>
       </table><p style="color:#475569;margin-top:16px">Reply within 2 business hours.</p>`,
     });
+    if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 200)}`);
+  } catch (e) {
+    console.error('[b2b] enquiry email to Diego failed:', e.message);
+    return res.status(500).json({
+      error:
+        'We could not send your enquiry. Please email contact@drbikesydney.com.au or call 0433 963 250.',
+    });
+  }
+
+  // The echo to the client is a courtesy: Diego already has the lead, so a
+  // failure here is logged, not reported back as a failed enquiry.
+  try {
     // The form sends the page's language: business.html and its es/ and zh/
     // copies, and the landing's fleet form.
     const lang = req.body?.lang;
-    await send({
+    const r = await send({
       from: 'Dr. Bike Sydney <noreply@drbikesydney.com.au>',
       to: email,
       subject: translateEmailSubject(`We received your fleet enquiry — Dr. Bike Sydney`, lang),
@@ -1187,8 +1212,9 @@ async function handleB2B(req, res) {
         lang
       ),
     });
+    if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 200)}`);
   } catch (e) {
-    console.error('[b2b]', e.message);
+    console.error('[b2b] confirmation to the client failed:', e.message);
   }
   return res.status(200).json({ success: true });
 }
