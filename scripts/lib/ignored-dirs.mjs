@@ -11,6 +11,7 @@
 // The source of truth is .gitignore: if git does not track it, a check about
 // what this repo ships has no business reading it.
 import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 // Names that are never repo content, whether or not .gitignore mentions them.
 const ALWAYS = ['node_modules', '.git'];
@@ -31,3 +32,15 @@ function fromGitignore() {
 
 /** Directory names a tree walk should skip. Matched by name, at any depth. */
 export const IGNORED_DIRS = new Set([...ALWAYS, ...fromGitignore()]);
+
+// A directory with its own `.git` (a file for a worktree, a folder for a
+// clone) is another checkout, not part of this one - git never descends into
+// it either. Claude Code puts its worktrees in .claude/worktrees/, ignored only
+// through .git/info/exclude, which the name list above cannot read: with one
+// worktree present, color-check reported the retired blue in that worktree's
+// own copy of color-check.mjs and `npm run check` failed locally on problems
+// the repo does not have (2026-11-02).
+/** True for a nested checkout a tree walk must not enter. */
+export function isNestedCheckout(dir) {
+  return existsSync(join(dir, '.git'));
+}

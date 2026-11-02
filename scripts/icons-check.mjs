@@ -12,7 +12,7 @@
 // generated letter icon and nobody finds out until a phone shows it.
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { IGNORED_DIRS } from './lib/ignored-dirs.mjs';
+import { IGNORED_DIRS, isNestedCheckout } from './lib/ignored-dirs.mjs';
 
 const problems = [];
 
@@ -24,7 +24,9 @@ function htmlFiles(dir, acc = []) {
     // HTML files with no favicon, and this check used to count them.
     if (IGNORED_DIRS.has(name) || name === 'docs' || name.startsWith('${')) continue;
     const p = join(dir, name);
-    if (statSync(p).isDirectory()) htmlFiles(p, acc);
+    if (statSync(p).isDirectory()) {
+      if (!isNestedCheckout(p)) htmlFiles(p, acc);
+    }
     else if (name.endsWith('.html')) acc.push(p.replace(/\\/g, '/').replace('./', ''));
   }
   return acc;

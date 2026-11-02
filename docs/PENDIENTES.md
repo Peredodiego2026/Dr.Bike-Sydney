@@ -5305,7 +5305,7 @@ y 23.4 tambien - no hace falta repetir la prueba dos veces.
 | 5.1 | ~~Sin paginacion en admin/mechanic/client...~~ **CERRADO.** Admin ya la tenia (doc desactualizado); mechanic/client avisan si tocan su tope en vez de paginar (PR #272) | Codigo |
 | 15.2 | ~~Si falla el PDF de la factura...~~ **CERRADO.** Avisa a Diego por WhatsApp (PR #265) | Codigo |
 | 14.2 | ~~El mensaje de error de "inicia sesion" no esta traducido...~~ **CERRADO** (PR #263) | Codigo, chico |
-| 14.3 | Nadie le aviso a Thais que se le devolvio el dinero (puede que ya se haya hecho) | **Sigue pendiente - es de Diego, no de codigo.** WhatsApp |
+| 14.3 | ~~Nadie le aviso a Thais que se le devolvio el dinero~~ **CERRADO.** Diego le aviso el 10-ago (verificado en el inventario del 22-oct, `CONTEXT.md`) | Diego |
 
 **Prioridad Baja — diseno, deuda tecnica, contenido:**
 

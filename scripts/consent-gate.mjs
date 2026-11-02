@@ -29,6 +29,7 @@
 
 import fs from 'node:fs';
 import { VENDOR_USES } from './lib/consent-vendors.mjs';
+import { isNestedCheckout } from './lib/ignored-dirs.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -101,7 +102,11 @@ function htmlFiles(dir, acc = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     if (e.name === 'node_modules' || e.name === '.git' || e.name === 'tests') continue;
     const p = path.join(dir, e.name);
-    if (e.isDirectory()) htmlFiles(p, acc);
+    // A nested checkout (a Claude Code worktree) is another session's files:
+    // without --check this script rewrites every page it walks.
+    if (e.isDirectory()) {
+      if (!isNestedCheckout(p)) htmlFiles(p, acc);
+    }
     else if (e.name.endsWith('.html')) acc.push(p);
   }
   return acc;

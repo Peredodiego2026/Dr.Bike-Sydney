@@ -31,6 +31,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isNestedCheckout } from './lib/ignored-dirs.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SKIP = new Set(['node_modules', '.git', '.vercel', '.look', 'coverage', 'dist']);
@@ -39,7 +40,9 @@ function htmlFiles(dir, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     if (SKIP.has(e.name)) continue;
     const full = path.join(dir, e.name);
-    if (e.isDirectory()) htmlFiles(full, out);
+    if (e.isDirectory()) {
+      if (!isNestedCheckout(full)) htmlFiles(full, out);
+    }
     else if (e.name.endsWith('.html')) out.push(full);
   }
   return out;
