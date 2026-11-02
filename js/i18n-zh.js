@@ -658,6 +658,8 @@ export default {
     '经过认证和背景审查的技工，由悉尼真实骑行者评分。',
   'Previous mechanic': '上一位技工',
   'Next mechanic': '下一位技工',
+  'Previous review': '上一条评价',
+  'Next review': '下一条评价',
   'Our mechanic profiles are coming soon.': '技工资料即将上线。',
   // Memberships section (landing-specific)
   Monthly: '按月',

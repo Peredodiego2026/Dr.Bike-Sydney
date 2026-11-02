@@ -716,6 +716,8 @@ export default {
     'Mecánicos calificados, con antecedentes verificados, calificados por ciclistas reales de Sydney.',
   'Previous mechanic': 'Mecánico anterior',
   'Next mechanic': 'Siguiente mecánico',
+  'Previous review': 'Reseña anterior',
+  'Next review': 'Siguiente reseña',
   'Our mechanic profiles are coming soon.':
     'Los perfiles de nuestros mecánicos estarán disponibles pronto.',
   // Memberships section (landing-specific)
