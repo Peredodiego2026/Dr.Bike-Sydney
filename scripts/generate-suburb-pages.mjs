@@ -186,7 +186,7 @@ const COPY = {
     description:
       'Expert mobile bicycle mechanic in {name}, Sydney. We come to you — home, work or park. Serving {areas}. Book online, same-day service available.',
     bookNow: 'Book Now',
-    badges: ['100% Satisfaction Guarantee', 'Verified Mechanic', 'Background Checked', 'Fully Insured'],
+    badges: ['14-Day Workmanship Guarantee', 'Verified Mechanic', 'Background Checked', 'Fully Insured'],
     heroH1: 'Mobile Bike Mechanic<br>{name}, Sydney',
     heroP:
       'Professional bicycle repair at your doorstep. We come to you — home, work or park. No need to transport your bike.',
@@ -256,7 +256,7 @@ const COPY = {
       'Mecánico de bicicletas a domicilio en {name}, Sídney. Vamos a donde estés: casa, trabajo o parque. Cubrimos {areas}. Reserva online, con turnos el mismo día.',
     bookNow: 'Reservar',
     badges: [
-      'Garantía de 100% de satisfacción',
+      'Garantía de 14 días en el trabajo',
       'Mecánico verificado',
       'Antecedentes verificados',
       'Totalmente asegurado',
@@ -329,7 +329,7 @@ const COPY = {
     description:
       '{name}（悉尼）专业上门自行车维修。我们到您指定的地点服务：家里、公司或公园。服务范围：{areas}。可在线预订，多数日期当天可约。',
     bookNow: '立即预订',
-    badges: ['100% 满意保证', '技师已认证', '已做背景核查', '全额投保'],
+    badges: ['14天工艺保修', '技师已认证', '已做背景核查', '全额投保'],
     heroH1: '{name}（悉尼）<br>上门自行车维修',
     heroP: '专业自行车维修，直接到您门口。家里、公司或公园都可以，无需自己搬运车子。',
     bookService: '预订服务',

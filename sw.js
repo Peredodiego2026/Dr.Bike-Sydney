@@ -271,7 +271,9 @@
 // diccionarios).
 // v160: Hornsby sale de "a unos 45 minutos" (cobertura y preguntas frecuentes,
 // en los dos diccionarios): el sistema lo mide a 52 minutos y lo cotiza.
-const CACHE_STATIC = 'drbike-static-v160';
+// v161: garantia de 14 dias (franja bajo "How it works", lista del equipo y
+// chip del celular) en los dos diccionarios.
+const CACHE_STATIC = 'drbike-static-v161';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

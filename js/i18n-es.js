@@ -581,7 +581,10 @@ export default {
   'Certified & experienced mechanic': 'Mecánico certificado y con experiencia',
   'Fully equipped mobile workshop': 'Taller móvil completamente equipado',
   'Premium tools and quality parts': 'Herramientas premium y repuestos de calidad',
-  'Satisfaction guaranteed': 'Satisfacción garantizada',
+  '14-day workmanship guarantee': 'Garantía de 14 días en la mano de obra',
+  "If something we fixed isn't right within 14 days of your service, we come back and fix it free. Damage from repeated off-road riding after the service isn't covered.":
+    'Si algo que reparamos no quedó bien dentro de los 14 días posteriores a tu servicio, volvemos y lo arreglamos sin cargo. No cubre daños por uso repetido en terreno off-road después del servicio.',
+  'Read the terms': 'Leer los términos',
   'Founder & Head Mechanic': 'Fundador y Mecánico Principal',
   'Happy Customers': 'Clientes Felices',
   'Bikes Serviced': 'Bicis Reparadas',
@@ -1458,7 +1461,7 @@ export default {
   'Type a message': 'Escribe un mensaje',
   'Toggle password visibility': 'Mostrar u ocultar la contraseña',
   'Could not enable notifications:': 'No se pudieron activar las notificaciones:',
-  '100% Satisfaction': '100% Satisfacción',
+  '14-day guarantee': 'Garantía de 14 días',
   'Trusted by cyclists across Sydney': 'Elegido por ciclistas de todo Sydney',
   'Be the first to leave a review': 'Sé el primero en dejar una reseña',
   'Real reviews from Sydney cyclists will show up here as soon as clients start sharing their experience.':

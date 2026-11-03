@@ -529,7 +529,10 @@ export default {
   'Certified & experienced mechanic': '持证且经验丰富的技工',
   'Fully equipped mobile workshop': '配备齐全的移动车间',
   'Premium tools and quality parts': '优质工具和高品质零件',
-  'Satisfaction guaranteed': '满意保证',
+  '14-day workmanship guarantee': '14天工艺保修',
+  "If something we fixed isn't right within 14 days of your service, we come back and fix it free. Damage from repeated off-road riding after the service isn't covered.":
+    '服务后14天内，如果我们修过的地方出现问题，我们会免费上门修好。服务后多次越野骑行造成的损坏不在保修范围内。',
+  'Read the terms': '查看条款',
   'Founder & Head Mechanic': '创始人兼首席技工',
   'Happy Customers': '满意客户',
   'Bikes Serviced': '服务车辆',
@@ -1342,7 +1345,7 @@ export default {
   'Type a message': '输入消息',
   'Toggle password visibility': '显示或隐藏密码',
   'Could not enable notifications:': '无法开启通知：',
-  '100% Satisfaction': '100% 满意',
+  '14-day guarantee': '14天保修',
   'Trusted by cyclists across Sydney': '深受悉尼各地骑行者信赖',
   'Be the first to leave a review': '成为第一个留下评价的人',
   'Real reviews from Sydney cyclists will show up here as soon as clients start sharing their experience.':
