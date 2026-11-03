@@ -202,7 +202,7 @@ const COPY = {
     areasLabel: '📍 Areas covered: {areas}',
     servicesH2: 'Our Services &amp; Pricing',
     pricingNote:
-      'All prices include the visit & diagnosis fee. No hidden charges. Sunday &amp; NSW public holiday bookings +20%; Saturday is normal price.',
+      'The visit & diagnosis fee is added to the prices below, from $35 depending on your suburb. No hidden charges. Sunday &amp; NSW public holiday bookings +20%; Saturday is normal price.',
     serviceNames: ['Tune-Up', 'Standard Service', 'Standard+ Service', 'Ultimate Overhaul'],
     serviceDescs: [
       'Gears, brakes, wheels trued · ~1 hour',
@@ -237,7 +237,7 @@ const COPY = {
       ],
       [
         'How much does a bike service cost in {name}?',
-        'Our Tune-Up starts at {tuneUpPrice} and includes the visit & diagnosis fee. Full pricing is listed above. No hidden charges.',
+        'Our Tune-Up starts at {tuneUpPrice}, plus the visit & diagnosis fee (from $35, depending on your suburb). Full pricing is listed above. No hidden charges.',
       ],
     ],
     ctaH2: 'Ready to book in {name}?',
@@ -275,7 +275,7 @@ const COPY = {
     areasLabel: '📍 Zonas que cubrimos: {areas}',
     servicesH2: 'Servicios y precios',
     pricingNote:
-      'Todos los precios incluyen la tarifa de visita a domicilio. Sin cargos ocultos. Las reservas de domingo y feriados de NSW tienen un 20% de recargo; el sábado tiene precio normal.',
+      'A los precios de abajo se suma la tarifa de visita a domicilio, desde $35 según tu suburbio. Sin cargos ocultos. Las reservas de domingo y feriados de NSW tienen un 20% de recargo; el sábado tiene precio normal.',
     serviceNames: ['Ajuste', 'Servicio Estándar', 'Servicio Estándar+', 'Revisión Definitiva'],
     serviceDescs: [
       'Cambios, frenos y ruedas centradas · ~1 hora',
@@ -310,7 +310,7 @@ const COPY = {
       ],
       [
         '¿Cuánto cuesta un servicio de bicicleta en {name}?',
-        'El Ajuste arranca en {tuneUpPrice} e incluye la tarifa de visita a domicilio. Los precios completos están más arriba. Sin cargos ocultos.',
+        'El Ajuste arranca en {tuneUpPrice}, más la tarifa de visita a domicilio (desde $35, según tu suburbio). Los precios completos están más arriba. Sin cargos ocultos.',
       ],
     ],
     ctaH2: '¿Listo para reservar en {name}?',
@@ -343,7 +343,7 @@ const COPY = {
     areasLabel: '📍 服务范围：{areas}',
     servicesH2: '服务与价格',
     pricingNote:
-      '所有价格均含上门服务费，无隐藏费用。周日及新南威尔士州公共假日预订加收 20%，周六按正常价格计算。',
+      '以下价格另加上门服务费，从 $35 起，视区域而定。无隐藏费用。周日及新南威尔士州公共假日预订加收 20%，周六按正常价格计算。',
     serviceNames: ['基础保养', '标准服务', '标准+服务', '全面翻新'],
     serviceDescs: [
       '变速、刹车调整，车轮校正 · 约 1 小时',
@@ -378,7 +378,7 @@ const COPY = {
       ],
       [
         '在 {name} 做一次保养要多少钱？',
-        '基础保养 {tuneUpPrice} 起，已包含上门服务费。完整价格见上方，没有隐藏费用。',
+        '基础保养 {tuneUpPrice} 起，另加上门服务费（从 $35 起，视区域而定）。完整价格见上方，没有隐藏费用。',
       ],
     ],
     ctaH2: '准备在 {name} 预订了吗？',

@@ -59,6 +59,19 @@ describe('no claim Diego said is untrue', () => {
     }
   });
 
+  // Same root, other pages: the booking charges the visit & diagnosis fee
+  // online and the service at the door (js/app.js, the booking summary), so no
+  // price "includes" it. The membership plans that waive it on covered visits
+  // say "included on covered visits" and are true; that phrase is not matched.
+  it('no page says the prices include the visit fee', () => {
+    for (const page of PAGES) {
+      const html = visible(page);
+      expect(html, page).not.toMatch(/prices include (a|the) visit|includes the visit & diagnosis fee/i);
+      expect(html, page).not.toMatch(/precios incluyen la|e incluye la tarifa de visita/);
+      expect(html, page).not.toMatch(/价格均含上门|已包含上门/);
+    }
+  });
+
   it('the true version is on both home pages', () => {
     for (const page of ['landing.html', 'index.html']) {
       // The landing's hero says it in title case; the phone's hero became the
