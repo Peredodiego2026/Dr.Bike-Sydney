@@ -654,6 +654,27 @@ export default {
   // Mechanics 3D carousel
   'OUR TEAM': '我们的团队',
   'Meet Your Mechanics': '认识我们的技工',
+  // Landing, phase 2 of the conversion study (2026-11-03): About + Mechanics
+  // as one block, and the coverage section
+  'Who Comes to Your Home': '谁会上门为您服务',
+  COVERAGE: '服务范围',
+  'Areas We Cover': '我们的服务区域',
+  'Every visit starts from our Northern Beaches base. The visit & diagnosis fee comes from the real driving time to your address, not from the suburb name.':
+    '每次上门都从我们位于 Northern Beaches 的基地出发。上门检查费按到您地址的实际车程计算，而不是按区域名称。',
+  'Northern Beaches': 'Northern Beaches',
+  'Manly to Mona Vale, Frenchs Forest and Terrey Hills':
+    'Manly 至 Mona Vale、Frenchs Forest 和 Terrey Hills',
+  'The far peninsula': '半岛北端',
+  'Newport, Bayview, Church Point, Avalon and Palm Beach':
+    'Newport、Bayview、Church Point、Avalon 和 Palm Beach',
+  'Within about 45 minutes': '约 45 分钟车程内',
+  'North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs':
+    'North Shore、Hornsby、CBD、Inner West 和 Eastern Suburbs',
+  'Up to $55': '最高 $55',
+  'Further out': '更远的地区',
+  'Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.':
+    'Western Sydney、Sutherland Shire 和 Blue Mountains。线上不收取任何费用：发送您的地址，我们为您报价。',
+  Quote: '报价',
   'Qualified, background-checked mechanics rated by real Sydney riders.':
     '经过认证和背景审查的技工，由悉尼真实骑行者评分。',
   'Previous mechanic': '上一位技工',

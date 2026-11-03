@@ -712,6 +712,27 @@ export default {
   // Mechanics 3D carousel
   'OUR TEAM': 'NUESTRO EQUIPO',
   'Meet Your Mechanics': 'Conocé a Nuestros Mecánicos',
+  // Landing, phase 2 of the conversion study (2026-11-03): About + Mechanics
+  // as one block, and the coverage section
+  'Who Comes to Your Home': 'Quién Va a Tu Casa',
+  COVERAGE: 'COBERTURA',
+  'Areas We Cover': 'Zonas que Cubrimos',
+  'Every visit starts from our Northern Beaches base. The visit & diagnosis fee comes from the real driving time to your address, not from the suburb name.':
+    'Cada visita sale de nuestra base en Northern Beaches. La visita y diagnóstico se calcula con el tiempo real de manejo hasta tu dirección, no con el nombre del suburbio.',
+  'Northern Beaches': 'Northern Beaches',
+  'Manly to Mona Vale, Frenchs Forest and Terrey Hills':
+    'De Manly a Mona Vale, Frenchs Forest y Terrey Hills',
+  'The far peninsula': 'La punta de la península',
+  'Newport, Bayview, Church Point, Avalon and Palm Beach':
+    'Newport, Bayview, Church Point, Avalon y Palm Beach',
+  'Within about 45 minutes': 'A unos 45 minutos',
+  'North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs':
+    'North Shore, Hornsby, el CBD, Inner West y Eastern Suburbs',
+  'Up to $55': 'Hasta $55',
+  'Further out': 'Más lejos',
+  'Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.':
+    'Western Sydney, Sutherland Shire y las Blue Mountains. No se cobra nada online: mandanos tu dirección y te cotizamos el viaje.',
+  Quote: 'Cotización',
   'Qualified, background-checked mechanics rated by real Sydney riders.':
     'Mecánicos calificados, con antecedentes verificados, calificados por ciclistas reales de Sydney.',
   'Previous mechanic': 'Mecánico anterior',

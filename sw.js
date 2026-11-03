@@ -265,7 +265,9 @@
 // sin ?v=.
 // v157: la hora de fin en el seguimiento cuando el mecanico llego; cambian los
 // dos diccionarios, que se importan sin ?v=.
-const CACHE_STATIC = 'drbike-static-v157';
+// v158: la landing une "About" con los mecanicos y suma la seccion de
+// cobertura (estudio de conversion, fase 2); sus textos en los dos diccionarios.
+const CACHE_STATIC = 'drbike-static-v158';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
