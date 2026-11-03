@@ -716,8 +716,8 @@ export default {
   // Services intro + "All Services" modal
   'Book a Service →': '预约服务 →',
   'All Services': '所有服务',
-  'All prices include a visit & diagnosis fee (from $35, depending on your suburb). We come to you.':
-    '所有价格均含上门检查费（从$35起，视郊区而定），我们会上门为您服务。',
+  'The visit & diagnosis fee is added to the prices below (from $35, depending on your suburb). We come to you.':
+    '以下价格另加上门检查费（从$35起，视郊区而定），我们会上门为您服务。',
   Essentials: '基础服务',
   'Tyres & Wheels': '轮胎与车轮',
   'Cables & Accessories': '线缆与配件',
@@ -762,8 +762,8 @@ export default {
   'Clean, adjust, regrease': '清洁、调整、重新润滑',
   'Custom Quote': '定制报价',
   'E-bikes, carbon, vintage, insurance claims': '电动自行车、碳纤维车架、老式车、保险理赔',
-  'All prices include a visit & diagnosis fee (from $35, depending on your suburb). Parts charged separately unless stated.':
-    '所有价格均含上门检查费（从$35起，视郊区而定）。除另有说明外，零件费用另计。',
+  'Plus a visit & diagnosis fee (from $35, depending on your suburb). Parts charged separately unless stated.':
+    '另加上门检查费（从$35起，视郊区而定）。除另有说明外，零件费用另计。',
   'Sunday & NSW public holiday bookings +20%. Saturday is normal price.':
     '周日及新南威尔士州公共假日预订加收20%。周六按正常价格计算。',
 

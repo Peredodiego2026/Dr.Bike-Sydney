@@ -286,7 +286,9 @@
 // diccionarios.
 // v166: los tramos de flota pasan a 1-3/4-8/9-15/16+ y
 // "Custom rates for 5+ bikes" a "from 4 bikes", en los dos diccionarios.
-const CACHE_STATIC = 'drbike-static-v166';
+// v167: la visita se cobra aparte del servicio: "All prices include a visit &
+// diagnosis fee" pasa a "Plus a visit & diagnosis fee", en los dos diccionarios.
+const CACHE_STATIC = 'drbike-static-v167';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

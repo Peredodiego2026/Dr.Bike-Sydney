@@ -778,8 +778,8 @@ export default {
   // Services intro + "All Services" modal
   'Book a Service →': 'Reservar un Servicio →',
   'All Services': 'Todos los Servicios',
-  'All prices include a visit & diagnosis fee (from $35, depending on your suburb). We come to you.':
-    'Todos los precios incluyen la visita y diagnóstico (desde $35, según tu suburbio). Vamos hasta vos.',
+  'The visit & diagnosis fee is added to the prices below (from $35, depending on your suburb). We come to you.':
+    'A los precios de abajo se suma la visita y diagnóstico (desde $35, según tu suburbio). Vamos hasta vos.',
   Essentials: 'Esenciales',
   'Tyres & Wheels': 'Neumáticos y Ruedas',
   'Cables & Accessories': 'Cables y Accesorios',
@@ -827,8 +827,8 @@ export default {
   'Clean, adjust, regrease': 'Limpieza, ajuste, re-engrase',
   'Custom Quote': 'Cotización Personalizada',
   'E-bikes, carbon, vintage, insurance claims': 'E-bikes, carbono, vintage, reclamos de seguro',
-  'All prices include a visit & diagnosis fee (from $35, depending on your suburb). Parts charged separately unless stated.':
-    'Todos los precios incluyen la visita y diagnóstico (desde $35, según tu suburbio). Los repuestos se cobran aparte salvo que se indique lo contrario.',
+  'Plus a visit & diagnosis fee (from $35, depending on your suburb). Parts charged separately unless stated.':
+    'Más la visita y diagnóstico (desde $35, según tu suburbio). Los repuestos se cobran aparte salvo que se indique lo contrario.',
   'Sunday & NSW public holiday bookings +20%. Saturday is normal price.':
     'Reservas de domingo y feriados de NSW +20%. El sábado tiene precio normal.',
 
