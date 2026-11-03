@@ -578,7 +578,7 @@ export default {
   'Passion for Bikes, Commitment to Service': 'Pasión por las Bicis, Compromiso con el Servicio',
   'Dr. Bike Sydney was founded with a simple mission: to provide professional, convenient, and reliable bike servicing to cyclists across Sydney.':
     'Dr. Bike Sydney nació con una misión simple: brindar servicio de bicicletas profesional, conveniente y confiable a ciclistas en toda Sydney.',
-  'Certified & experienced mechanic': 'Mecánico certificado y con experiencia',
+  '10 years of experience as a mechanic': '10 años de experiencia como mecánico',
   'Fully equipped mobile workshop': 'Taller móvil completamente equipado',
   'Premium tools and quality parts': 'Herramientas premium y repuestos de calidad',
   '14-day workmanship guarantee': 'Garantía de 14 días en la mano de obra',
@@ -689,9 +689,8 @@ export default {
   'Bookings · Bikes · Membership': 'Reservas · Bicis · Membresía',
   // Trust badges bar
   '100% Satisfaction Guarantee': '100% Satisfacción Garantizada',
-  'Verified Mechanic': 'Mecánico Verificado',
-  'Background Checked': 'Antecedentes Verificados',
-  'Fully Insured': 'Totalmente Asegurado',
+  '10 years of experience': '10 años de experiencia',
+  'Fully equipped van': 'Van totalmente equipada',
   'ASAP Response': 'Respuesta Inmediata',
   'Transparent Pricing': 'Precios Transparentes',
   'Sydney Wide': 'Toda Sydney',
@@ -708,7 +707,7 @@ export default {
   // translateScreen() automatically - see final report for this limitation.
   'Book a service': 'Reservar Servicio',
   'Get Your Free Quote': 'Obtené tu Cotización Gratis',
-  'Qualified Mechanic': 'Mecánico Calificado',
+  '10 Years of Experience': '10 Años de Experiencia',
   'Fully Equipped Van': 'Van Totalmente Equipada',
   '14-Day Guarantee': 'Garantía de 14 Días',
   // Mechanics 3D carousel
@@ -735,8 +734,8 @@ export default {
   'Hornsby, Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.':
     'Hornsby, Western Sydney, Sutherland Shire y las Blue Mountains. No se cobra nada online: mandanos tu dirección y te cotizamos el viaje.',
   Quote: 'Cotización',
-  'Qualified, background-checked mechanics rated by real Sydney riders.':
-    'Mecánicos calificados, con antecedentes verificados, calificados por ciclistas reales de Sydney.',
+  '10 years of fixing bikes, rated by real Sydney riders.':
+    '10 años arreglando bicis, calificados por ciclistas reales de Sydney.',
   'Previous mechanic': 'Mecánico anterior',
   'Next mechanic': 'Siguiente mecánico',
   'Previous review': 'Reseña anterior',
@@ -1217,9 +1216,6 @@ export default {
   'Service reports': 'Informes de servicio',
   'Full PDF report per bike after every visit. Track the health of your entire fleet.':
     'Informe PDF completo por bici después de cada visita. Seguí el estado de toda tu flota.',
-  'bikes serviced': 'bicis reparadas',
-  'response time': 'tiempo de respuesta',
-  'call-out for fleets': 'de visita para flotas',
   'Get a fleet quote': 'Cotizá tu flota',
   "We'll reply within 2 business hours": 'Te respondemos dentro de 2 horas hábiles',
   'Business name *': 'Nombre de la empresa *',

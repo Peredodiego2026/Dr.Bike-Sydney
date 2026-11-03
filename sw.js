@@ -278,7 +278,10 @@
 // cantidad de estrellas (antes solo con 5); textos nuevos en los dos diccionarios.
 // v163: "Next available" bajo el boton de reservar (las dos paginas), con
 // sus tres textos en los dos diccionarios.
-const CACHE_STATIC = 'drbike-static-v163';
+// v164: fuera "Verified Mechanic", "Background Checked", "Fully Insured",
+// "Qualified/Certified" y las cifras de flotas (Diego: no son ciertas); entran
+// los 10 anos de experiencia, en los dos diccionarios.
+const CACHE_STATIC = 'drbike-static-v164';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
