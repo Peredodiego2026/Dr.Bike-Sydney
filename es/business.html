@@ -61,6 +61,14 @@
     .pricing-table tr:last-child td{border-bottom:none}
     .pricing-table tr:nth-child(even) td{background:#F7F8FA}
     .price-tag{font-weight:700;color:#0A58CA}
+    /* Four columns at 16px a side is 128px of padding alone: on a 360px phone
+       the Spanish table ran 35px past the screen until 3-nov-2026. The wrapper
+       is the fallback - if a column still can't fit, only the table scrolls. */
+    .table-wrap{overflow-x:auto}
+    @media (max-width:480px){
+      .pricing-table{font-size:13px}
+      .pricing-table th,.pricing-table td{padding:10px 8px}
+    }
     .contact-section{background:linear-gradient(135deg,#0D1F3C,#2563EB);color:#fff;padding:72px 24px;text-align:center}
     .contact-section h2{font-size:28px;font-weight:900;margin-bottom:12px}
     .contact-section p{font-size:15px;opacity:.85;margin-bottom:32px;max-width:480px;margin-left:auto;margin-right:auto}
@@ -129,7 +137,7 @@
 <div class="section">
   <h2>Precios para Flotas</h2>
   <p class="sub">Precios por volumen: cuantas más bicis, más bajo el costo por bici. Todos los precios incluyen GST.</p>
-  <table class="pricing-table">
+  <div class="table-wrap"><table class="pricing-table">
     <thead><tr><th>Tamaño de Flota</th><th>Tipo de Servicio</th><th>Por Bici</th><th>Total Estimado</th></tr></thead>
     <tbody>
       <tr><td>1–4 bicis</td><td>Ajuste Básico</td><td class="price-tag">$119</td><td>$119–$476</td></tr>
@@ -138,7 +146,7 @@
       <tr><td>20+ bicis</td><td>Cotización personalizada</td><td class="price-tag">POA</td><td>Contactanos</td></tr>
       <tr><td colspan="4" style="background:#EEF3FC;color:#2563EB;font-size:13px;padding:10px 16px">📌 Los servicios Estándar, Mayor y Definitivo también tienen descuentos por volumen equivalentes. Servicio de urgencia disponible.</td></tr>
     </tbody>
-  </table>
+  </table></div>
 </div>
 
 <div class="contact-section" id="contact">
