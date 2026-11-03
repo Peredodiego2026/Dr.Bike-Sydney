@@ -1426,6 +1426,10 @@ export default {
   Before: 'Antes',
   After: 'Después',
   '⭐ Rate this mechanic': '⭐ Califica al mecánico',
+  'Thanks for telling us': 'Gracias por contarnos',
+  "We're sorry it wasn't a great experience. If something we fixed isn't right, it's covered by our 14-day guarantee.":
+    'Lamentamos que la experiencia no haya sido buena. Si algo que reparamos no quedó bien, lo cubre nuestra garantía de 14 días.',
+  'Report a problem': 'Reportar un problema',
   'Thanks for the 5 stars!': '¡Gracias por las 5 estrellas!',
   'Would you mind leaving a quick Google review? It helps other Sydney cyclists find us.':
     '¿Nos dejas una reseña rápida en Google? Ayuda a que otros ciclistas de Sydney nos encuentren.',

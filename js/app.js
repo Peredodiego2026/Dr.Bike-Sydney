@@ -4539,12 +4539,23 @@ async function renderReview() {
         },
       });
 
-    // 2.3: If 5-star review, show social share nudge before navigating home
-    if (currentRating === 5) {
-      screen.innerHTML = `
+    // Every client who rates gets the Google ask, whatever the stars. Until
+    // 3-nov-2026 only a 5 did, and Google's review policy forbids exactly that
+    // ("selectively solicit positive reviews") - a profile caught at it can
+    // lose its reviews. The landing's review modal already asked everyone.
+    // A low rating also gets the way to the 14-day guarantee: that client may
+    // still have a bike to fix.
+    const low = currentRating <= 3;
+    screen.innerHTML = `
         <div style="padding:48px 24px;text-align:center">
-          <div style="font-size:48px;margin-bottom:16px">&#11088;&#11088;&#11088;&#11088;&#11088;</div>
-          <h2 style="font-size:24px;font-weight:800;color:var(--color-text);margin-bottom:8px">Thanks for the 5 stars!</h2>
+          ${low ? '' : `<div style="font-size:48px;margin-bottom:16px">${'&#11088;'.repeat(currentRating)}</div>`}
+          <h2 style="font-size:24px;font-weight:800;color:var(--color-text);margin-bottom:8px">${currentRating === 5 ? 'Thanks for the 5 stars!' : low ? 'Thanks for telling us' : 'Thanks for your feedback!'}</h2>
+          ${
+            low
+              ? `<p style="font-size:15px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:16px">We're sorry it wasn't a great experience. If something we fixed isn't right, it's covered by our 14-day guarantee.</p>
+          <a href="/claims.html" style="display:flex;align-items:center;justify-content:center;min-height:48px;max-width:280px;margin:0 auto 28px;border:1.5px solid var(--border);border-radius:10px;text-decoration:none;font-weight:600;font-size:15px;color:var(--navy)">Report a problem</a>`
+              : ''
+          }
           <p style="font-size:15px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:28px">
             Would you mind leaving a quick Google review? It helps other Sydney cyclists find us.
           </p>
@@ -4565,20 +4576,26 @@ async function renderReview() {
           </div>
         </div>
       `;
-      screen.querySelector('#google-review-link').addEventListener('click', () => {
-        if (window.gtag) gtag('event', 'review_click', { platform: 'google' });
-      });
-      screen.querySelector('#fb-share-link').addEventListener('click', () => {
-        if (window.gtag) gtag('event', 'review_click', { platform: 'facebook' });
-      });
-      screen
-        .querySelector('#review-skip-home-btn')
-        .addEventListener('click', () => router.navigate('home'));
-      thankYou('Would you share it on Google too? It helps other Sydney cyclists find us.');
-      return; // don't navigate home yet
+    screen.querySelector('#google-review-link').addEventListener('click', () => {
+      if (window.gtag) gtag('event', 'review_click', { platform: 'google' });
+    });
+    screen.querySelector('#fb-share-link').addEventListener('click', () => {
+      if (window.gtag) gtag('event', 'review_click', { platform: 'facebook' });
+    });
+    screen
+      .querySelector('#review-skip-home-btn')
+      .addEventListener('click', () => router.navigate('home'));
+    // No celebration over a low rating. The reviews grid still needs the
+    // refresh thankYou() would have done on close.
+    if (low) {
+      try {
+        window.drbikeReloadReviews?.();
+      } catch (e) {
+        console.warn('[review] could not refresh the reviews list:', e.message);
+      }
+      return;
     }
-    router.navigate('home');
-    thankYou('Your review is now on our page. Thank you for taking the time.');
+    thankYou('Would you share it on Google too? It helps other Sydney cyclists find us.');
   });
 
   screen.querySelector('#skip-btn').addEventListener('click', () => router.navigate('home'));

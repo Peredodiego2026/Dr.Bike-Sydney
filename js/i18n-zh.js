@@ -1310,6 +1310,10 @@ export default {
   Before: '维修前',
   After: '维修后',
   '⭐ Rate this mechanic': '⭐ 为技师评分',
+  'Thanks for telling us': '感谢您告诉我们',
+  "We're sorry it wasn't a great experience. If something we fixed isn't right, it's covered by our 14-day guarantee.":
+    '很抱歉这次体验不够好。如果我们修过的地方有问题，可享受14天保修。',
+  'Report a problem': '报告问题',
   'Thanks for the 5 stars!': '感谢您的五星好评！',
   'Would you mind leaving a quick Google review? It helps other Sydney cyclists find us.':
     '方便在 Google 上留个简短评价吗？这能帮助更多悉尼骑行者找到我们。',
