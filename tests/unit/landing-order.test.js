@@ -74,7 +74,7 @@ describe('desktop: trust and coverage before the plans', () => {
       '<section id="coverage"',
       '<section id="memberships"',
       '<section id="faq"',
-      'Ready to Experience Premium Bike Service?',
+      'Bike Not Riding Right?',
       '<section id="fleet"',
       'id="giftcard-open-btn"',
       '</main>',

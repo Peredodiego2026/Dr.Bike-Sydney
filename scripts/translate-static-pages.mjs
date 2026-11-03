@@ -60,7 +60,8 @@ const DICT = {
       'Average on-site time': 'Tiempo promedio en el lugar',
       'Transport cost': 'Costo de traslado',
       'Years experience': 'Años de experiencia',
-      'Satisfaction guarantee': 'Garantía de satisfacción',
+      '14 days': '14 días',
+      'Workmanship guarantee': 'Garantía en la mano de obra',
       'Why Choose Dr. Bike for Your Fleet?': '¿Por qué elegir Dr. Bike para tu flota?',
       'Managing a bike fleet is time-consuming and costly. We eliminate the logistics — one call and we come to you.':
         'Gestionar una flota de bicicletas consume tiempo y plata. Nosotros nos encargamos de la logística: un llamado y vamos hasta vos.',
@@ -165,7 +166,8 @@ const DICT = {
       'Average on-site time': '平均现场服务时长',
       'Transport cost': '运输费用',
       'Years experience': '年经验',
-      'Satisfaction guarantee': '满意保证',
+      '14 days': '14天',
+      'Workmanship guarantee': '工艺保修',
       'Why Choose Dr. Bike for Your Fleet?': '为什么为您的车队选择 Dr. Bike？',
       'Managing a bike fleet is time-consuming and costly. We eliminate the logistics — one call and we come to you.':
         '管理自行车车队既耗时又费钱。我们帮您搞定所有物流——一通电话，我们就上门服务。',

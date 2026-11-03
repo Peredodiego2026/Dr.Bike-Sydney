@@ -529,7 +529,10 @@ export default {
   'Certified & experienced mechanic': '持证且经验丰富的技工',
   'Fully equipped mobile workshop': '配备齐全的移动车间',
   'Premium tools and quality parts': '优质工具和高品质零件',
-  'Satisfaction guaranteed': '满意保证',
+  '14-day workmanship guarantee': '14天工艺保修',
+  "If something we fixed isn't right within 14 days of your service, we come back and fix it free. Damage from repeated off-road riding after the service isn't covered.":
+    '服务后14天内，如果我们修过的地方出现问题，我们会免费上门修好。服务后多次越野骑行造成的损坏不在保修范围内。',
+  'Read the terms': '查看条款',
   'Founder & Head Mechanic': '创始人兼首席技工',
   'Happy Customers': '满意客户',
   'Bikes Serviced': '服务车辆',
@@ -595,10 +598,9 @@ export default {
     '我们接受所有主流信用卡和借记卡、Apple Pay和Google Pay。预订时收取上门检查费押金（从$35起，视郊区而定），其余金额在服务完成后收取。',
   "Still have questions? We're here to help!": '还有疑问？我们随时为您解答！',
   'Contact Us': '联系我们',
-  'Ready to Experience': '准备好体验',
-  'Premium Bike Service?': '高端自行车服务了吗？',
-  'Book your service today and join hundreds of satisfied cyclists across Sydney.':
-    '立即预订，加入悉尼数百位满意骑行者的行列。',
+  'Bike Not Riding Right?': '自行车骑着不顺？',
+  'Book online in a couple of minutes and we come to your door.':
+    '几分钟就能在线预约，我们上门服务。',
   'Book Now': '立即预订',
   'Start Your Membership': '开始您的会员',
   'Phone Number (04XX XXX XXX)': '电话号码 (04XX XXX XXX)',
@@ -650,7 +652,7 @@ export default {
   'Get Your Free Quote': '获取免费报价',
   'Qualified Mechanic': '专业技工',
   'Fully Equipped Van': '装备齐全的服务车',
-  '5 Star Rated': '五星好评',
+  '14-Day Guarantee': '14天保修',
   // Mechanics 3D carousel
   'OUR TEAM': '我们的团队',
   'Meet Your Mechanics': '认识我们的技工',
@@ -1160,7 +1162,6 @@ export default {
   'Something went wrong. Please email us directly.': '出现问题，请直接给我们发邮件。',
 
   // ── Final CTA ───────────────────────────────────────────────────────────
-  'Ready to Experience Premium Bike Service?': '准备好体验高端自行车服务了吗？',
 
   // ── Footer ──────────────────────────────────────────────────────────────
   'Professional bike service at your doorstep.': '上门专业自行车服务。',
@@ -1342,7 +1343,7 @@ export default {
   'Type a message': '输入消息',
   'Toggle password visibility': '显示或隐藏密码',
   'Could not enable notifications:': '无法开启通知：',
-  '100% Satisfaction': '100% 满意',
+  '14-day guarantee': '14天保修',
   'Trusted by cyclists across Sydney': '深受悉尼各地骑行者信赖',
   'Be the first to leave a review': '成为第一个留下评价的人',
   'Real reviews from Sydney cyclists will show up here as soon as clients start sharing their experience.':
