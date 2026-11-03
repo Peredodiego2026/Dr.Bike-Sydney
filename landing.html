@@ -193,6 +193,13 @@
           Check my diagnosis fee
         </button>
       </div>
+      <!-- The next bookable slot, filled by loadNextAvailable() in js/app.js
+           from the booking calendar's own rules (api/auth.js
+           handleNextAvailable). Hidden until there is one - never typed by
+           hand, never a guess. -->
+      <p id="hero-next" style="margin-top:14px;font-size:15px;font-weight:600;color:var(--white)" hidden>
+        <span style="display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:50%;background:var(--green-bright);vertical-align:middle" aria-hidden="true"></span><span class="hero-next__text"></span>
+      </p>
       <p style="margin-top:12px;font-size:15px;color:var(--gray)">Or call <a href="tel:+61433963250" style="color:var(--blue-text);font-weight:600">0433 963 250</a> / <a href="https://wa.me/61433963250" target="_blank" rel="noopener" style="color:var(--blue-text);font-weight:600">WhatsApp</a></p>
 
       <div class="hero-stats">
@@ -1575,7 +1582,7 @@
 <!-- js/app.js is the only entry point - see the note in index.html. Listing
      router.js, supabase.js, components.js or stripe.js here loads each of them
      a second time, under a URL the imports inside app.js never resolve to. -->
-<script src="js/app.js?v=f2d92ec011" type="module"></script>
+<script src="js/app.js?v=454d7c2983" type="module"></script>
 <script src="js/live-prices.js?v=20261025b" defer></script>
 <script src="js/cta-tracking.js?v=20260728a" defer></script>
 <script src="js/utm-capture.js?v=20260728a"></script>

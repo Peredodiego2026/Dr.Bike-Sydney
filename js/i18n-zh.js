@@ -1480,6 +1480,9 @@ export default {
   // Ninguna de las de `{n}` la detecta scripts/i18n-check.mjs.
   'Reviews on Google': '谷歌评价',
   '{n} review on Google': '{n} 条谷歌评价',
+  'Next available: today at {time}': '最早可预约：今天 {time}',
+  'Next available: tomorrow at {time}': '最早可预约：明天 {time}',
+  'Next available: {day} at {time}': '最早可预约：{day} {time}',
   '{n} reviews on Google': '{n} 条谷歌评价',
   '{n} review from our clients': '{n} 条客户评价',
   '{n} reviews from our clients': '{n} 条客户评价',
