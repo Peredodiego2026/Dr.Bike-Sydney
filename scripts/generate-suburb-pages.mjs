@@ -62,7 +62,9 @@ const NEIGHBOURS = {
   bondi: ['eastern-suburbs', 'surry-hills', 'cbd'],
   cbd: ['surry-hills', 'inner-west', 'bondi'],
   'inner-west': ['newtown', 'marrickville', 'cbd'],
-  'north-shore': ['chatswood', 'mosman', 'hornsby'],
+  // Hornsby left on 3-nov-2026: 52 real minutes from the base, outside the
+  // perimeter, so "same day rates" under this heading was not true.
+  'north-shore': ['chatswood', 'mosman'],
   'northern-beaches': ['manly', 'mosman', 'north-shore'],
 };
 

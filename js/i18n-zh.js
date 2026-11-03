@@ -336,11 +336,11 @@ export default {
   'Your Address': '您的地址',
   'Where should we come?': '我们应该前往哪里？',
   'Your mechanic will come to this address': '您的技工将前往此地址',
-  "Same-day visits cover everything within about 45 minutes of our Northern Beaches base — Northern Beaches, North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs. Further out, like Western Sydney, the Sutherland Shire or the Blue Mountains, we still come, but by arrangement rather than same-day. Enter your address when you book and we'll tell you which one you are.":
-    '当日上门服务覆盖距离我们 Northern Beaches 基地约 45 分钟车程内的所有地区：Northern Beaches、North Shore、Hornsby、CBD、Inner West 和 Eastern Suburbs。更远的地区，如 Western Sydney、Sutherland Shire 或 Blue Mountains，我们仍会前往，但需另行安排，非当日服务。预订时输入您的地址，我们会告知您属于哪一种。',
+  "Same-day visits cover everything within about 45 minutes of our Northern Beaches base — Northern Beaches, North Shore, the CBD, Inner West and Eastern Suburbs. Further out, like Hornsby, Western Sydney, the Sutherland Shire or the Blue Mountains, we still come, but by arrangement rather than same-day. Enter your address when you book and we'll tell you which one you are.":
+    '当日上门服务覆盖距离我们 Northern Beaches 基地约 45 分钟车程内的所有地区：Northern Beaches、North Shore、CBD、Inner West 和 Eastern Suburbs。更远的地区，如 Hornsby、Western Sydney、Sutherland Shire 或 Blue Mountains，我们仍会前往，但需另行安排，非当日服务。预订时输入您的地址，我们会告知您属于哪一种。',
   'Why is the visit & diagnosis fee different for my suburb?': '为什么不同区域的上门检查费不一样？',
-  "Because it pays for the trip, and what a trip really costs is time, not kilometres. From our Northern Beaches base the CBD is about 40 minutes across the Spit Bridge, while Hornsby is further away on the map but only 30 minutes up the motorway — so the CBD costs a little more. We work the fee out from real driving time to your address, which is why it's exact rather than a flat rate.":
-    '因为它支付的是行程，而行程的真正成本是时间，不是公里数。从我们 Northern Beaches 的基地出发，CBD 需要约 40 分钟穿过 Spit Bridge，而 Hornsby 在地图上更远，走高速却只需 30 分钟——所以 CBD 稍贵一些。我们根据到您地址的实际驾驶时间计算费用，因此是精确的，而非统一定价。',
+  "Because it pays for the trip, and what a trip really costs is time, not kilometres. From our Northern Beaches base the CBD and Avalon Beach are about the same distance away, but Avalon is one road up the peninsula while the CBD means the Spit Bridge and city traffic — so the CBD costs more. We work the fee out from real driving time to your address, which is why it's exact rather than a flat rate.":
+    '因为它支付的是行程，而行程的真正成本是时间，不是公里数。从我们 Northern Beaches 的基地出发，CBD 和 Avalon Beach 的距离差不多，但去 Avalon 只需沿半岛一路直行，而去 CBD 要经过 Spit Bridge 和市区交通——所以 CBD 更贵一些。我们根据到您地址的实际驾驶时间计算费用，因此是精确的，而非统一定价。',
   'We quote that area case by case': '该地区我们逐例报价',
   'Continue - book at no cost': '继续 — 免费预订',
   "It's outside our same-day zone, so there's no fixed price to show you - but we do still come. Book as usual and the last step asks for a price instead of a card: no charge, and the mechanic replies to you personally.":
@@ -668,12 +668,12 @@ export default {
   'Newport, Bayview, Church Point, Avalon and Palm Beach':
     'Newport、Bayview、Church Point、Avalon 和 Palm Beach',
   'Within about 45 minutes': '约 45 分钟车程内',
-  'North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs':
-    'North Shore、Hornsby、CBD、Inner West 和 Eastern Suburbs',
+  'North Shore, the CBD, Inner West and Eastern Suburbs':
+    'North Shore、CBD、Inner West 和 Eastern Suburbs',
   'Up to $60': '最高 $60',
   'Further out': '更远的地区',
-  'Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.':
-    'Western Sydney、Sutherland Shire 和 Blue Mountains。线上不收取任何费用：发送您的地址，我们为您报价。',
+  'Hornsby, Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.':
+    'Hornsby、Western Sydney、Sutherland Shire 和 Blue Mountains。线上不收取任何费用：发送您的地址，我们为您报价。',
   Quote: '报价',
   'Qualified, background-checked mechanics rated by real Sydney riders.':
     '经过认证和背景审查的技工，由悉尼真实骑行者评分。',

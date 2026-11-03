@@ -269,7 +269,9 @@
 // cobertura (estudio de conversion, fase 2); sus textos en los dos diccionarios.
 // v159: la visita a unos 45 minutos pasa de $55 a $60 ("Up to $60" en los dos
 // diccionarios).
-const CACHE_STATIC = 'drbike-static-v159';
+// v160: Hornsby sale de "a unos 45 minutos" (cobertura y preguntas frecuentes,
+// en los dos diccionarios): el sistema lo mide a 52 minutos y lo cotiza.
+const CACHE_STATIC = 'drbike-static-v160';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

@@ -380,12 +380,12 @@ export default {
   'Your Address': 'Tu Dirección',
   'Where should we come?': '¿A dónde vamos?',
   'Your mechanic will come to this address': 'Tu mecánico va a llegar a esta dirección',
-  "Same-day visits cover everything within about 45 minutes of our Northern Beaches base — Northern Beaches, North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs. Further out, like Western Sydney, the Sutherland Shire or the Blue Mountains, we still come, but by arrangement rather than same-day. Enter your address when you book and we'll tell you which one you are.":
-    'Las visitas del día cubren todo lo que esté a unos 45 minutos de nuestra base en Northern Beaches: Northern Beaches, North Shore, Hornsby, el CBD, Inner West y Eastern Suburbs. Más lejos, como Western Sydney, Sutherland Shire o las Blue Mountains, igual vamos, pero con coordinación previa en vez de el mismo día. Poné tu dirección al reservar y te decimos en cuál estás.',
+  "Same-day visits cover everything within about 45 minutes of our Northern Beaches base — Northern Beaches, North Shore, the CBD, Inner West and Eastern Suburbs. Further out, like Hornsby, Western Sydney, the Sutherland Shire or the Blue Mountains, we still come, but by arrangement rather than same-day. Enter your address when you book and we'll tell you which one you are.":
+    'Las visitas del día cubren todo lo que esté a unos 45 minutos de nuestra base en Northern Beaches: Northern Beaches, North Shore, el CBD, Inner West y Eastern Suburbs. Más lejos, como Hornsby, Western Sydney, Sutherland Shire o las Blue Mountains, igual vamos, pero con coordinación previa en vez de el mismo día. Poné tu dirección al reservar y te decimos en cuál estás.',
   'Why is the visit & diagnosis fee different for my suburb?':
     '¿Por qué la visita y diagnóstico cambia según mi suburbio?',
-  "Because it pays for the trip, and what a trip really costs is time, not kilometres. From our Northern Beaches base the CBD is about 40 minutes across the Spit Bridge, while Hornsby is further away on the map but only 30 minutes up the motorway — so the CBD costs a little more. We work the fee out from real driving time to your address, which is why it's exact rather than a flat rate.":
-    'Porque paga el viaje, y lo que un viaje cuesta de verdad es tiempo, no kilómetros. Desde nuestra base en Northern Beaches, el CBD está a unos 40 minutos cruzando el Spit Bridge, mientras que Hornsby queda más lejos en el mapa pero a solo 30 minutos por autopista, así que el CBD cuesta un poco más. Calculamos la tarifa con el tiempo real de manejo hasta tu dirección, por eso es exacta y no una tarifa plana.',
+  "Because it pays for the trip, and what a trip really costs is time, not kilometres. From our Northern Beaches base the CBD and Avalon Beach are about the same distance away, but Avalon is one road up the peninsula while the CBD means the Spit Bridge and city traffic — so the CBD costs more. We work the fee out from real driving time to your address, which is why it's exact rather than a flat rate.":
+    'Porque paga el viaje, y lo que un viaje cuesta de verdad es tiempo, no kilómetros. Desde nuestra base en Northern Beaches, el CBD y Avalon Beach están más o menos a la misma distancia, pero a Avalon se llega por una sola ruta por la península y al CBD hay que cruzar el Spit Bridge y el tráfico de la ciudad, así que el CBD cuesta más. Calculamos la tarifa con el tiempo real de manejo hasta tu dirección, por eso es exacta y no una tarifa plana.',
   'We quote that area case by case': 'Esa zona la cotizamos caso por caso',
   'Continue - book at no cost': 'Continuar - reservar sin costo',
   "It's outside our same-day zone, so there's no fixed price to show you - but we do still come. Book as usual and the last step asks for a price instead of a card: no charge, and the mechanic replies to you personally.":
@@ -726,12 +726,12 @@ export default {
   'Newport, Bayview, Church Point, Avalon and Palm Beach':
     'Newport, Bayview, Church Point, Avalon y Palm Beach',
   'Within about 45 minutes': 'A unos 45 minutos',
-  'North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs':
-    'North Shore, Hornsby, el CBD, Inner West y Eastern Suburbs',
+  'North Shore, the CBD, Inner West and Eastern Suburbs':
+    'North Shore, el CBD, Inner West y Eastern Suburbs',
   'Up to $60': 'Hasta $60',
   'Further out': 'Más lejos',
-  'Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.':
-    'Western Sydney, Sutherland Shire y las Blue Mountains. No se cobra nada online: mandanos tu dirección y te cotizamos el viaje.',
+  'Hornsby, Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.':
+    'Hornsby, Western Sydney, Sutherland Shire y las Blue Mountains. No se cobra nada online: mandanos tu dirección y te cotizamos el viaje.',
   Quote: 'Cotización',
   'Qualified, background-checked mechanics rated by real Sydney riders.':
     'Mecánicos calificados, con antecedentes verificados, calificados por ciclistas reales de Sydney.',
