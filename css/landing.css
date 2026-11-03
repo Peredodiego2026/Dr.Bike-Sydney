@@ -331,6 +331,40 @@ section[id] {
     min-height: 200px;
   }
 }
+/* The first screen has to be one screen. On Diego's laptop (1920x1080 at 150%
+   Windows scaling = a 1280x635 page) the hero ran 51px past the bottom and cut
+   the stats row in half (3-nov). Most of it was the third button wrapping to a
+   row of its own; slightly narrower buttons keep all three on one line. The
+   base values come from css/home.css, which the phone home screen shares - so
+   they are overridden here, for the landing only, instead of changed there. */
+@media (min-width: 901px) {
+  body[data-surface='landing'] .hero {
+    padding-top: clamp(16px, 3vh, 48px);
+  }
+  body[data-surface='landing'] .hero .container {
+    padding-top: 0;
+    padding-bottom: clamp(16px, 3vh, 48px);
+    align-items: center;
+  }
+  body[data-surface='landing'] .hero-badge {
+    margin-bottom: 12px;
+  }
+  body[data-surface='landing'] .hero-h1 {
+    font-size: clamp(2rem, 6.5vh, 2.75rem);
+  }
+  body[data-surface='landing'] .hero-btns {
+    margin-top: 18px;
+    gap: 10px;
+  }
+  body[data-surface='landing'] .hero-btns > button {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  body[data-surface='landing'] .hero-stats {
+    margin-top: 18px;
+    padding-top: 14px;
+  }
+}
 
 /* ── Fleet / corporate ────────────────────────────────────────────────────── */
 /* The section is an anchor target (#fleet), so it has to fit one screen: the
@@ -1035,9 +1069,10 @@ html.drbike-wizard-open #faqbot-win {
   body[data-surface='landing'] #memberships .plan-card ul {
     gap: clamp(3px, 0.6vh, 6px);
     font-size: clamp(12px, 1.5vh, 13px);
+    line-height: 1.35;
   }
   body[data-surface='landing'] #memberships .plan-card .lp-get-started {
-    margin-top: clamp(6px, 1.4vh, 16px) !important;
+    margin-top: clamp(6px, 1vh, 16px) !important;
     padding: clamp(7px, 1.1vh, 10px) !important;
   }
   body[data-surface='landing'] #memberships .plan-card .lp-learn-more {
