@@ -526,7 +526,7 @@ export default {
   'Passion for Bikes, Commitment to Service': '热爱自行车，专注服务',
   'Dr. Bike Sydney was founded with a simple mission: to provide professional, convenient, and reliable bike servicing to cyclists across Sydney.':
     'Dr. Bike Sydney 的创立使命很简单：为悉尼各地的骑行者提供专业、便捷、可靠的自行车服务。',
-  'Certified & experienced mechanic': '持证且经验丰富的技工',
+  '10 years of experience as a mechanic': '10年技师经验',
   'Fully equipped mobile workshop': '配备齐全的移动车间',
   'Premium tools and quality parts': '优质工具和高品质零件',
   '14-day workmanship guarantee': '14天工艺保修',
@@ -634,9 +634,8 @@ export default {
   'Bookings · Bikes · Membership': '预订 · 自行车 · 会员',
   // Trust badges bar
   '100% Satisfaction Guarantee': '100%满意保证',
-  'Verified Mechanic': '认证技工',
-  'Background Checked': '背景审查',
-  'Fully Insured': '全额保险',
+  '10 years of experience': '10年经验',
+  'Fully equipped van': '装备齐全的服务车',
   'ASAP Response': '即时响应',
   'Transparent Pricing': '价格透明',
   'Sydney Wide': '覆盖全悉尼',
@@ -650,7 +649,7 @@ export default {
   // comment for context)
   'Book a service': '预约服务',
   'Get Your Free Quote': '获取免费报价',
-  'Qualified Mechanic': '专业技工',
+  '10 Years of Experience': '10年经验',
   'Fully Equipped Van': '装备齐全的服务车',
   '14-Day Guarantee': '14天保修',
   // Mechanics 3D carousel
@@ -677,8 +676,8 @@ export default {
   'Hornsby, Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.':
     'Hornsby、Western Sydney、Sutherland Shire 和 Blue Mountains。线上不收取任何费用：发送您的地址，我们为您报价。',
   Quote: '报价',
-  'Qualified, background-checked mechanics rated by real Sydney riders.':
-    '经过认证和背景审查的技工，由悉尼真实骑行者评分。',
+  '10 years of fixing bikes, rated by real Sydney riders.':
+    '10年自行车维修经验，由悉尼真实骑行者评分。',
   'Previous mechanic': '上一位技工',
   'Next mechanic': '下一位技工',
   'Previous review': '上一条评价',
@@ -1129,9 +1128,6 @@ export default {
   'Service reports': '服务报告',
   'Full PDF report per bike after every visit. Track the health of your entire fleet.':
     '每次上门后为每辆车提供完整PDF报告，追踪整个车队的健康状况。',
-  'bikes serviced': '辆车已服务',
-  'response time': '响应时间',
-  'call-out for fleets': '车队上门检查费',
   'Get a fleet quote': '获取车队报价',
   "We'll reply within 2 business hours": '我们会在2个工作小时内回复',
   'Business name *': '企业名称 *',

@@ -186,7 +186,9 @@ const COPY = {
     description:
       'Expert mobile bicycle mechanic in {name}, Sydney. We come to you — home, work or park. Serving {areas}. Book online, same-day service available.',
     bookNow: 'Book Now',
-    badges: ['14-Day Workmanship Guarantee', 'Verified Mechanic', 'Background Checked', 'Fully Insured'],
+    // Until 3-nov-2026 also 'Verified Mechanic', 'Background Checked' and
+    // 'Fully Insured' - Diego: none of the three is true. Keep to facts.
+    badges: ['14-Day Workmanship Guarantee', '10 Years of Experience', 'Fully Equipped Van'],
     heroH1: 'Mobile Bike Mechanic<br>{name}, Sydney',
     heroP:
       'Professional bicycle repair at your doorstep. We come to you — home, work or park. No need to transport your bike.',
@@ -194,7 +196,7 @@ const COPY = {
     call: 'Call 0433 963 250',
     repairsH2: 'Bike Repairs in {name}',
     repairsP1:
-      'Dr. Bike Sydney provides professional mobile bicycle repair and servicing throughout {name} and surrounding suburbs. Our qualified mechanic arrives in a fully-equipped van with all the tools and parts needed to fix your bike on the spot.',
+      'Dr. Bike Sydney provides professional mobile bicycle repair and servicing throughout {name} and surrounding suburbs. Our mechanic, with 10 years of experience, arrives in a fully-equipped van with all the tools and parts needed to fix your bike on the spot.',
     repairsP2:
       "We cover {areas} and all nearby streets. Whether you're at home, at work, or at the park — we come to you.",
     areasLabel: '📍 Areas covered: {areas}',
@@ -210,7 +212,7 @@ const COPY = {
     ],
     whyH2: 'Why Choose Dr. Bike in {name}?',
     pillars: [
-      ['🔧', 'Qualified Mechanic', 'Experienced bicycle technician with 5+ years of hands-on expertise'],
+      ['🔧', '10 Years Fixing Bikes', 'A bicycle mechanic with 10 years of hands-on experience'],
       ['🚐', 'Fully Equipped Van', 'Mobile workshop stocked with professional tools and common parts'],
       ['⭐', '5-Star Rated', 'Trusted by cyclists across {name} and greater Sydney'],
       ['📱', 'Easy Online Booking', 'Book in 4 taps. Same-day slots available most days'],
@@ -257,9 +259,8 @@ const COPY = {
     bookNow: 'Reservar',
     badges: [
       'Garantía de 14 días en el trabajo',
-      'Mecánico verificado',
-      'Antecedentes verificados',
-      'Totalmente asegurado',
+      '10 años de experiencia',
+      'Camioneta totalmente equipada',
     ],
     heroH1: 'Mecánico de Bicicletas a Domicilio<br>{name}, Sídney',
     heroP:
@@ -268,7 +269,7 @@ const COPY = {
     call: 'Llamar al 0433 963 250',
     repairsH2: 'Reparación de bicicletas en {name}',
     repairsP1:
-      'Dr. Bike Sydney ofrece reparación y mantenimiento de bicicletas a domicilio en {name} y los barrios vecinos. Nuestro mecánico calificado llega en una camioneta totalmente equipada, con las herramientas y los repuestos necesarios para arreglar tu bici en el lugar.',
+      'Dr. Bike Sydney ofrece reparación y mantenimiento de bicicletas a domicilio en {name} y los barrios vecinos. Nuestro mecánico, con 10 años de experiencia, llega en una camioneta totalmente equipada, con las herramientas y los repuestos necesarios para arreglar tu bici en el lugar.',
     repairsP2:
       'Cubrimos {areas} y todas las calles cercanas. Estés en casa, en el trabajo o en el parque, vamos a donde estés.',
     areasLabel: '📍 Zonas que cubrimos: {areas}',
@@ -284,7 +285,7 @@ const COPY = {
     ],
     whyH2: '¿Por qué elegir Dr. Bike en {name}?',
     pillars: [
-      ['🔧', 'Mecánico calificado', 'Técnico en bicicletas con más de 5 años de experiencia real'],
+      ['🔧', '10 años arreglando bicis', 'Mecánico de bicicletas con 10 años de experiencia real'],
       ['🚐', 'Camioneta equipada', 'Taller móvil con herramientas profesionales y repuestos comunes'],
       ['⭐', 'Calificación 5 estrellas', 'Nos eligen ciclistas de {name} y de todo Sídney'],
       ['📱', 'Reserva online fácil', 'Reservá en 4 toques. Casi siempre hay turnos el mismo día'],
@@ -329,14 +330,14 @@ const COPY = {
     description:
       '{name}（悉尼）专业上门自行车维修。我们到您指定的地点服务：家里、公司或公园。服务范围：{areas}。可在线预订，多数日期当天可约。',
     bookNow: '立即预订',
-    badges: ['14天工艺保修', '技师已认证', '已做背景核查', '全额投保'],
+    badges: ['14天工艺保修', '10年经验', '装备齐全的服务车'],
     heroH1: '{name}（悉尼）<br>上门自行车维修',
     heroP: '专业自行车维修，直接到您门口。家里、公司或公园都可以，无需自己搬运车子。',
     bookService: '预订服务',
     call: '致电 0433 963 250',
     repairsH2: '{name} 自行车维修',
     repairsP1:
-      'Dr. Bike Sydney 为 {name} 及周边地区提供专业的上门自行车维修与保养。我们的持证技师开着装备齐全的服务车上门，带齐所需工具和常用零件，现场完成维修。',
+      'Dr. Bike Sydney 为 {name} 及周边地区提供专业的上门自行车维修与保养。我们拥有10年经验的技师开着装备齐全的服务车上门，带齐所需工具和常用零件，现场完成维修。',
     repairsP2:
       '我们的服务范围覆盖 {areas} 及附近街区。无论您在家、在公司还是在公园，我们都能上门。',
     areasLabel: '📍 服务范围：{areas}',
@@ -352,7 +353,7 @@ const COPY = {
     ],
     whyH2: '为什么在 {name} 选择 Dr. Bike？',
     pillars: [
-      ['🔧', '持证技师', '拥有 5 年以上实战经验的自行车技师'],
+      ['🔧', '10年维修经验', '拥有 10 年实战经验的自行车技师'],
       ['🚐', '装备齐全的服务车', '移动工作间，配备专业工具与常用零件'],
       ['⭐', '五星好评', '{name} 及大悉尼地区的骑行者都信赖我们'],
       ['📱', '在线预订便捷', '4 步完成预订，多数日期当天有空位'],
@@ -409,9 +410,8 @@ const fill = (text, sub) =>
 // #D97706) is the live amber - matches --amber in css/variables.css.
 const BADGE_STYLES = [
   ['#065F46', '#ECFDF5', '#15803D', 'var(--green)', '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>'],
-  ['#1e40af', '#EEF3FC', '#0A58CA', '#0A58CA', '<circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><polyline points="16 3 18 5 22 1"/>'],
-  ['#92400e', '#FFFBEB', '#B45309', '#B45309', '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'],
-  ['#5b21b6', '#F5F3FF', '#7C3AED', '#7C3AED', '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'],
+  ['#1e40af', '#EEF3FC', '#0A58CA', '#0A58CA', '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'],
+  ['#92400e', '#FFFBEB', '#B45309', '#B45309', '<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>'],
 ];
 
 function page(sub, lang) {
