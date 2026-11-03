@@ -58,7 +58,7 @@ const DARK_THEMED = /^(admin\.html|mechanic\.html|css\/admin\.css|css\/mechanic\
 // Budgets: the count each file has today. Lower them as you convert; the
 // script tells you the new number when you do.
 const BUDGET = {
-  'index.html': 8,
+  'index.html': 6,
   // 3.2: the 15 inline <script> blocks this file used to carry moved to
   // js/landing-inline.js, and took most of the hand-written hex with them -
   // budget for that file is set the same placeholder-run way, see below.
@@ -135,7 +135,7 @@ const BUDGET = {
 // it is the hand-authored source those two translations are generated FROM,
 // already tracked in its own BUDGET entry above - counting it here too would
 // budget the same file in two places at once.
-const GENERATED_BUDGET = 1399;
+const GENERATED_BUDGET = 1339;
 const INDIVIDUALLY_BUDGETED_ROOT = new Set(['business.html']);
 
 function generatedPages() {

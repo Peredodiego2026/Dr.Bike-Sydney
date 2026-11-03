@@ -521,7 +521,7 @@
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 <polyline points="9 12 11 14 15 10" />
               </svg>
-              100% Satisfaction
+              14-day guarantee
             </span>
             <span
               style="
@@ -546,11 +546,10 @@
                 stroke="var(--blue)"
                 stroke-width="2.5"
               >
-                <circle cx="12" cy="8" r="4" />
-                <path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
-                <polyline points="16 3 18 5 22 1" />
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 6v6l4 2" />
               </svg>
-              Verified Mechanic
+              10 years of experience
             </span>
             <span
               style="
@@ -575,37 +574,12 @@
                 stroke="#B45309"
                 stroke-width="2.5"
               >
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 6v6l4 2" />
+                <rect x="1" y="3" width="15" height="13" />
+                <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                <circle cx="5.5" cy="18.5" r="2.5" />
+                <circle cx="18.5" cy="18.5" r="2.5" />
               </svg>
-              Background Checked
-            </span>
-            <span
-              style="
-                background: var(--purple-lt);
-                border: 1px solid var(--purple);
-                border-radius: 20px;
-                padding: 5px 12px;
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 12px;
-                font-weight: 600;
-                color: #5b21b6;
-                flex-shrink: 0;
-              "
-            >
-              <svg
-                width="13"
-                height="13"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#7C3AED"
-                stroke-width="2.5"
-              >
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-              </svg>
-              Fully Insured
+              Fully equipped van
             </span>
           </div>
         </div>
@@ -650,6 +624,27 @@
                   Check my diagnosis fee
                 </button>
               </div>
+              <!-- The next bookable slot, same line as landing.html: filled by
+                   loadNextAvailable() in js/app.js, hidden until there is one. -->
+              <p
+                id="hero-next"
+                style="margin: 12px 0 0; font-size: 14px; font-weight: 600; color: var(--white)"
+                hidden
+              >
+                <span
+                  style="
+                    display: inline-block;
+                    width: 8px;
+                    height: 8px;
+                    margin-right: 8px;
+                    border-radius: 50%;
+                    background: var(--green-bright);
+                    vertical-align: middle;
+                  "
+                  aria-hidden="true"
+                ></span
+                ><span class="hero-next__text"></span>
+              </p>
               <!-- Three numbers where three words were (2026-11-03). The rating
                    is filled by loadReviewStats() in js/app.js and stays hidden
                    until there is a rating AND a count; the Tune-Up price follows
@@ -1096,6 +1091,55 @@
                 <p class="hiw-desc">Your bike is ready to go!</p>
               </div>
             </div>
+            <!-- The guarantee under the four steps, same copy as the landing
+                 (terms.html section 16, id="warranty"). Diego, 3-nov-2026. -->
+            <div
+              style="
+                display: flex;
+                gap: 12px;
+                align-items: flex-start;
+                margin-top: 28px;
+                padding: 16px;
+                background: var(--green-lt);
+                border-left: 4px solid var(--green);
+                border-radius: 12px;
+              "
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--green)"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                style="flex-shrink: 0; margin-top: 1px"
+                aria-hidden="true"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <polyline points="9 12 11 14 15 10" />
+              </svg>
+              <div>
+                <p style="font-weight: 700; font-size: 15px; color: var(--navy); margin: 0 0 4px">
+                  14-day workmanship guarantee
+                </p>
+                <p style="color: var(--gray); font-size: 14px; line-height: 1.5; margin: 0">
+                  If something we fixed isn't right within 14 days of your service, we come back and fix it free. Damage from repeated off-road riding after the service isn't covered.
+                </p>
+                <a
+                  href="/terms.html#warranty"
+                  style="
+                    display: inline-block;
+                    padding: 12px 0;
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: var(--blue-dark-text);
+                  "
+                  >Read the terms</a
+                >
+              </div>
+            </div>
             <!-- Opens the same fee check as the hero button, already asking
                  for what was typed here (openFeeCheckModal in js/app.js). -->
             <div class="home-suburb">
@@ -1153,7 +1197,7 @@
                         stroke-linejoin="round"
                       />
                     </svg>
-                    Certified &amp; experienced mechanic
+                    10 years of experience as a mechanic
                   </li>
                   <li class="check-item">
                     <svg
@@ -1210,7 +1254,7 @@
                         stroke-linejoin="round"
                       />
                     </svg>
-                    Satisfaction guaranteed
+                    14-day workmanship guarantee
                   </li>
                 </ul>
                 <div class="about-sig">
@@ -2581,7 +2625,7 @@
      (removed 2026-07-28); router.js and components.js got away with it only
      because they hold no state of their own. app.js pulls in the whole graph -
      router, supabase, components, i18n, rider-tier, stripe. -->
-    <script src="js/app.js?v=5be17227c9" type="module"></script>
+    <script src="js/app.js?v=6a37a0e4e3" type="module"></script>
     <script type="module">
       /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
       import { sb } from './js/supabase.js';

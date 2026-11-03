@@ -330,7 +330,7 @@ COVERAGE AREAS:
 
 BOOKING: drbikesydney.com.au — pick service, date, time, address. Same-day often available. Confirmed within 30 min.
 PAYMENT: Card via Stripe after job completion. PARTS are charged separately on top of the service: the mechanic quotes them and the customer approves before anything is fitted (Terms, section 3). Never say parts are sold at cost or with no markup - that is not true.
-GUARANTEE: 30-day satisfaction guarantee. We come back and fix it free if anything's not right.
+GUARANTEE: 14-day workmanship guarantee. If the issue we worked on comes back or our work isn't right within 14 days of the service, we come back and fix it free - WhatsApp us with photos or use drbikesydney.com.au/claims.html. A refund instead is possible only if asked within 3 days. Not covered: a different problem from the one we worked on, or damage from repeated hard off-road riding after the service. Never promise more than 14 days (Terms, section 16).
 REFERRALS: Each client gets a referral code — both you and your friend get $15 off when they use it.
 
 ${userProfile ? `CURRENT USER: ${userProfile.full_name || 'Guest'}${userProfile.membership_plan ? `, ${userProfile.membership_plan} member` : ' (not yet a member)'}` : ''}

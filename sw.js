@@ -271,10 +271,20 @@
 // diccionarios).
 // v160: Hornsby sale de "a unos 45 minutos" (cobertura y preguntas frecuentes,
 // en los dos diccionarios): el sistema lo mide a 52 minutos y lo cotiza.
-// v161: la portada del telefono nueva (barra de datos, Diego, la IA, el
+// v161: garantia de 14 dias (franja bajo "How it works", lista del equipo y
+// chip del celular) en los dos diccionarios; "5 Star Rated" pasa a ser la
+// garantia y el cierre deja de prometer "hundreds of satisfied cyclists".
+// v162: la pantalla de resena de la app pide la resena de Google con cualquier
+// cantidad de estrellas (antes solo con 5); textos nuevos en los dos diccionarios.
+// v163: "Next available" bajo el boton de reservar (las dos paginas), con
+// sus tres textos en los dos diccionarios.
+// v164: fuera "Verified Mechanic", "Background Checked", "Fully Insured",
+// "Qualified/Certified" y las cifras de flotas (Diego: no son ciertas); entran
+// los 10 anos de experiencia, en los dos diccionarios.
+// v165: la portada del telefono nueva (barra de datos, Diego, la IA, el
 // suburbio, "Good to know", hablar con Dr. Bike); sus textos en los dos
 // diccionarios.
-const CACHE_STATIC = 'drbike-static-v161';
+const CACHE_STATIC = 'drbike-static-v165';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

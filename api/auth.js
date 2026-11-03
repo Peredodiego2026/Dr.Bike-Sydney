@@ -6223,6 +6223,110 @@ export async function handleGetAvailability(req, res) {
   return res.status(200).json(slots);
 }
 
+// ── Next available slot ──────────────────────────────────────────────────────
+// The "Next available: tomorrow at 9:00 am" line under the hero's Book button
+// on both home pages (conversion study, phase 3: "show availability"). It
+// walks the days with the same pieces handleGetAvailability uses, in the same
+// order, so the line can never offer a time the booking calendar would grey
+// out. No service is chosen yet, so it is the default job length - a long
+// service may start later, which the calendar then shows.
+export const NEXT_AVAILABLE_DAYS = 14;
+
+export function firstOpenSlot({
+  dates,
+  bookings,
+  overrides,
+  vans,
+  durationByService,
+  todayStr,
+  nowMin,
+  shutUntil,
+  nowMs,
+}) {
+  const neededMin = DEFAULT_SERVICE_DURATION_MIN + SLOT_BUFFER_MIN;
+  for (const date of dates) {
+    if (shutUntil && date < shutUntil) continue;
+    const live = occupiedBookings(
+      (bookings || []).filter((b) => b.scheduled_date === date),
+      nowMs
+    );
+    const slots = computeAvailableSlots({
+      allSlots: ALL_SLOTS,
+      vans,
+      busyIntervals: buildBusyIntervals(live, durationByService),
+      neededMin,
+      blockIntervals: buildBlockIntervals(
+        (overrides || []).filter((o) => o.date === date),
+        vans
+      ),
+      isToday: date === todayStr,
+      nowMin,
+    });
+    const open = slots.find((s) => s.available);
+    if (open) return { date, time: open.time };
+  }
+  return { date: null, time: null };
+}
+
+export async function handleNextAvailable(req, res) {
+  if (await guard(req, res, { method: 'GET', rateMax: 60, rateWindow: 60000 })) return;
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const todayStr = sydneyToday();
+  const dates = [];
+  for (let i = 0; i < NEXT_AVAILABLE_DAYS; i++) {
+    const d = new Date(`${todayStr}T12:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + i);
+    dates.push(d.toISOString().slice(0, 10));
+  }
+
+  const [b, o, vz, sv] = await Promise.all([
+    sb
+      .from('bookings')
+      .select(
+        'id,scheduled_date,scheduled_time,van_number,service_name,status,created_at,stripe_payment_intent_id'
+      )
+      .gte('scheduled_date', dates[0])
+      .lte('scheduled_date', dates.at(-1))
+      .in('status', ['pending', 'confirmed', 'enroute', ...IN_PROGRESS_STATUSES]),
+    sb
+      .from('availability')
+      .select('date, time_slot, available, van_number')
+      .gte('date', dates[0])
+      .lte('date', dates.at(-1)),
+    sb.from('van_zones').select('van_number').neq('van_number', 0),
+    sb.from('services').select('id,name,duration_max'),
+  ]);
+  // handleGetAvailability reads a failed query as an empty day. Here that
+  // would advertise a time somebody already has, so any error hides the line.
+  if (b.error || o.error) {
+    console.error('[next-available] query failed:', (b.error || o.error).message);
+    return res.status(200).json({ date: null, time: null });
+  }
+  const vans = [...new Set((vz.data || []).map((r) => r.van_number))];
+  if (!vans.length) vans.push(1);
+  const durationByService = {};
+  for (const s of sv.data || []) {
+    if (s.name) durationByService[s.name] = s.duration_max || DEFAULT_SERVICE_DURATION_MIN;
+  }
+  const nowSydney = new Date(new Date().toLocaleString('en-US', { timeZone: 'Australia/Sydney' }));
+
+  const next = firstOpenSlot({
+    dates,
+    bookings: b.data,
+    overrides: o.data,
+    vans,
+    durationByService,
+    todayStr,
+    nowMin: nowSydney.getHours() * 60 + nowSydney.getMinutes() + 120,
+    shutUntil: await closedUntil(SUPABASE_KEY),
+  });
+  // Two minutes at the edge: one function call per two minutes however many
+  // people open the page, and a slot taken meanwhile is still refused by the
+  // calendar and by handleCreateBooking.
+  res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=60');
+  return res.status(200).json(next);
+}
+
 // ── Google Calendar OAuth (see api/_google-calendar.js) ─────────────────────────
 // Both roles are reached via vercel.json rewrites (/api/google-calendar-connect,
 // /api/google-calendar-callback) rather than their own files, to stay under
@@ -7833,6 +7937,10 @@ async function handler(req, res) {
   if (role === 'get-availability') {
     if (await rateLimit(req, res, { max: 30, windowMs: 60000, key: 'get-availability' })) return;
     return handleGetAvailability(req, res);
+  }
+  if (role === 'next-available') {
+    if (await rateLimit(req, res, { max: 30, windowMs: 60000, key: 'next-available' })) return;
+    return handleNextAvailable(req, res);
   }
   if (role === 'google-calendar-connect') {
     if (await rateLimit(req, res, { max: 10, windowMs: 60000, key: 'cal-connect' })) return;

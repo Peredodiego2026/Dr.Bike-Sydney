@@ -526,10 +526,13 @@ export default {
   'Passion for Bikes, Commitment to Service': '热爱自行车，专注服务',
   'Dr. Bike Sydney was founded with a simple mission: to provide professional, convenient, and reliable bike servicing to cyclists across Sydney.':
     'Dr. Bike Sydney 的创立使命很简单：为悉尼各地的骑行者提供专业、便捷、可靠的自行车服务。',
-  'Certified & experienced mechanic': '持证且经验丰富的技工',
+  '10 years of experience as a mechanic': '10年技师经验',
   'Fully equipped mobile workshop': '配备齐全的移动车间',
   'Premium tools and quality parts': '优质工具和高品质零件',
-  'Satisfaction guaranteed': '满意保证',
+  '14-day workmanship guarantee': '14天工艺保修',
+  "If something we fixed isn't right within 14 days of your service, we come back and fix it free. Damage from repeated off-road riding after the service isn't covered.":
+    '服务后14天内，如果我们修过的地方出现问题，我们会免费上门修好。服务后多次越野骑行造成的损坏不在保修范围内。',
+  'Read the terms': '查看条款',
   'Founder & Head Mechanic': '创始人兼首席技工',
   'Happy Customers': '满意客户',
   'Bikes Serviced': '服务车辆',
@@ -595,10 +598,9 @@ export default {
     '我们接受所有主流信用卡和借记卡、Apple Pay和Google Pay。预订时收取上门检查费押金（从$35起，视郊区而定），其余金额在服务完成后收取。',
   "Still have questions? We're here to help!": '还有疑问？我们随时为您解答！',
   'Contact Us': '联系我们',
-  'Ready to Experience': '准备好体验',
-  'Premium Bike Service?': '高端自行车服务了吗？',
-  'Book your service today and join hundreds of satisfied cyclists across Sydney.':
-    '立即预订，加入悉尼数百位满意骑行者的行列。',
+  'Bike Not Riding Right?': '自行车骑着不顺？',
+  'Book online in a couple of minutes and we come to your door.':
+    '几分钟就能在线预约，我们上门服务。',
   'Book Now': '立即预订',
   'Start Your Membership': '开始您的会员',
   'Phone Number (04XX XXX XXX)': '电话号码 (04XX XXX XXX)',
@@ -632,9 +634,8 @@ export default {
   'Bookings · Bikes · Membership': '预订 · 自行车 · 会员',
   // Trust badges bar
   '100% Satisfaction Guarantee': '100%满意保证',
-  'Verified Mechanic': '认证技工',
-  'Background Checked': '背景审查',
-  'Fully Insured': '全额保险',
+  '10 years of experience': '10年经验',
+  'Fully equipped van': '装备齐全的服务车',
   'ASAP Response': '即时响应',
   'Transparent Pricing': '价格透明',
   'Sydney Wide': '覆盖全悉尼',
@@ -648,9 +649,9 @@ export default {
   // comment for context)
   'Book a service': '预约服务',
   'Get Your Free Quote': '获取免费报价',
-  'Qualified Mechanic': '专业技工',
+  '10 Years of Experience': '10年经验',
   'Fully Equipped Van': '装备齐全的服务车',
-  '5 Star Rated': '五星好评',
+  '14-Day Guarantee': '14天保修',
   // Mechanics 3D carousel
   'OUR TEAM': '我们的团队',
   'Meet Your Mechanics': '认识我们的技工',
@@ -675,8 +676,8 @@ export default {
   'Hornsby, Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.':
     'Hornsby、Western Sydney、Sutherland Shire 和 Blue Mountains。线上不收取任何费用：发送您的地址，我们为您报价。',
   Quote: '报价',
-  'Qualified, background-checked mechanics rated by real Sydney riders.':
-    '经过认证和背景审查的技工，由悉尼真实骑行者评分。',
+  '10 years of fixing bikes, rated by real Sydney riders.':
+    '10年自行车维修经验，由悉尼真实骑行者评分。',
   'Previous mechanic': '上一位技工',
   'Next mechanic': '下一位技工',
   'Previous review': '上一条评价',
@@ -1127,9 +1128,6 @@ export default {
   'Service reports': '服务报告',
   'Full PDF report per bike after every visit. Track the health of your entire fleet.':
     '每次上门后为每辆车提供完整PDF报告，追踪整个车队的健康状况。',
-  'bikes serviced': '辆车已服务',
-  'response time': '响应时间',
-  'call-out for fleets': '车队上门检查费',
   'Get a fleet quote': '获取车队报价',
   "We'll reply within 2 business hours": '我们会在2个工作小时内回复',
   'Business name *': '企业名称 *',
@@ -1160,7 +1158,6 @@ export default {
   'Something went wrong. Please email us directly.': '出现问题，请直接给我们发邮件。',
 
   // ── Final CTA ───────────────────────────────────────────────────────────
-  'Ready to Experience Premium Bike Service?': '准备好体验高端自行车服务了吗？',
 
   // ── Footer ──────────────────────────────────────────────────────────────
   'Professional bike service at your doorstep.': '上门专业自行车服务。',
@@ -1309,6 +1306,10 @@ export default {
   Before: '维修前',
   After: '维修后',
   '⭐ Rate this mechanic': '⭐ 为技师评分',
+  'Thanks for telling us': '感谢您告诉我们',
+  "We're sorry it wasn't a great experience. If something we fixed isn't right, it's covered by our 14-day guarantee.":
+    '很抱歉这次体验不够好。如果我们修过的地方有问题，可享受14天保修。',
+  'Report a problem': '报告问题',
   'Thanks for the 5 stars!': '感谢您的五星好评！',
   'Would you mind leaving a quick Google review? It helps other Sydney cyclists find us.':
     '方便在 Google 上留个简短评价吗？这能帮助更多悉尼骑行者找到我们。',
@@ -1342,7 +1343,7 @@ export default {
   'Type a message': '输入消息',
   'Toggle password visibility': '显示或隐藏密码',
   'Could not enable notifications:': '无法开启通知：',
-  '100% Satisfaction': '100% 满意',
+  '14-day guarantee': '14天保修',
   'Trusted by cyclists across Sydney': '深受悉尼各地骑行者信赖',
   'Be the first to leave a review': '成为第一个留下评价的人',
   'Real reviews from Sydney cyclists will show up here as soon as clients start sharing their experience.':
@@ -1475,6 +1476,9 @@ export default {
   // Ninguna de las de `{n}` la detecta scripts/i18n-check.mjs.
   'Reviews on Google': '谷歌评价',
   '{n} review on Google': '{n} 条谷歌评价',
+  'Next available: today at {time}': '最早可预约：今天 {time}',
+  'Next available: tomorrow at {time}': '最早可预约：明天 {time}',
+  'Next available: {day} at {time}': '最早可预约：{day} {time}',
   '{n} reviews on Google': '{n} 条谷歌评价',
   '{n} review from our clients': '{n} 条客户评价',
   '{n} reviews from our clients': '{n} 条客户评价',

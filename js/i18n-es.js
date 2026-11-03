@@ -578,10 +578,13 @@ export default {
   'Passion for Bikes, Commitment to Service': 'Pasión por las Bicis, Compromiso con el Servicio',
   'Dr. Bike Sydney was founded with a simple mission: to provide professional, convenient, and reliable bike servicing to cyclists across Sydney.':
     'Dr. Bike Sydney nació con una misión simple: brindar servicio de bicicletas profesional, conveniente y confiable a ciclistas en toda Sydney.',
-  'Certified & experienced mechanic': 'Mecánico certificado y con experiencia',
+  '10 years of experience as a mechanic': '10 años de experiencia como mecánico',
   'Fully equipped mobile workshop': 'Taller móvil completamente equipado',
   'Premium tools and quality parts': 'Herramientas premium y repuestos de calidad',
-  'Satisfaction guaranteed': 'Satisfacción garantizada',
+  '14-day workmanship guarantee': 'Garantía de 14 días en la mano de obra',
+  "If something we fixed isn't right within 14 days of your service, we come back and fix it free. Damage from repeated off-road riding after the service isn't covered.":
+    'Si algo que reparamos no quedó bien dentro de los 14 días posteriores a tu servicio, volvemos y lo arreglamos sin cargo. No cubre daños por uso repetido en terreno off-road después del servicio.',
+  'Read the terms': 'Leer los términos',
   'Founder & Head Mechanic': 'Fundador y Mecánico Principal',
   'Happy Customers': 'Clientes Felices',
   'Bikes Serviced': 'Bicis Reparadas',
@@ -650,10 +653,9 @@ export default {
     'Aceptamos todas las tarjetas de crédito y débito principales, Apple Pay y Google Pay. Se cobra un depósito por la visita (desde $35, según tu suburbio) al reservar; el resto se cobra al completar el servicio.',
   "Still have questions? We're here to help!": '¿Tenés más preguntas? ¡Estamos para ayudarte!',
   'Contact Us': 'Contactanos',
-  'Ready to Experience': 'Listo para Experimentar',
-  'Premium Bike Service?': 'un Servicio Premium?',
-  'Book your service today and join hundreds of satisfied cyclists across Sydney.':
-    'Reservá tu servicio hoy y sumate a cientos de ciclistas satisfechos en toda Sydney.',
+  'Bike Not Riding Right?': '¿Tu bici no anda bien?',
+  'Book online in a couple of minutes and we come to your door.':
+    'Reservá online en un par de minutos y vamos hasta tu puerta.',
   'Book Now': 'Reservar Ahora',
   'Start Your Membership': 'Comenzá tu Membresía',
   'Phone Number (04XX XXX XXX)': 'Número de Teléfono (04XX XXX XXX)',
@@ -687,9 +689,8 @@ export default {
   'Bookings · Bikes · Membership': 'Reservas · Bicis · Membresía',
   // Trust badges bar
   '100% Satisfaction Guarantee': '100% Satisfacción Garantizada',
-  'Verified Mechanic': 'Mecánico Verificado',
-  'Background Checked': 'Antecedentes Verificados',
-  'Fully Insured': 'Totalmente Asegurado',
+  '10 years of experience': '10 años de experiencia',
+  'Fully equipped van': 'Van totalmente equipada',
   'ASAP Response': 'Respuesta Inmediata',
   'Transparent Pricing': 'Precios Transparentes',
   'Sydney Wide': 'Toda Sydney',
@@ -706,9 +707,9 @@ export default {
   // translateScreen() automatically - see final report for this limitation.
   'Book a service': 'Reservar Servicio',
   'Get Your Free Quote': 'Obtené tu Cotización Gratis',
-  'Qualified Mechanic': 'Mecánico Calificado',
+  '10 Years of Experience': '10 Años de Experiencia',
   'Fully Equipped Van': 'Van Totalmente Equipada',
-  '5 Star Rated': 'Calificación 5 Estrellas',
+  '14-Day Guarantee': 'Garantía de 14 Días',
   // Mechanics 3D carousel
   'OUR TEAM': 'NUESTRO EQUIPO',
   'Meet Your Mechanics': 'Conocé a Nuestros Mecánicos',
@@ -733,8 +734,8 @@ export default {
   'Hornsby, Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.':
     'Hornsby, Western Sydney, Sutherland Shire y las Blue Mountains. No se cobra nada online: mandanos tu dirección y te cotizamos el viaje.',
   Quote: 'Cotización',
-  'Qualified, background-checked mechanics rated by real Sydney riders.':
-    'Mecánicos calificados, con antecedentes verificados, calificados por ciclistas reales de Sydney.',
+  '10 years of fixing bikes, rated by real Sydney riders.':
+    '10 años arreglando bicis, calificados por ciclistas reales de Sydney.',
   'Previous mechanic': 'Mecánico anterior',
   'Next mechanic': 'Siguiente mecánico',
   'Previous review': 'Reseña anterior',
@@ -1215,9 +1216,6 @@ export default {
   'Service reports': 'Informes de servicio',
   'Full PDF report per bike after every visit. Track the health of your entire fleet.':
     'Informe PDF completo por bici después de cada visita. Seguí el estado de toda tu flota.',
-  'bikes serviced': 'bicis reparadas',
-  'response time': 'tiempo de respuesta',
-  'call-out for fleets': 'de visita para flotas',
   'Get a fleet quote': 'Cotizá tu flota',
   "We'll reply within 2 business hours": 'Te respondemos dentro de 2 horas hábiles',
   'Business name *': 'Nombre de la empresa *',
@@ -1251,7 +1249,6 @@ export default {
     'Algo salió mal. Por favor escribinos directamente.',
 
   // ── Final CTA ───────────────────────────────────────────────────────────
-  'Ready to Experience Premium Bike Service?': '¿Listo para Experimentar un Servicio Premium?',
 
   // ── Footer ──────────────────────────────────────────────────────────────
   'Professional bike service at your doorstep.': 'Servicio profesional de bicicletas en tu puerta.',
@@ -1425,6 +1422,10 @@ export default {
   Before: 'Antes',
   After: 'Después',
   '⭐ Rate this mechanic': '⭐ Califica al mecánico',
+  'Thanks for telling us': 'Gracias por contarnos',
+  "We're sorry it wasn't a great experience. If something we fixed isn't right, it's covered by our 14-day guarantee.":
+    'Lamentamos que la experiencia no haya sido buena. Si algo que reparamos no quedó bien, lo cubre nuestra garantía de 14 días.',
+  'Report a problem': 'Reportar un problema',
   'Thanks for the 5 stars!': '¡Gracias por las 5 estrellas!',
   'Would you mind leaving a quick Google review? It helps other Sydney cyclists find us.':
     '¿Nos dejas una reseña rápida en Google? Ayuda a que otros ciclistas de Sydney nos encuentren.',
@@ -1458,7 +1459,7 @@ export default {
   'Type a message': 'Escribe un mensaje',
   'Toggle password visibility': 'Mostrar u ocultar la contraseña',
   'Could not enable notifications:': 'No se pudieron activar las notificaciones:',
-  '100% Satisfaction': '100% Satisfacción',
+  '14-day guarantee': 'Garantía de 14 días',
   'Trusted by cyclists across Sydney': 'Elegido por ciclistas de todo Sydney',
   'Be the first to leave a review': 'Sé el primero en dejar una reseña',
   'Real reviews from Sydney cyclists will show up here as soon as clients start sharing their experience.':
@@ -1631,6 +1632,9 @@ export default {
   // ingles y ningun check se queja.
   'Reviews on Google': 'Reseñas en Google',
   '{n} review on Google': '{n} reseña en Google',
+  'Next available: today at {time}': 'Próximo turno: hoy a las {time}',
+  'Next available: tomorrow at {time}': 'Próximo turno: mañana a las {time}',
+  'Next available: {day} at {time}': 'Próximo turno: {day} a las {time}',
   '{n} reviews on Google': '{n} reseñas en Google',
   '{n} review from our clients': '{n} reseña de nuestros clientes',
   '{n} reviews from our clients': '{n} reseñas de nuestros clientes',

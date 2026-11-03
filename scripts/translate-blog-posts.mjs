@@ -131,8 +131,8 @@ const DICT = {
         '<strong>Especialización por marca</strong>: las e-bikes (sobre todo con Bosch Smart System), las bicis de carrera y las de carga requieren conocimientos específicos',
       '<strong>Trail background</strong> — mechanics who ride regularly understand problems cyclists actually face':
         '<strong>Experiencia sobre el terreno</strong>: los mecánicos que andan en bici seguido entienden mejor los problemas reales de los ciclistas',
-      '💡 At Dr. Bike Sydney, our lead mechanic has 5+ years of experience including managing a fleet of Bosch-equipped e-bikes. Every service is performed by an experienced mechanic — not a junior trainee.':
-        '💡 En Dr. Bike Sydney, nuestro mecánico principal tiene más de 5 años de experiencia, incluyendo la gestión de una flota de e-bikes con sistema Bosch. Cada servicio lo hace un mecánico experimentado, no un aprendiz.',
+      '💡 At Dr. Bike Sydney, our lead mechanic has 10 years of experience including managing a fleet of Bosch-equipped e-bikes. Every service is performed by an experienced mechanic — not a junior trainee.':
+        '💡 En Dr. Bike Sydney, nuestro mecánico principal tiene 10 años de experiencia, incluyendo la gestión de una flota de e-bikes con sistema Bosch. Cada servicio lo hace un mecánico experimentado, no un aprendiz.',
       '2. Mobile vs. Workshop — Which is Better?': '2. A Domicilio vs. Taller: ¿Cuál Conviene Más?',
       'Sydney\'s traditional workshop model requires you to transport your bike, wait days for an appointment slot, and collect it again. A quality mobile mechanic brings a fully-equipped van directly to you, often available same-day.':
         'El modelo tradicional de taller en Sídney te obliga a trasladar la bici, esperar días por un turno y después ir a buscarla de nuevo. Un buen mecánico a domicilio lleva una camioneta totalmente equipada directo hasta vos, muchas veces disponible el mismo día.',
@@ -177,8 +177,8 @@ const DICT = {
       'Any mechanic working on your bike has access to your property and is performing work that, if done incorrectly, could cause an accident. A professional mobile mechanic should carry public liability insurance and be able to confirm this on request.':
         'Cualquier mecánico que trabaje en tu bici tiene acceso a tu propiedad y hace un trabajo que, si sale mal, puede causar un accidente. Un mecánico a domicilio profesional debería tener seguro de responsabilidad civil y poder confirmarlo si se lo pedís.',
       'Book a Dr. Bike Sydney service': 'Reservá un servicio con Dr. Bike Sydney',
-      'Experienced, insured, transparent pricing. We come to you anywhere across Sydney — home, work or park.':
-        'Experiencia, seguro y precios transparentes. Vamos hasta vos a cualquier parte de Sídney: casa, trabajo o parque.',
+      'Experienced, with transparent pricing. We come to you anywhere across Sydney — home, work or park.':
+        'Experiencia y precios transparentes. Vamos hasta vos a cualquier parte de Sídney: casa, trabajo o parque.',
       'Book Now — From $119 →': 'Reservar Ahora — Desde $119 →',
     },
     zh: {
@@ -199,8 +199,8 @@ const DICT = {
         '<strong>品牌专长</strong>——电动自行车（尤其是搭载 Bosch Smart System 的车型）、公路赛车和货运自行车都需要专门的知识',
       '<strong>Trail background</strong> — mechanics who ride regularly understand problems cyclists actually face':
         '<strong>骑行背景</strong>——经常骑车的技师更了解骑行者真正会遇到的问题',
-      '💡 At Dr. Bike Sydney, our lead mechanic has 5+ years of experience including managing a fleet of Bosch-equipped e-bikes. Every service is performed by an experienced mechanic — not a junior trainee.':
-        '💡 在 Dr. Bike Sydney，我们的主理技师拥有 5 年以上经验，曾负责管理一支配备 Bosch 系统的电动自行车车队。每一次服务都由经验丰富的技师亲自完成，绝非新手学徒。',
+      '💡 At Dr. Bike Sydney, our lead mechanic has 10 years of experience including managing a fleet of Bosch-equipped e-bikes. Every service is performed by an experienced mechanic — not a junior trainee.':
+        '💡 在 Dr. Bike Sydney，我们的主理技师拥有 10 年经验，曾负责管理一支配备 Bosch 系统的电动自行车车队。每一次服务都由经验丰富的技师亲自完成，绝非新手学徒。',
       '2. Mobile vs. Workshop — Which is Better?': '2. 上门服务 vs. 实体店——哪个更好？',
       'Sydney\'s traditional workshop model requires you to transport your bike, wait days for an appointment slot, and collect it again. A quality mobile mechanic brings a fully-equipped van directly to you, often available same-day.':
         '悉尼传统的实体店模式需要您自己运送自行车、等待数天预约，再取车。而优质的上门技师会直接开着装备齐全的服务车来找您，通常当天即可安排。',
@@ -240,8 +240,8 @@ const DICT = {
       'Any mechanic working on your bike has access to your property and is performing work that, if done incorrectly, could cause an accident. A professional mobile mechanic should carry public liability insurance and be able to confirm this on request.':
         '任何为您维修自行车的技师都能接触到您的财物，所进行的工作若操作不当，也可能引发事故。专业的上门技师应当持有公共责任险，并能在您要求时予以确认。',
       'Book a Dr. Bike Sydney service': '预订 Dr. Bike Sydney 服务',
-      'Experienced, insured, transparent pricing. We come to you anywhere across Sydney — home, work or park.':
-        '经验丰富、有保险保障、价格透明。我们上门服务悉尼全境——家中、办公室或公园均可。',
+      'Experienced, with transparent pricing. We come to you anywhere across Sydney — home, work or park.':
+        '经验丰富、价格透明。我们上门服务悉尼全境——家中、办公室或公园均可。',
       'Book Now — From $119 →': '立即预订 — 低至 $119 →',
     },
   },
@@ -255,8 +255,8 @@ const DICT = {
       'By Dr. Bike Sydney · June 2026 · 6 min read': 'Por Dr. Bike Sydney · junio 2026 · 6 min de lectura',
       "Sydney's cycling infrastructure has expanded significantly in recent years, with protected lanes on Crown Street, College Street and Anzac Parade making inner-city commuting more viable than ever. But choosing the right commuter bike for Sydney's unique mix of flat stretches, hilly suburbs and occasionally wet roads matters more than many riders think.":
         'La infraestructura ciclista de Sídney creció mucho en los últimos años, con carriles protegidos en Crown Street, College Street y Anzac Parade que hacen que moverse por el centro en bici sea más viable que nunca. Pero elegir la bici correcta para la mezcla particular de Sídney (tramos planos, suburbios con subidas y calles a veces mojadas) importa más de lo que muchos ciclistas piensan.',
-      'Here\'s our 2026 guide — written by mechanics with 5+ years servicing Sydney commuters daily.':
-        'Esta es nuestra guía 2026, escrita por mecánicos con más de 5 años atendiendo a ciclistas urbanos de Sídney todos los días.',
+      'Here\'s our 2026 guide — written by a mechanic with 10 years of experience, servicing Sydney commuters every day.':
+        'Esta es nuestra guía 2026, escrita por un mecánico con 10 años de experiencia que atiende a ciclistas urbanos de Sídney todos los días.',
       '1. Hybrid Bikes — Best All-Rounder': '1. Bicis Híbridas: la Más Versátil',
       'Hybrid bikes are the go-to for most Sydney commuters. They combine the efficiency of a road bike with the upright position and tyre clearance of a mountain bike. For commutes under 15km in areas like Surry Hills, Newtown and Glebe, a quality hybrid is hard to beat.':
         'Las bicis híbridas son la primera opción para la mayoría de los ciclistas urbanos de Sídney. Combinan la eficiencia de una bici de ruta con la posición erguida y el espacio para cubiertas de una mountain bike. Para trayectos de menos de 15 km en zonas como Surry Hills, Newtown o Glebe, una híbrida de calidad es difícil de superar.',
@@ -319,8 +319,8 @@ const DICT = {
       'By Dr. Bike Sydney · June 2026 · 6 min read': '作者：Dr. Bike Sydney · 2026年6月 · 阅读需6分钟',
       "Sydney's cycling infrastructure has expanded significantly in recent years, with protected lanes on Crown Street, College Street and Anzac Parade making inner-city commuting more viable than ever. But choosing the right commuter bike for Sydney's unique mix of flat stretches, hilly suburbs and occasionally wet roads matters more than many riders think.":
         '近年来悉尼的骑行基础设施大幅扩展，Crown Street、College Street 和 Anzac Parade 上的受保护车道让市区通勤骑行比以往任何时候都更可行。但为悉尼这种平路、丘陵郊区和偶尔湿滑路面并存的独特路况选对通勤自行车，比许多骑行者想象的更重要。',
-      'Here\'s our 2026 guide — written by mechanics with 5+ years servicing Sydney commuters daily.':
-        '以下是我们的2026年指南——由每天为悉尼通勤者提供服务、拥有5年以上经验的技师撰写。',
+      'Here\'s our 2026 guide — written by a mechanic with 10 years of experience, servicing Sydney commuters every day.':
+        '以下是我们的2026年指南——由每天为悉尼通勤者提供服务、拥有10年经验的技师撰写。',
       '1. Hybrid Bikes — Best All-Rounder': '1. 混合动力车——最全能之选',
       'Hybrid bikes are the go-to for most Sydney commuters. They combine the efficiency of a road bike with the upright position and tyre clearance of a mountain bike. For commutes under 15km in areas like Surry Hills, Newtown and Glebe, a quality hybrid is hard to beat.':
         '混合动力车是大多数悉尼通勤者的首选。它兼具公路车的高效与山地车的直立骑姿和轮胎间隙。对于 Surry Hills、Newtown、Glebe 等地 15 公里以内的通勤路程，一辆优质的混合动力车很难被超越。',
