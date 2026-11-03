@@ -62,7 +62,7 @@
   {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What areas do you service?","acceptedAnswer":{"@type":"Answer","text":"Same-day visits cover everything within about 45 minutes of our Northern Beaches base — Northern Beaches, North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs. Further out, like Western Sydney, the Sutherland Shire or the Blue Mountains, we still come, but by arrangement rather than same-day. Enter your address when you book and we'll tell you which one you are."}},{"@type":"Question","name":"What if I need to reschedule?","acceptedAnswer":{"@type":"Answer","text":"You can reschedule or cancel from the link in your booking confirmation, or by calling us. It's free with more than 24 hours' notice; with less, a fee of up to the visit & diagnosis fee may apply."}},{"@type":"Question","name":"Do you bring spare parts?","acceptedAnswer":{"@type":"Answer","text":"Yes. The van carries inner tubes in the common sizes, and any other part your bike needs we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately."}},{"@type":"Question","name":"How long does a service take?","acceptedAnswer":{"@type":"Answer","text":"A Tune-Up takes about an hour, a Standard Service about 1.5 hours, a Standard+ Service about 2.5 hours and an Ultimate Overhaul about 4 hours. You'll see the estimate when you book."}},{"@type":"Question","name":"What payment methods do you accept?","acceptedAnswer":{"@type":"Answer","text":"We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $35, depending on your suburb) is charged at booking; the remainder is charged on completion."}}]}
   </script>
 
-  <link rel="stylesheet" href="css/landing.css?v=141f599441">
+  <link rel="stylesheet" href="css/landing.css?v=f3789c6158">
   <link rel="stylesheet" href="css/shop.css?v=f28b164290">
   <script src="https://js.stripe.com/v3/"></script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
@@ -504,15 +504,59 @@
 .mech-dot.active { background: var(--white); transform: scale(1.3); }
 #mech-carousel-viewport { touch-action: pan-y; }
 </style>
+<!-- ── WHO COMES TO YOUR HOME ──────────────────────────────────────────────────
+     About and Mechanics were two blocks, four sections apart, until the
+     conversion study (2026-11-03, phase 2). They answer one question - who is
+     going to walk into my home - so they are one block: the founder's note on
+     the left, the mechanic cards on the right. The left column keeps the
+     #about anchor, so the nav and footer links still land here. -->
 <section id="mechanics" class="fits-one-screen" style="padding:clamp(36px,5vh,72px) 0 clamp(40px,6vh,80px);background:var(--navy);overflow:hidden">
-  <div class="container">
-    <div class="section-center">
+  <div class="container who-grid">
+    <div id="about" class="who-about">
       <span class="section-badge" style="background:rgba(255,255,255,0.1);color:var(--blue-pale)">OUR TEAM</span>
-      <h2 class="section-h2" style="font-size:2rem;color:var(--white)">Meet Your Mechanics</h2>
-      <p class="section-sub" style="color:var(--gray-lt)">Qualified, background-checked mechanics rated by real Sydney riders.</p>
+      <h2 class="section-h2" style="font-size:2rem;color:var(--white)">Who Comes to Your Home</h2>
+      <p class="about-p">Qualified, background-checked mechanics rated by real Sydney riders.</p>
+      <p class="about-p">Dr. Bike Sydney was founded with a simple mission: to provide professional, convenient, and reliable bike servicing to cyclists across Sydney.</p>
+
+      <ul class="check-list">
+        <li class="check-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px">
+            <circle cx="12" cy="12" r="12" fill="var(--blue)"/>
+            <polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Certified &amp; experienced mechanic
+        </li>
+        <li class="check-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px">
+            <circle cx="12" cy="12" r="12" fill="var(--blue)"/>
+            <polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Fully equipped mobile workshop
+        </li>
+        <li class="check-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px">
+            <circle cx="12" cy="12" r="12" fill="var(--blue)"/>
+            <polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Premium tools and quality parts
+        </li>
+        <li class="check-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px">
+            <circle cx="12" cy="12" r="12" fill="var(--blue)"/>
+            <polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Satisfaction guaranteed
+        </li>
+      </ul>
+
+      <div class="about-sig">
+        <p><em style="font-style:italic;font-weight:700">Diego Peredo</em><br>
+        <span>Founder &amp; Head Mechanic</span></p>
+      </div>
     </div>
 
-    <div id="mech-carousel-wrap" style="position:relative;margin-top:clamp(20px,3vh,44px)">
+    <div>
+    <div id="mech-carousel-wrap" style="position:relative">
       <div id="mech-carousel-viewport" style="height:clamp(300px,42vh,420px);perspective:1400px;position:relative">
         <div id="mech-carousel-track" style="position:relative;width:100%;height:100%;transform-style:preserve-3d"></div>
       </div>
@@ -527,6 +571,7 @@
 
     <div id="mech-carousel-empty" style="display:none;text-align:center;color:var(--gray-lt);padding:40px">
       <p>Our mechanic profiles are coming soon.</p>
+    </div>
     </div>
   </div>
 </section>
@@ -543,102 +588,7 @@
 
 
 
-<!-- ── MEMBERSHIPS ────────────────────────────────────────────────────────────── -->
-<section id="memberships" class="fits-one-screen" style="padding:clamp(12px,2vh,44px) 0;background:var(--gray-light)">
-  <div class="container" style="text-align:center">
-    <span class="section-badge">MEMBERSHIPS</span>
-    <h2 class="section-h2" style="font-size:1.75rem;margin-top:4px">Choose Your Plan</h2>
-    <p style="color:var(--gray);font-size:15px;margin-top:2px">Save more with our membership plans. Designed for regular cyclists.</p>
 
-    <div style="display:inline-flex;align-items:center;gap:0;background:var(--border);border-radius:9999px;padding:4px;margin:6px 0 14px">
-      <button id="toggle-monthly" style="padding:5px 22px;border-radius:9999px;border:none;font-size:14px;font-weight:600;cursor:pointer;background:var(--blue);color:white;font-family:inherit;transition:all 200ms">Monthly</button>
-      <button id="toggle-annual" style="padding:5px 22px;border-radius:9999px;border:none;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--gray);font-family:inherit;transition:all 200ms">Annual <span style="background:var(--green-lt);color:var(--green-text);font-size:11px;padding:2px 8px;border-radius:9999px;margin-left:4px">Save 20%</span></button>
-    </div>
-
-    <div class="memberships-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,1.6vw,24px);max-width:1100px;margin:0 auto">
-      <!-- Basic -->
-      <div class="plan-card">
-        <h3 style="font-weight:700;font-size:18px">Basic</h3>
-        <div class="plan-price">
-          <span id="price-basic" class="amount">$67</span>
-          <span id="period-basic" style="color:var(--gray);font-size:15px">/month</span>
-          <div id="annual-note-basic" style="display:none;font-size:13px;color:var(--green-text);font-weight:600;margin-top:4px">$643<span>/yr - save</span> $161</div>
-        </div>
-        <ul>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>1 free minor repair (under $70) + 1 free bike wash per month</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>5% off extra services</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Visit & diagnosis applies (from $35, depending on your suburb)</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Priority scheduling (72hs)</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Email support</li>
-        </ul>
-        <button class="lp-get-started lp-hover-fill" data-plan="basic" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue-text);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:15px;transition:var(--transition);font-family:inherit">Get Started</button>
-        <button class="lp-learn-more" data-plan="basic" style="width:100%;margin-top:8px;padding:8px;border:none;color:var(--gray);background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
-      </div>
-      <!-- Standard -->
-      <div class="plan-card plan-card--featured">
-        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:4px 16px;border-radius:var(--radius-full);font-size:13px;font-weight:600;white-space:nowrap">Popular</div>
-        <h3 style="font-weight:700;font-size:18px">Standard</h3>
-        <div class="plan-price">
-          <span id="price-standard" class="amount">$97</span>
-          <span id="period-standard" style="color:var(--gray);font-size:15px">/month</span>
-          <div id="annual-note-standard" style="display:none;font-size:13px;color:var(--green-text);font-weight:600;margin-top:4px">$931<span>/yr - save</span> $233</div>
-        </div>
-        <ul>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>2 free minor repairs (under $70) + 1 free bike wash + 1 free Tune-Up per month</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Visit & diagnosis included</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>10% off extra services</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Priority scheduling (48hs)</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>1 emergency callout per month (visit & diagnosis fee applies)</li>
-        </ul>
-        <button class="lp-get-started lp-hover-dark" data-plan="standard" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:white;background:var(--blue);border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:15px;transition:var(--transition);font-family:inherit">Get Started</button>
-        <button class="lp-learn-more" data-plan="standard" style="width:100%;margin-top:8px;padding:8px;border:none;color:var(--gray);background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
-      </div>
-      <!-- VIP -->
-      <div class="plan-card">
-        <h3 style="font-weight:700;font-size:18px">VIP</h3>
-        <div class="plan-price">
-          <span id="price-vip" class="amount">$197</span>
-          <span id="period-vip" style="color:var(--gray);font-size:15px">/month</span>
-          <div id="annual-note-vip" style="display:none;font-size:13px;color:var(--green-text);font-weight:600;margin-top:4px">$1,891<span>/yr - save</span> $473</div>
-        </div>
-        <ul>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>3 free minor repairs (under $70) + 2 free bike washes + 1 free Tune-Up per month</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Visit & diagnosis included</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>15% off extra services, plus 5% more</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Priority scheduling (24hs)</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>1 emergency callout per month (visit & diagnosis fee waived in your zone)</li>
-          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Dedicated mechanic</li>
-        </ul>
-        <button class="lp-get-started lp-hover-fill" data-plan="vip" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue-text);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:15px;transition:var(--transition);font-family:inherit">Get Started</button>
-        <button class="lp-learn-more" data-plan="vip" style="width:100%;margin-top:8px;padding:8px;border:none;color:var(--gray);background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
-      </div>
-    </div>
-    <p style="color:var(--gray);font-size:13px;margin-top:8px">All plans include mobile service within Sydney metro area</p>
-
-  </div>
-</section>
-
-<!-- Gift cards: era parte de la seccion de planes, y no es un plan. Sacarlo
-     de ahi es lo que deja los tres planes en una sola pantalla (160px de
-     los 1023 que medía la seccion). Sigue existiendo, como su propio bloque. -->
-<section style="padding:28px 0;background:var(--gray-light)">
-  <div class="container">
-    <div style="max-width:900px;margin:40px auto 0;background:linear-gradient(135deg,var(--purple),var(--blue));border-radius:var(--radius-lg);padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;text-align:left">
-      <div style="display:flex;align-items:center;gap:18px">
-        <div style="font-size:40px">🎁</div>
-        <div>
-          <div style="font-size:20px;font-weight:800;color:var(--white)">Gift a service</div>
-          <div style="font-size:15px;color:rgba(255,255,255,0.8);margin-top:2px">Send a Dr. Bike gift card by email - perfect for any cyclist</div>
-        </div>
-      </div>
-      <button id="giftcard-open-btn" style="padding:13px 28px;background:var(--white);color:var(--purple-text);border:none;border-radius:var(--radius);font-weight:700;font-size:15px;cursor:pointer;font-family:inherit;white-space:nowrap">Buy a gift card</button>
-    </div>
-  </div>
-</section>
 
 
 <!-- ── ALL SERVICES MODAL ────────────────────────────────────────────────────── -->
@@ -945,64 +895,8 @@
   </div>
 </div>
 
-<!-- ── ABOUT ────────────────────────────────────────────────────────────────── -->
-<section id="about" style="padding:96px 0;background:var(--gray-light)">
-  <div class="container">
-    <div class="about-grid">
-      <div>
-        <span class="section-badge">OUR STORY</span>
-        <h2 class="about-h2">Passion for Bikes, Commitment to Service</h2>
-        <p class="about-p">Dr. Bike Sydney was founded with a simple mission: to provide professional, convenient, and reliable bike servicing to cyclists across Sydney.</p>
-
-        <ul class="check-list">
-          <li class="check-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px">
-              <circle cx="12" cy="12" r="12" fill="var(--blue)"/>
-              <polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Certified &amp; experienced mechanic
-          </li>
-          <li class="check-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px">
-              <circle cx="12" cy="12" r="12" fill="var(--blue)"/>
-              <polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Fully equipped mobile workshop
-          </li>
-          <li class="check-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px">
-              <circle cx="12" cy="12" r="12" fill="var(--blue)"/>
-              <polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Premium tools and quality parts
-          </li>
-          <li class="check-item">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px">
-              <circle cx="12" cy="12" r="12" fill="var(--blue)"/>
-              <polyline points="6 12 10 16 18 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Satisfaction guaranteed
-          </li>
-        </ul>
-
-        <div class="about-sig">
-          <p><em style="font-style:italic;font-weight:700">Diego Peredo</em><br>
-          <span style="color:var(--gray);font-size:15px">Founder &amp; Head Mechanic</span></p>
-        </div>
-
-        <!-- 2026-07-22: removed a hardcoded "500+ Happy Customers / 1,000+
-             Bikes Serviced / 5.0 / 100%" stats block - it was static text
-             with no real data behind it, sitting right above the honest
-             Testimonials empty state ("Be the first to leave a review"),
-             which contradicted it. Bring real numbers back once they exist. -->
-      </div>
-
-      <div class="about-image" style="padding:0;overflow:hidden">
-        <img width="1122" height="1402" src="images/mechanic-working.webp" alt="Dr. Bike Sydney mechanic servicing a bike" style="width:100%;height:100%;object-fit:cover;border-radius:16px" loading="lazy">
-      </div>
-    </div>
-  </div>
-</section>
+<!-- About (Diego's story) moved into #mechanics on 2026-11-03: "who comes to
+     your home" is one question, so it is one block. -->
 
 <!-- ── RECENT WORK ─────────────────────────────────────────────────────────────
      The photos Diego marks "On website" in Admin > Photos. Hidden until there
@@ -1029,12 +923,126 @@
   </div>
 </section>
 
+<!-- ── COVERAGE ────────────────────────────────────────────────────────────────
+     Where we go and what the trip costs, visible without opening anything
+     (conversion study, 2026-11-03, phase 2). The four rows are api/_coverage.js
+     read aloud - FEE_BANDS, PENINSULA_FAR_FEE, NORTH_NEAR_SUBURBS and the
+     45-minute perimeter - and tests/unit/landing-coverage.test.js fails if they
+     stop agreeing. The base suburb is left out on purpose: it is where Diego
+     starts his day. The button is the hero's fee check, which asks the server. -->
+<section id="coverage" style="padding:clamp(36px,6vh,72px) 0;background:var(--white)">
+  <div class="container coverage-grid">
+    <div>
+      <span class="section-badge">COVERAGE</span>
+      <h2 class="section-h2" style="font-size:2rem">Areas We Cover</h2>
+      <p class="coverage-lead">Every visit starts from our Northern Beaches base. The visit &amp; diagnosis fee comes from the real driving time to your address, not from the suburb name.</p>
+      <button id="coverage-fee-btn" class="btn-primary" type="button">Check my diagnosis fee</button>
+    </div>
+    <ul class="coverage-list">
+      <li>
+        <div><strong>Northern Beaches</strong><span>Manly to Mona Vale, Frenchs Forest and Terrey Hills</span></div>
+        <b data-fee="near">$35</b>
+      </li>
+      <li>
+        <div><strong>The far peninsula</strong><span>Newport, Bayview, Church Point, Avalon and Palm Beach</span></div>
+        <b data-fee="peninsula">$45</b>
+      </li>
+      <li>
+        <div><strong>Within about 45 minutes</strong><span>North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs</span></div>
+        <b data-fee="perimeter">Up to $55</b>
+      </li>
+      <li>
+        <div><strong>Further out</strong><span>Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.</span></div>
+        <b data-fee="quote">Quote</b>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- ── MEMBERSHIPS ────────────────────────────────────────────────────────────── -->
+<section id="memberships" class="fits-one-screen" style="padding:clamp(12px,2vh,44px) 0;background:var(--gray-light)">
+  <div class="container" style="text-align:center">
+    <span class="section-badge">MEMBERSHIPS</span>
+    <h2 class="section-h2" style="font-size:1.75rem;margin-top:4px">Choose Your Plan</h2>
+    <p style="color:var(--gray);font-size:15px;margin-top:2px">Save more with our membership plans. Designed for regular cyclists.</p>
+
+    <div style="display:inline-flex;align-items:center;gap:0;background:var(--border);border-radius:9999px;padding:4px;margin:6px 0 14px">
+      <button id="toggle-monthly" style="padding:5px 22px;border-radius:9999px;border:none;font-size:14px;font-weight:600;cursor:pointer;background:var(--blue);color:white;font-family:inherit;transition:all 200ms">Monthly</button>
+      <button id="toggle-annual" style="padding:5px 22px;border-radius:9999px;border:none;font-size:14px;font-weight:600;cursor:pointer;background:transparent;color:var(--gray);font-family:inherit;transition:all 200ms">Annual <span style="background:var(--green-lt);color:var(--green-text);font-size:11px;padding:2px 8px;border-radius:9999px;margin-left:4px">Save 20%</span></button>
+    </div>
+
+    <div class="memberships-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,1.6vw,24px);max-width:1100px;margin:0 auto">
+      <!-- Basic -->
+      <div class="plan-card">
+        <h3 style="font-weight:700;font-size:18px">Basic</h3>
+        <div class="plan-price">
+          <span id="price-basic" class="amount">$67</span>
+          <span id="period-basic" style="color:var(--gray);font-size:15px">/month</span>
+          <div id="annual-note-basic" style="display:none;font-size:13px;color:var(--green-text);font-weight:600;margin-top:4px">$643<span>/yr - save</span> $161</div>
+        </div>
+        <ul>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>1 free minor repair (under $70) + 1 free bike wash per month</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>5% off extra services</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Visit & diagnosis applies (from $35, depending on your suburb)</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Priority scheduling (72hs)</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Email support</li>
+        </ul>
+        <button class="lp-get-started lp-hover-fill" data-plan="basic" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue-text);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:15px;transition:var(--transition);font-family:inherit">Get Started</button>
+        <button class="lp-learn-more" data-plan="basic" style="width:100%;margin-top:8px;padding:8px;border:none;color:var(--gray);background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
+      </div>
+      <!-- Standard -->
+      <div class="plan-card plan-card--featured">
+        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--blue);color:white;padding:4px 16px;border-radius:var(--radius-full);font-size:13px;font-weight:600;white-space:nowrap">Popular</div>
+        <h3 style="font-weight:700;font-size:18px">Standard</h3>
+        <div class="plan-price">
+          <span id="price-standard" class="amount">$97</span>
+          <span id="period-standard" style="color:var(--gray);font-size:15px">/month</span>
+          <div id="annual-note-standard" style="display:none;font-size:13px;color:var(--green-text);font-weight:600;margin-top:4px">$931<span>/yr - save</span> $233</div>
+        </div>
+        <ul>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>2 free minor repairs (under $70) + 1 free bike wash + 1 free Tune-Up per month</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Visit & diagnosis included</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>10% off extra services</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Priority scheduling (48hs)</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>1 emergency callout per month (visit & diagnosis fee applies)</li>
+        </ul>
+        <button class="lp-get-started lp-hover-dark" data-plan="standard" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:white;background:var(--blue);border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:15px;transition:var(--transition);font-family:inherit">Get Started</button>
+        <button class="lp-learn-more" data-plan="standard" style="width:100%;margin-top:8px;padding:8px;border:none;color:var(--gray);background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
+      </div>
+      <!-- VIP -->
+      <div class="plan-card">
+        <h3 style="font-weight:700;font-size:18px">VIP</h3>
+        <div class="plan-price">
+          <span id="price-vip" class="amount">$197</span>
+          <span id="period-vip" style="color:var(--gray);font-size:15px">/month</span>
+          <div id="annual-note-vip" style="display:none;font-size:13px;color:var(--green-text);font-weight:600;margin-top:4px">$1,891<span>/yr - save</span> $473</div>
+        </div>
+        <ul>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>3 free minor repairs (under $70) + 2 free bike washes + 1 free Tune-Up per month</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Visit & diagnosis included</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>15% off extra services, plus 5% more</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Priority scheduling (24hs)</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Phone support</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Free safety check</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>1 emergency callout per month (visit & diagnosis fee waived in your zone)</li>
+          <li><span style="color:var(--green-text);font-weight:700;margin-right:8px">&#10003;</span>Dedicated mechanic</li>
+        </ul>
+        <button class="lp-get-started lp-hover-fill" data-plan="vip" style="width:100%;margin-top:24px;padding:12px;border:2px solid var(--blue);color:var(--blue-text);background:transparent;border-radius:var(--radius);font-weight:600;cursor:pointer;font-size:15px;transition:var(--transition);font-family:inherit">Get Started</button>
+        <button class="lp-learn-more" data-plan="vip" style="width:100%;margin-top:8px;padding:8px;border:none;color:var(--gray);background:transparent;font-size:13px;cursor:pointer;font-family:inherit;text-decoration:underline">Learn more</button>
+      </div>
+    </div>
+    <p style="color:var(--gray);font-size:13px;margin-top:8px">All plans include mobile service within Sydney metro area</p>
+
+  </div>
+</section>
 
 
 
 
-<!-- ── MEMBERSHIPS ───────────────────────────────────────────────────────────── -->
-<!-- Memberships moved to after How It Works -->
+
+
 
 <!-- A second booking form, "Schedule Your Service Today", lived here until
      2026-11-03. It asked for other fields than the real wizard and only ever
@@ -1115,6 +1123,18 @@
           contact@drbikesydney.com.au
         </div>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FINAL CTA ─────────────────────────────────────────────────────────────── -->
+<section style="padding:96px 0;background:var(--navy)">
+  <div class="container" style="text-align:center;max-width:700px">
+    <h2 style="color:white;font-size:clamp(1.75rem,3vw,2.5rem);font-weight:800">Ready to Experience Premium Bike Service?</h2>
+    <p style="color:var(--gray-lt);font-size:18px;margin:16px 0 32px">Book your service today and join hundreds of satisfied cyclists across Sydney.</p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+      <button class="lp-hover-dark" style="background:var(--blue);color:white;padding:14px 32px;border-radius:var(--radius);font-weight:600;font-size:15px;border:none;cursor:pointer;font-family:inherit;transition:var(--transition)">Book Now</button>
+      <a href="tel:+61433963250" style="border:2px solid var(--gray);color:white;background:transparent;padding:14px 32px;border-radius:var(--radius);font-weight:600;font-size:15px;display:inline-block">Call 0433 963 250</a>
     </div>
   </div>
 </section>
@@ -1253,15 +1273,22 @@
   </div>
 </section>
 
-
-<!-- ── FINAL CTA ─────────────────────────────────────────────────────────────── -->
-<section style="padding:96px 0;background:var(--navy)">
-  <div class="container" style="text-align:center;max-width:700px">
-    <h2 style="color:white;font-size:clamp(1.75rem,3vw,2.5rem);font-weight:800">Ready to Experience Premium Bike Service?</h2>
-    <p style="color:var(--gray-lt);font-size:18px;margin:16px 0 32px">Book your service today and join hundreds of satisfied cyclists across Sydney.</p>
-    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
-      <button class="lp-hover-dark" style="background:var(--blue);color:white;padding:14px 32px;border-radius:var(--radius);font-weight:600;font-size:15px;border:none;cursor:pointer;font-family:inherit;transition:var(--transition)">Book Now</button>
-      <a href="tel:+61433963250" style="border:2px solid var(--gray);color:white;background:transparent;padding:14px 32px;border-radius:var(--radius);font-weight:600;font-size:15px;display:inline-block">Call 0433 963 250</a>
+<!-- Gift cards: era parte de la seccion de planes, y no es un plan. Sacarlo
+     de ahi es lo que deja los tres planes en una sola pantalla (160px de
+     los 1023 que medía la seccion). Sigue existiendo, como su propio bloque.
+     Desde el 2026-11-03 va al final, junto a Flotas: fuera del recorrido de
+     quien viene a reservar (Flotas sigue en el menu). -->
+<section style="padding:28px 0;background:var(--gray-light)">
+  <div class="container">
+    <div style="max-width:900px;margin:40px auto 0;background:linear-gradient(135deg,var(--purple),var(--blue));border-radius:var(--radius-lg);padding:28px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;text-align:left">
+      <div style="display:flex;align-items:center;gap:18px">
+        <div style="font-size:40px">🎁</div>
+        <div>
+          <div style="font-size:20px;font-weight:800;color:var(--white)">Gift a service</div>
+          <div style="font-size:15px;color:rgba(255,255,255,0.8);margin-top:2px">Send a Dr. Bike gift card by email - perfect for any cyclist</div>
+        </div>
+      </div>
+      <button id="giftcard-open-btn" style="padding:13px 28px;background:var(--white);color:var(--purple-text);border:none;border-radius:var(--radius);font-weight:700;font-size:15px;cursor:pointer;font-family:inherit;white-space:nowrap">Buy a gift card</button>
     </div>
   </div>
 </section>
@@ -1530,7 +1557,7 @@
      their original document order (that order is load-bearing - they share
      this file's top-level scope the same way they shared the page's global
      scope before). docs/PENDIENTES.md 3.2. -->
-<script src="js/landing-inline.js?v=c9c728e9e8"></script>
+<script src="js/landing-inline.js?v=d2c3063440"></script>
 <!-- Same for this page's inline <script type="module"> blocks. -->
 <script type="module" src="js/landing-modules.js?v=72dbfef149"></script>
 <!-- js/app.js is the only entry point - see the note in index.html. Listing

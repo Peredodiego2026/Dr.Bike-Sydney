@@ -479,6 +479,111 @@ section[id] {
   padding: 24px;
 }
 
+/* ── Who comes to your home: About + Mechanics, one block (2026-11-03) ────── */
+/* The left column is the old About section, set on the mechanics' navy. The
+   ids are what outrank css/home.css, which styles these same classes for the
+   phone under [data-screen='home'] - a wrapper the landing carries too. */
+.who-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+#mechanics .about-p {
+  color: var(--gray-lt);
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 10px 0 0;
+}
+#mechanics .check-list {
+  margin-top: 18px;
+}
+#mechanics .check-item {
+  color: var(--white);
+  font-size: 15px;
+}
+#mechanics .about-sig {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top-color: rgba(255, 255, 255, 0.15);
+  color: var(--white);
+}
+#mechanics .about-sig span {
+  color: var(--gray-lt);
+  font-size: 15px;
+}
+/* More than one profile fans the back cards out sideways: clip them at the
+   column rather than over the text. Only x - the float and its shadow need
+   the vertical room. */
+#mech-carousel-wrap {
+  overflow-x: clip;
+}
+/* #about is no longer a section, so section[id] above does not reach it. */
+#about {
+  scroll-margin-top: var(--navbar-h);
+}
+
+/* ── Coverage (2026-11-03) ────────────────────────────────────────────────── */
+/* A list, not cards: four rows read top to bottom as "closer, cheaper". */
+.coverage-grid {
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  gap: 48px;
+  align-items: center;
+}
+.coverage-lead {
+  color: var(--gray);
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 12px 0 20px;
+}
+.coverage-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--border);
+}
+.coverage-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.coverage-list strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.coverage-list span {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--gray);
+}
+.coverage-list b {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--navy);
+  white-space: nowrap;
+}
+.coverage-list b[data-fee='quote'] {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gray);
+}
+
+@media (max-width: 900px) {
+  .who-grid,
+  .coverage-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
 /* ── Reviews ──────────────────────────────────────────────────────────────── */
 .review-card {
   padding: 28px;

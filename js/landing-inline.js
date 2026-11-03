@@ -131,6 +131,14 @@ function lpDateLocale() {
     renderMechCards();
     renderMechDots();
     updateMechCarousel();
+    // One profile has nowhere to go: arrows and a dot that do nothing read as
+    // broken. display, not hidden - the arrows carry an inline display:flex.
+    if (mechanics.length < 2) {
+      ['mech-prev-btn', 'mech-next-btn', 'mech-carousel-dots'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+    }
   }
 
   function renderMechCards() {
@@ -401,8 +409,10 @@ document.addEventListener('visibilitychange', function() {
 // slides it up, under the sticky navbar: Fleet never landed square on the
 // first click. So the target is revealed before the jump, transition off, and
 // its box is already where it will stay.
-function revealNow(s) {
-  if (!s || s.tagName !== 'SECTION' || s.classList.contains('visible')) return;
+function revealNow(target) {
+  // #about is a column inside #mechanics now, not a section of its own.
+  const s = target && target.closest ? target.closest('section') : null;
+  if (!s || s.classList.contains('visible')) return;
   s.style.transition = 'none';
   s.classList.add('visible');
   void s.offsetHeight;
@@ -1554,6 +1564,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   const heroFeeBtn = document.getElementById('hero-fee-btn');
   if (heroFeeBtn) heroFeeBtn.addEventListener('click', openFeeCheckModal);
+  const coverageFeeBtn = document.getElementById('coverage-fee-btn');
+  if (coverageFeeBtn) coverageFeeBtn.addEventListener('click', openFeeCheckModal);
 
   // TASK-023: inline onclick handlers converted to addEventListener (see
   // tasks.md - done incrementally per page, landing.html first).

@@ -64,6 +64,43 @@ describe('desktop: the price and the proof come before the asks', () => {
   });
 });
 
+// Phase 2: who comes, where we go, and only then the monthly plan. Fleet and
+// the gift card are for someone else, so they close the page.
+describe('desktop: trust and coverage before the plans', () => {
+  it('team, coverage, plans, FAQ, the last ask - then fleet and gifts', () => {
+    inOrder(landing, [
+      'Simple 4-Step Process',
+      '<section id="mechanics"',
+      '<section id="coverage"',
+      '<section id="memberships"',
+      '<section id="faq"',
+      'Ready to Experience Premium Bike Service?',
+      '<section id="fleet"',
+      'id="giftcard-open-btn"',
+      '</main>',
+    ]);
+  });
+
+  it('About is the left column of the team block, not a section of its own', () => {
+    expect(landing).not.toContain('<section id="about"');
+    const team = sectionOf(landing, '<section id="mechanics"');
+    expect(team).toContain('<div id="about" class="who-about">');
+    expect(team).toContain('Founder &amp; Head Mechanic');
+    expect(team).toContain('id="mech-carousel-wrap"');
+  });
+
+  // The nav and the footer still link to #about. A jump to a column has to
+  // reveal its section first, or it lands 20px low under the navbar.
+  it('a jump to #about still lands square', () => {
+    expect(inline).toMatch(/const s = target && target\.closest \? target\.closest\('section'\) : null;/);
+    expect(landingCss).toMatch(/#about \{\s*scroll-margin-top: var\(--navbar-h\);/);
+  });
+
+  it('with one mechanic, no arrows that go nowhere', () => {
+    expect(inline).toMatch(/if \(mechanics\.length < 2\) \{/);
+  });
+});
+
 describe('desktop: one main action in the hero', () => {
   it('Book a Service, and the fee check as the second - nothing else', () => {
     const hero = sectionOf(landing, '<section class="hero">');
