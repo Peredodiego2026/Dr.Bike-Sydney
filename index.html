@@ -681,6 +681,27 @@
                   Check my diagnosis fee
                 </button>
               </div>
+              <!-- The next bookable slot, same line as landing.html: filled by
+                   loadNextAvailable() in js/app.js, hidden until there is one. -->
+              <p
+                id="hero-next"
+                style="margin: 12px 0 0; font-size: 14px; font-weight: 600; color: var(--white)"
+                hidden
+              >
+                <span
+                  style="
+                    display: inline-block;
+                    width: 8px;
+                    height: 8px;
+                    margin-right: 8px;
+                    border-radius: 50%;
+                    background: var(--green-bright);
+                    vertical-align: middle;
+                  "
+                  aria-hidden="true"
+                ></span
+                ><span class="hero-next__text"></span>
+              </p>
               <div class="hero-stats">
                 <div class="hero-stat">
                   <svg
@@ -2534,7 +2555,7 @@
      (removed 2026-07-28); router.js and components.js got away with it only
      because they hold no state of their own. app.js pulls in the whole graph -
      router, supabase, components, i18n, rider-tier, stripe. -->
-    <script src="js/app.js?v=f2d92ec011" type="module"></script>
+    <script src="js/app.js?v=454d7c2983" type="module"></script>
     <script type="module">
       /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
       import { sb } from './js/supabase.js';

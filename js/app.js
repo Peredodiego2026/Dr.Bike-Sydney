@@ -7362,6 +7362,47 @@ if (window._pendingReview) {
   }
 })();
 
+// La linea "Next available" debajo del boton de reservar (#hero-next, en las
+// dos paginas). El turno lo elige el servidor con las reglas del calendario
+// (handleNextAvailable en api/auth.js); aca solo se escribe. Oculta si falla
+// o si no hay nada libre en dos semanas - nunca un turno inventado.
+(async function loadNextAvailable() {
+  const el = document.getElementById('hero-next');
+  if (!el) return;
+  let next;
+  try {
+    const resp = await fetch('/api/auth?role=next-available');
+    if (!resp.ok) return;
+    next = await resp.json();
+  } catch {
+    return;
+  }
+  const mins = timeToMinutes(next?.time);
+  const [y, m, d] = String(next?.date || '')
+    .split('-')
+    .map(Number);
+  if (!y || !m || !d || mins === null) return;
+  const at = new Date(y, m - 1, d, Math.floor(mins / 60), mins % 60);
+  const time = at.toLocaleTimeString(dateLocale(), { hour: 'numeric', minute: '2-digit' });
+  // "Today" is Sydney's today, wherever the visitor's clock is.
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Australia/Sydney' }).format(
+    new Date()
+  );
+  const tomorrow = new Date(`${today}T12:00:00Z`);
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  let text;
+  if (next.date === today) text = translateValue('Next available: today at {time}');
+  else if (next.date === tomorrow.toISOString().slice(0, 10))
+    text = translateValue('Next available: tomorrow at {time}');
+  else
+    text = translateValue('Next available: {day} at {time}').replace(
+      '{day}',
+      at.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric', month: 'short' })
+    );
+  el.querySelector('.hero-next__text').textContent = text.replace('{time}', time);
+  el.hidden = false;
+})();
+
 // Published for the non-module scripts on the page (js/live-prices.js needs
 // sourceOf to map a translated service-card heading back to its English name).
 // Object.assign because landing.html's own inline module publishes the same

@@ -1636,6 +1636,9 @@ export default {
   // ingles y ningun check se queja.
   'Reviews on Google': 'Reseñas en Google',
   '{n} review on Google': '{n} reseña en Google',
+  'Next available: today at {time}': 'Próximo turno: hoy a las {time}',
+  'Next available: tomorrow at {time}': 'Próximo turno: mañana a las {time}',
+  'Next available: {day} at {time}': 'Próximo turno: {day} a las {time}',
   '{n} reviews on Google': '{n} reseñas en Google',
   '{n} review from our clients': '{n} reseña de nuestros clientes',
   '{n} reviews from our clients': '{n} reseñas de nuestros clientes',
