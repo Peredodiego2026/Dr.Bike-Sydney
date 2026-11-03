@@ -602,7 +602,18 @@ ${alternates}
     .logo{color:#fff;font-weight:800;font-size:18px;text-decoration:none}
     .head-right{display:flex;align-items:center;gap:14px}
     .lang-links{display:flex;align-items:center;gap:6px}
-    .cta-header{background:#0A58CA;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px}
+    .cta-header{background:#0A58CA;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;white-space:nowrap}
+    /* Logo, language links and the button need ~440px in one row, so on a phone
+       the language links drop to a second row and the button stays beside the
+       logo. Until 3-nov-2026 the button wrapped to 2-4 lines and still pushed the
+       page 12-50px wider than a 360-390px screen. */
+    @media (max-width:480px){
+      header{flex-wrap:wrap;row-gap:8px;padding:12px 16px}
+      .logo{font-size:16px}
+      .head-right{display:contents}
+      .cta-header{order:2;padding:9px 14px;font-size:13px}
+      .lang-links{order:3;flex-basis:100%;justify-content:flex-end}
+    }
     .hero{background:linear-gradient(135deg,#0D1F3C,#2563EB);color:#fff;padding:60px 24px;text-align:center}
     .hero h1{font-size:clamp(26px,5vw,42px);font-weight:900;margin-bottom:12px;line-height:1.2}
     .hero p{font-size:16px;opacity:.85;margin-bottom:32px;max-width:560px;margin-left:auto;margin-right:auto}
