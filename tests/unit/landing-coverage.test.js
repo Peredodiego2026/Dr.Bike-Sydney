@@ -71,6 +71,17 @@ describe('the coverage section quotes the fees the server charges', () => {
     expect(row('quote').places).toMatch(/Nothing is charged online/);
   });
 
+  // Production, 3-nov-2026: "Hornsby NSW 2077" measured 52 real minutes and
+  // came back as a quote, while the page listed it under $55. The router is
+  // the authority, so the copy moved - here and in the FAQ of both pages.
+  it('Hornsby is with the quotes, not under the perimeter fee', () => {
+    expect(row('perimeter').places).not.toContain('Hornsby');
+    expect(row('quote').places).toContain('Hornsby');
+    for (const html of [landing, read('index.html')]) {
+      expect(html).not.toMatch(/North Shore, Hornsby, the CBD/);
+    }
+  });
+
   // Where the van starts its day is where Diego lives.
   it('never names the base suburb', () => {
     expect(section).not.toContain(BASE.suburb);
