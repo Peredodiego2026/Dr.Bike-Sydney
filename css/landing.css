@@ -155,71 +155,6 @@ section[id] {
   background: var(--blue-dark);
 }
 
-/* ── Trust bar (marquee) ──────────────────────────────────────────────────── */
-/* Replaced a static, wrap-if-needed row of badges (2026-09-10) - see the HTML
-   comment above #trust-badges in landing.html for the full history. The two
-   .trust-marquee__seq spans in the markup are identical copies of the same
-   sequence; animating the track exactly -50% moves the first copy fully out
-   of view at the same instant the second copy reaches the start position, so
-   the loop has no visible seam. */
-.trust-marquee {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
-  padding: 10px 0;
-  overflow: hidden;
-}
-.trust-marquee__track {
-  display: flex;
-  width: max-content;
-  animation: trust-marquee-scroll 32s linear infinite;
-}
-.trust-marquee:hover .trust-marquee__track {
-  animation-play-state: paused;
-}
-@keyframes trust-marquee-scroll {
-  to {
-    transform: translateX(-50%);
-  }
-}
-.trust-marquee__seq {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 0 10px;
-}
-.trust-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--navy);
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 6px 10px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.trust-marquee__slogan {
-  font-family: 'Outfit', 'Inter', sans-serif;
-  font-size: 16px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--blue);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-@media (prefers-reduced-motion: reduce) {
-  .trust-marquee__track {
-    animation: none;
-  }
-  .trust-marquee {
-    overflow-x: auto;
-  }
-}
-
 /* ── Hero ─────────────────────────────────────────────────────────────────── */
 .hero {
   min-height: 0;
@@ -1079,6 +1014,52 @@ html.drbike-wizard-open #faqbot-win {
     margin-top: 2px !important;
     padding: 2px !important;
     line-height: 1.2;
+  }
+
+  /* The six prices on the page (3-nov). With the modal's tall card the block
+     measured 906px against the 571 left under the navbar on Diego's laptop, so
+     the second row was always below the fold. Here the icon, name and price
+     share one row and the card drops to ~145px. Scoped to #services: the cards
+     in the All Services modal keep their own shape. */
+  body[data-surface='landing'] #services .section-center {
+    max-width: 760px;
+    margin-bottom: 20px;
+  }
+  body[data-surface='landing'] #services .section-sub {
+    font-size: 15px;
+    margin: 4px auto 0;
+    max-width: none;
+  }
+  body[data-surface='landing'] #services .btn-outline-blue {
+    margin-top: 0;
+    padding: 9px 28px;
+  }
+  body[data-surface='landing'] #services .svc-grid {
+    gap: 12px;
+  }
+  body[data-surface='landing'] #services .svc-card {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    align-items: center;
+    column-gap: 10px;
+    row-gap: 6px;
+    padding: 14px 16px;
+  }
+  body[data-surface='landing'] #services .svc-icon {
+    width: 32px;
+    height: 32px;
+    margin: 0;
+  }
+  body[data-surface='landing'] #services .svc-desc,
+  body[data-surface='landing'] #services .svc-btn {
+    grid-column: 1 / -1;
+  }
+  body[data-surface='landing'] #services .svc-desc {
+    line-height: 1.45;
+  }
+  body[data-surface='landing'] #services .svc-btn {
+    margin-top: 2px;
+    padding: 8px 0;
   }
 
   /* The reviews carousel, same complaint (2-nov): "al 60% se ve perfecto, asi

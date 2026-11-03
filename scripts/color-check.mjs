@@ -62,7 +62,7 @@ const BUDGET = {
   // 3.2: the 15 inline <script> blocks this file used to carry moved to
   // js/landing-inline.js, and took most of the hand-written hex with them -
   // budget for that file is set the same placeholder-run way, see below.
-  'landing.html': 11,
+  'landing.html': 10,
   'track.html': 2,
   'admin.html': 7,
   'mechanic.html': 8,

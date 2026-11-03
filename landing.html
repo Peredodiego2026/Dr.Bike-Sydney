@@ -62,7 +62,7 @@
   {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What areas do you service?","acceptedAnswer":{"@type":"Answer","text":"Same-day visits cover everything within about 45 minutes of our Northern Beaches base — Northern Beaches, North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs. Further out, like Western Sydney, the Sutherland Shire or the Blue Mountains, we still come, but by arrangement rather than same-day. Enter your address when you book and we'll tell you which one you are."}},{"@type":"Question","name":"What if I need to reschedule?","acceptedAnswer":{"@type":"Answer","text":"You can reschedule or cancel from the link in your booking confirmation, or by calling us. It's free with more than 24 hours' notice; with less, a fee of up to the visit & diagnosis fee may apply."}},{"@type":"Question","name":"Do you bring spare parts?","acceptedAnswer":{"@type":"Answer","text":"Yes. The van carries inner tubes in the common sizes, and any other part your bike needs we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately."}},{"@type":"Question","name":"How long does a service take?","acceptedAnswer":{"@type":"Answer","text":"A Tune-Up takes about an hour, a Standard Service about 1.5 hours, a Standard+ Service about 2.5 hours and an Ultimate Overhaul about 4 hours. You'll see the estimate when you book."}},{"@type":"Question","name":"What payment methods do you accept?","acceptedAnswer":{"@type":"Answer","text":"We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $35, depending on your suburb) is charged at booking; the remainder is charged on completion."}}]}
   </script>
 
-  <link rel="stylesheet" href="css/landing.css?v=c104d8d503">
+  <link rel="stylesheet" href="css/landing.css?v=141f599441">
   <link rel="stylesheet" href="css/shop.css?v=f28b164290">
   <script src="https://js.stripe.com/v3/"></script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
@@ -156,46 +156,11 @@
   </div>
 </nav>
 <main id="main-content" tabindex="-1">
-  <!-- 6.1 + 6.2 Trust Badges -->
-  <!-- Moving trust bar (2026-09-10, Diego's request via exploratory concept
-       Artifact): was a static wrap-if-needed row of 4 badges. Now an
-       infinite CSS marquee - see .trust-marquee* in css/landing.css - with
-       4 more taglines already used elsewhere on this page (Qualified
-       Mechanic / Fully Equipped Van / 5 Star Rated / Sydney Wide) mixed in,
-       "Fully Insured" dropped, and the "Healthy bikes, happy riders" slogan
-       inserted once per lap in Outfit (self-hosted, css/fonts.css - the
-       ONLY thing on this page not in Inter). The two spans below are
-       IDENTICAL on purpose: a seamless marquee loop needs the sequence
-       duplicated so the track can translate exactly -50% and land back on
-       its own start with no visible seam or gap. -->
-  <div id="trust-badges" class="trust-marquee">
-    <div class="trust-marquee__track">
-      <span class="trust-marquee__seq">
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>100% Satisfaction Guarantee</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><polyline points="16 3 18 5 22 1"/></svg>Verified Mechanic</span>
-        <span class="trust-marquee__slogan">Healthy bikes, happy riders</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Background Checked</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>ASAP Response</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>Transparent Pricing</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Qualified Mechanic</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Fully Equipped Van</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>5 Star Rated</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Sydney Wide</span>
-      </span>
-      <span class="trust-marquee__seq" aria-hidden="true">
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>100% Satisfaction Guarantee</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><polyline points="16 3 18 5 22 1"/></svg>Verified Mechanic</span>
-        <span class="trust-marquee__slogan">Healthy bikes, happy riders</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>Background Checked</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>ASAP Response</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>Transparent Pricing</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Qualified Mechanic</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Fully Equipped Van</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>5 Star Rated</span>
-        <span class="trust-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Sydney Wide</span>
-      </span>
-    </div>
-  </div>
+  <!-- The moving trust bar (2026-09-10) lived here. It repeated ten claims
+       with no number behind any of them ("5 Star Rated", "100% Satisfaction
+       Guarantee") and took the strip a visitor reads first. Removed in the
+       conversion study of 2026-11-03: the hero now shows the real Google
+       rating and count instead (#hero-proof). -->
 
 
 <!-- ── HERO ────────────────────────────────────────────────────────────────── -->
@@ -206,10 +171,23 @@
       <h1 class="hero-h1">Professional Bike Service at Your Doorstep</h1>
       <p style="font-size:18px;font-weight:600;color:var(--blue-text);margin:0 0 12px;letter-spacing:0.01em">Healthy bikes, happy riders</p>
       <p class="hero-p">Mobile bicycle mechanic in Sydney. We come to you, fully equipped.</p>
+      <!-- Real proof on the first screen: the Google rating and count, filled by
+           loadReviewStats() in js/app.js from the same site-stats the reviews
+           section uses. Hidden until there is a number - never a zero, never a
+           figure typed by hand. -->
+      <p id="hero-proof" style="margin-top:12px;font-size:15px" hidden>
+        <a href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--white);text-decoration:none">
+          <span class="hero-proof__stars" style="color:var(--amber-bright);font-size:18px;letter-spacing:1px" aria-hidden="true"></span>
+          <span class="hero-proof__rating" style="font-weight:800"></span>
+          <span class="hero-proof__count" style="font-weight:600;text-decoration:underline">Reviews on Google</span>
+        </a>
+      </p>
 
+      <!-- One main action. "View Services" used to sit between these two; the
+           prices are now the next block on the page, and the nav still opens
+           the full list. -->
       <div class="hero-btns">
         <button id="hero-book-btn" class="btn-primary" type="button">Book a Service</button>
-        <button id="hero-services-btn" class="btn-outline" type="button">View Services</button>
         <button id="hero-fee-btn" class="btn-white" type="button">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           Check my diagnosis fee
@@ -245,6 +223,180 @@
     <div class="hero-image" style="padding:0;overflow:hidden">
       <img decoding="async" loading="eager" src="images/hero-van.webp" alt="Dr. Bike Sydney mobile van" width="1672" height="941" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:16px">
     </div>
+  </div>
+</section>
+
+<!-- ── SERVICES, WITH PRICES ─────────────────────────────────────────────────
+     Second block on purpose (conversion study, 2026-11-03): after "what is
+     this" a visitor asks "how much", and on desktop the only answer was inside
+     the All Services modal. The phone has shown these six cards in this same
+     place all along. Same .svc-card shape as the modal, so js/live-prices.js,
+     prices:sync and services:check read and correct them with no change. -->
+<section id="services" style="padding:clamp(28px,4vh,56px) 0;background:var(--gray-light)">
+  <div class="container">
+    <div class="section-center">
+      <span class="section-badge">OUR SERVICES</span>
+      <h2 class="section-h2" style="font-size:1.75rem;margin-top:8px">Complete Bike Care at Your Location</h2>
+      <p class="section-sub">We bring a fully equipped mobile workshop to your door &mdash; no bike shop queues, no expensive tow-ins.</p>
+    </div>
+
+    <div class="svc-grid" style="max-width:1100px;margin:0 auto">
+      <div class="svc-card">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
+        <div class="svc-name">Tune-Up</div>
+        <div class="svc-price">$119</div>
+        <p class="svc-desc">Perfect for regular maintenance and safety checks.</p>
+        <button class="svc-btn">Book Now</button>
+      </div>
+      <div class="svc-card">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+        <div class="svc-name">Standard Service</div>
+        <div class="svc-price">$159</div>
+        <p class="svc-desc">Comprehensive service with detailed adjustment.</p>
+        <button class="svc-btn">Book Now</button>
+      </div>
+      <div class="svc-card">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+        <div class="svc-name">Standard+ Service</div>
+        <div class="svc-price">$209</div>
+        <p class="svc-desc">Complete overhaul and performance optimization.</p>
+        <button class="svc-btn">Book Now</button>
+      </div>
+      <!-- Repairs names a category, not a bookable service: live-prices.js
+           computes its floor from the cheapest row, and its button opens the
+           full list instead of a wizard with nothing it could preselect. -->
+      <div class="svc-card" data-price-from="cheapest">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="M13 13l6 6"/></svg></div>
+        <div class="svc-name">Repairs</div>
+        <div class="svc-price">From $27</div>
+        <p class="svc-desc">Fast and reliable repair at your doorstep.</p>
+        <button class="svc-btn" data-open-services>View Services</button>
+      </div>
+      <div class="svc-card">
+        <div class="svc-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+        <div class="svc-name">E-bike Diagnostic</div>
+        <div class="svc-price">$70</div>
+        <p class="svc-desc">Full system scan, firmware check and error code review.</p>
+        <button class="svc-btn">Book Now</button>
+      </div>
+      <div class="svc-card" data-price-from>
+        <div class="svc-icon"><span style="display:inline-block;width:22px;height:22px;background-color:var(--blue);-webkit-mask:url('images/bike-icon.png') center/contain no-repeat;mask:url('images/bike-icon.png') center/contain no-repeat"></span></div>
+        <div class="svc-name">Bike Assembly</div>
+        <div class="svc-price">From $90</div>
+        <p class="svc-desc">Full assembly of a new boxed bike.</p>
+        <button class="svc-btn">Book Now</button>
+      </div>
+    </div>
+
+    <p style="text-align:center;margin-top:12px;color:var(--gray);font-size:14px">All prices include a visit & diagnosis fee (from $35, depending on your suburb). Parts charged separately unless stated.</p>
+    <div style="text-align:center;margin-top:8px">
+      <button id="home-view-all-btn" type="button" class="btn-outline-blue">View All Services &rarr;</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── TESTIMONIALS ──────────────────────────────────────────────────────────── -->
+<section id="reviews" style="padding:clamp(28px,4vh,44px) 0;background:white">
+  <div class="container">
+    <div class="section-center">
+      <span class="section-badge">TESTIMONIALS</span>
+      <h2 class="section-h2" style="font-size:1.75rem;margin-top:8px">What Our Customers Say</h2>
+      <p class="section-sub">Real reviews from Sydney cyclists who've used Dr. Bike Sydney.</p>
+    </div>
+
+    <!-- Real reviews, loaded from the public_reviews view (see
+         scripts/create-public-reviews-view.sql). Starts empty until the
+         first client leaves a review after a completed job - #reviews-empty
+         below covers that state, swapped for real cards automatically once
+         any exist. No fabricated content, no fake "Google Review" label. -->
+
+    <!-- ── Reviews on Google ───────────────────────────────────────────────
+         Quoted by hand, verbatim, from the Google Business Profile linked
+         below (place 0x6762fdefebf19285:0x52872725f8bdca88). Two reasons this
+         is not pulled from the Places API: it caps at five reviews that Google
+         picks, and it costs a Cloud account - neither is worth it at this
+         volume. Adding one is editing this block.
+         RULES, because this section already shipped fabricated once:
+           - text verbatim, in the English it was written in;
+           - the name as the reviewer published it;
+           - the link goes to the real profile, so any claim here is checkable.
+         Never write a card for a review that does not exist. -->
+    <!-- El "5.0" y el "2 reviews on Google" estaban escritos a mano aca. Nadie
+         los iba a actualizar: el dia de la tercera resena esto seguiria
+         diciendo dos, y el dia de la vigesima tambien. Ahora los llena
+         js/landing-inline.js desde /api/chat?type=site-stats, y si no hay dato
+         no se dibuja ningun numero - nunca un cero ni una cifra vieja.
+         Las cinco estrellas fijas se fueron con ellos: al lado de un promedio
+         que puede no ser 5, eran una afirmacion propia. -->
+    <div style="text-align:center;margin-bottom:8px">
+      <div style="display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center">
+        <img decoding="async" loading="lazy" width="24" height="24" src="images/google-logo.svg" alt="Google" style="width:52px">
+        <span id="google-rating" style="font-size:20px;font-weight:800;color:var(--navy)" hidden></span>
+        <span id="google-stars" style="color:var(--amber-bright);font-size:17px" hidden></span>
+        <a href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7" target="_blank" rel="noopener" style="font-size:15px;color:var(--blue-text);font-weight:600;text-decoration:none" id="google-count-link">Reviews on Google</a>
+      </div>
+      <div id="own-stats" style="font-size:14px;color:var(--gray);margin-top:10px" hidden></div>
+    </div>
+    <div id="rv-carousel" style="position:relative">
+      <div id="rv-viewport" class="rv-viewport">
+        <div class="rv-orb" aria-hidden="true"></div>
+        <div id="google-reviews-grid" class="rv-track">
+        <div class="review-card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">S</div>
+            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Sofia Etchart</div>
+          </div>
+          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p style="font-size:15px;color:var(--gray);line-height:1.6">The best fixing bikes! I didn’t know what happened but he figured out in 20 minutes! I strongly recommend him</p>
+        </div>
+        <div class="review-card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">Q</div>
+            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Quentin Darcheville</div>
+          </div>
+          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p style="font-size:15px;color:var(--gray);line-height:1.6">J’ai contacté Dr Bike Sydney pour un problème de frein sur mon vélo. Le rendez-vous a été facile à organiser et le technicien est venu directement chez moi avec tout le matériel nécessaire. Il a rapidement identifié le problème, fait les réglages et vérifié que tout fonctionnait correctement avant de repartir. Très pratique de ne pas avoir à transporter le vélo jusqu’à un magasin. Service rapide et professionnel, je recommande.</p>
+        </div>
+        <div class="review-card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">A</div>
+            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Aldana Jacquet</div>
+          </div>
+          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p style="font-size:15px;color:var(--gray);line-height:1.6">Amazing service! Super friendly, professional and efficient. They fixed my bike brakes perfectly and did a great job with the service. Highly recommend!</p>
+          <img src="images/review-aldana.webp" alt="Bike photo shared by Aldana Jacquet" width="709" height="836" loading="lazy" decoding="async" style="display:block;width:100%;max-width:100%;height:200px;object-fit:cover;border-radius:10px;margin-top:12px">
+        </div>
+        <div class="review-card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">S</div>
+            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Shaun Murphy</div>
+          </div>
+          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p style="font-size:15px;color:var(--gray);line-height:1.6">Our electric bike has been regularly serviced and highly recommended these guys. Quick and courteous.</p>
+        </div>
+    </div>
+      </div>
+      <div class="rv-controls">
+        <button type="button" class="rv-btn" id="rv-prev" aria-label="Previous review"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <button type="button" class="rv-btn" id="rv-next" aria-label="Next review"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+      </div>
+    </div>
+    <div id="reviews-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:32px"></div>
+    <!-- The old "Be the first to leave a review" empty state lived here. It
+         made sense when the section was blank; under two real Google reviews it
+         contradicted what the visitor could see. js/landing-inline.js now just
+         leaves #reviews-grid empty when there are no in-app reviews yet. -->
+    <div style="text-align:center;margin-bottom:8px">
+      <a href="https://www.google.com.au/maps/place/Dr.+Bike+Sydney/@-33.8472348,150.602314,80533m/data=!3m1!1e3!4m8!3m7!1s0x6762fdefebf19285:0x52872725f8bdca88!8m2!3d-33.8482439!4d150.9319747!9m1!1b1!16s%2Fg%2F11nq1s1k4b" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--border);padding:10px 20px;border-radius:8px;font-size:15px;font-weight:600;color:var(--gray);text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,.08)">
+        <img decoding="async" loading="lazy" width="24" height="24" src="images/google-logo.svg" alt="Google" style="width:52px">
+        <span>Leave us a review</span>
+      </a>
+    </div>
+
+    <!-- "See Our Service In Action / Watch Video" lived here. The button
+         popped alert('Video coming soon!') - a promise to a visitor that ended
+         in a browser dialog. Removed 2026-07-28; put the block back when there
+         is a video to point it at. -->
   </div>
 </section>
 
@@ -877,171 +1029,19 @@
   </div>
 </section>
 
-<!-- ── TESTIMONIALS ──────────────────────────────────────────────────────────── -->
-<section id="reviews" style="padding:clamp(28px,4vh,44px) 0;background:white">
-  <div class="container">
-    <div class="section-center">
-      <span class="section-badge">TESTIMONIALS</span>
-      <h2 class="section-h2" style="font-size:1.75rem;margin-top:8px">What Our Customers Say</h2>
-      <p class="section-sub">Real reviews from Sydney cyclists who've used Dr. Bike Sydney.</p>
-    </div>
 
-    <!-- Real reviews, loaded from the public_reviews view (see
-         scripts/create-public-reviews-view.sql). Starts empty until the
-         first client leaves a review after a completed job - #reviews-empty
-         below covers that state, swapped for real cards automatically once
-         any exist. No fabricated content, no fake "Google Review" label. -->
-
-    <!-- ── Reviews on Google ───────────────────────────────────────────────
-         Quoted by hand, verbatim, from the Google Business Profile linked
-         below (place 0x6762fdefebf19285:0x52872725f8bdca88). Two reasons this
-         is not pulled from the Places API: it caps at five reviews that Google
-         picks, and it costs a Cloud account - neither is worth it at this
-         volume. Adding one is editing this block.
-         RULES, because this section already shipped fabricated once:
-           - text verbatim, in the English it was written in;
-           - the name as the reviewer published it;
-           - the link goes to the real profile, so any claim here is checkable.
-         Never write a card for a review that does not exist. -->
-    <!-- El "5.0" y el "2 reviews on Google" estaban escritos a mano aca. Nadie
-         los iba a actualizar: el dia de la tercera resena esto seguiria
-         diciendo dos, y el dia de la vigesima tambien. Ahora los llena
-         js/landing-inline.js desde /api/chat?type=site-stats, y si no hay dato
-         no se dibuja ningun numero - nunca un cero ni una cifra vieja.
-         Las cinco estrellas fijas se fueron con ellos: al lado de un promedio
-         que puede no ser 5, eran una afirmacion propia. -->
-    <div style="text-align:center;margin-bottom:8px">
-      <div style="display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center">
-        <img decoding="async" loading="lazy" width="24" height="24" src="images/google-logo.svg" alt="Google" style="width:52px">
-        <span id="google-rating" style="font-size:20px;font-weight:800;color:var(--navy)" hidden></span>
-        <span id="google-stars" style="color:var(--amber-bright);font-size:17px" hidden></span>
-        <a href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7" target="_blank" rel="noopener" style="font-size:15px;color:var(--blue-text);font-weight:600;text-decoration:none" id="google-count-link">Reviews on Google</a>
-      </div>
-      <div id="own-stats" style="font-size:14px;color:var(--gray);margin-top:10px" hidden></div>
-    </div>
-    <div id="rv-carousel" style="position:relative">
-      <div id="rv-viewport" class="rv-viewport">
-        <div class="rv-orb" aria-hidden="true"></div>
-        <div id="google-reviews-grid" class="rv-track">
-        <div class="review-card">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <div style="width:44px;height:44px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">S</div>
-            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Sofia Etchart</div>
-          </div>
-          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <p style="font-size:15px;color:var(--gray);line-height:1.6">The best fixing bikes! I didn’t know what happened but he figured out in 20 minutes! I strongly recommend him</p>
-        </div>
-        <div class="review-card">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <div style="width:44px;height:44px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">Q</div>
-            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Quentin Darcheville</div>
-          </div>
-          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <p style="font-size:15px;color:var(--gray);line-height:1.6">J’ai contacté Dr Bike Sydney pour un problème de frein sur mon vélo. Le rendez-vous a été facile à organiser et le technicien est venu directement chez moi avec tout le matériel nécessaire. Il a rapidement identifié le problème, fait les réglages et vérifié que tout fonctionnait correctement avant de repartir. Très pratique de ne pas avoir à transporter le vélo jusqu’à un magasin. Service rapide et professionnel, je recommande.</p>
-        </div>
-        <div class="review-card">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <div style="width:44px;height:44px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">A</div>
-            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Aldana Jacquet</div>
-          </div>
-          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <p style="font-size:15px;color:var(--gray);line-height:1.6">Amazing service! Super friendly, professional and efficient. They fixed my bike brakes perfectly and did a great job with the service. Highly recommend!</p>
-          <img src="images/review-aldana.webp" alt="Bike photo shared by Aldana Jacquet" width="709" height="836" loading="lazy" decoding="async" style="display:block;width:100%;max-width:100%;height:200px;object-fit:cover;border-radius:10px;margin-top:12px">
-        </div>
-        <div class="review-card">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <div style="width:44px;height:44px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">S</div>
-            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Shaun Murphy</div>
-          </div>
-          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <p style="font-size:15px;color:var(--gray);line-height:1.6">Our electric bike has been regularly serviced and highly recommended these guys. Quick and courteous.</p>
-        </div>
-    </div>
-      </div>
-      <div class="rv-controls">
-        <button type="button" class="rv-btn" id="rv-prev" aria-label="Previous review"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
-        <button type="button" class="rv-btn" id="rv-next" aria-label="Next review"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
-      </div>
-    </div>
-    <div id="reviews-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:32px"></div>
-    <!-- The old "Be the first to leave a review" empty state lived here. It
-         made sense when the section was blank; under two real Google reviews it
-         contradicted what the visitor could see. js/landing-inline.js now just
-         leaves #reviews-grid empty when there are no in-app reviews yet. -->
-    <div style="text-align:center;margin-bottom:8px">
-      <a href="https://www.google.com.au/maps/place/Dr.+Bike+Sydney/@-33.8472348,150.602314,80533m/data=!3m1!1e3!4m8!3m7!1s0x6762fdefebf19285:0x52872725f8bdca88!8m2!3d-33.8482439!4d150.9319747!9m1!1b1!16s%2Fg%2F11nq1s1k4b" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:var(--white);border:1px solid var(--border);padding:10px 20px;border-radius:8px;font-size:15px;font-weight:600;color:var(--gray);text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,.08)">
-        <img decoding="async" loading="lazy" width="24" height="24" src="images/google-logo.svg" alt="Google" style="width:52px">
-        <span>Leave us a review</span>
-      </a>
-    </div>
-
-    <!-- "See Our Service In Action / Watch Video" lived here. The button
-         popped alert('Video coming soon!') - a promise to a visitor that ended
-         in a browser dialog. Removed 2026-07-28; put the block back when there
-         is a video to point it at. -->
-  </div>
-</section>
 
 
 
 <!-- ── MEMBERSHIPS ───────────────────────────────────────────────────────────── -->
 <!-- Memberships moved to after How It Works -->
 
-<!-- ── BOOK A SERVICE ────────────────────────────────────────────────────────── -->
-<section style="padding:96px 0;background:var(--navy)">
-  <div class="container" style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center">
-    <div style="background:linear-gradient(135deg,#1e3a5f,var(--blue));border-radius:16px;aspect-ratio:4/5"></div>
+<!-- A second booking form, "Schedule Your Service Today", lived here until
+     2026-11-03. It asked for other fields than the real wizard and only ever
+     opened that wizard anyway - two ways to book that disagree is a reason to
+     doubt both. Every "Book" on the page opens the wizard directly. -->
 
-    <div>
-      <span style="background:rgba(37,99,235,0.25);color:var(--blue-pale);padding:4px 14px;border-radius:var(--radius-full);font-size:13px;font-weight:600;display:inline-block">BOOK A SERVICE</span>
-      <h2 style="color:white;font-size:1.75rem;font-weight:800;margin-top:12px">Schedule Your Service Today</h2>
-      <p style="color:var(--gray-lt);margin:12px 0 24px;font-size:15px">Choose a service, pick a time, and we'll come to you.</p>
 
-      <div style="display:flex;flex-direction:column;gap:16px">
-        <select class="lform-input" id="lform-service" aria-label="Service Type">
-          <option value="" disabled selected>Service Type</option>
-          <option>Tune-Up</option>
-          <option>Standard Service</option>
-          <option>Standard+ Service</option>
-          <option>Repairs</option>
-          <option>E-Bike Service</option>
-          <option>Bike Assembly</option>
-        </select>
-        <input type="date" class="lform-input" id="lform-date" aria-label="Preferred date">
-        <select class="lform-input" aria-label="Preferred Time">
-          <option value="" disabled selected>Preferred Time</option>
-          <option>Morning (8am - 12pm)</option>
-          <option>Afternoon (12pm - 5pm)</option>
-        </select>
-        <input type="text" class="lform-input" placeholder="Enter your address" aria-label="Address">
-      </div>
-
-      <button id="lform-continue-btn" class="lp-hover-dark" style="width:100%;padding:14px;background:var(--blue);color:white;border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;transition:var(--transition);font-family:inherit">Continue Booking</button>
-
-      <div style="display:flex;gap:24px;margin-top:12px">
-        <span style="color:var(--gray);font-size:13px">&#10003; Confirmation in minutes</span>
-        <span style="color:var(--gray);font-size:13px">&#10003; Free cancellation</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- HOW IT WORKS moved to after Hero -->
-
-<style>
-  .lform-input {
-    width: 100%;
-    padding: 12px 16px;
-    background: var(--navy2);
-    border: 1px solid var(--gray);
-    border-radius: var(--radius);
-    color: white;
-    font-size: 15px;
-    font-family: inherit;
-  }
-  .lform-input:focus { outline: none; border-color: var(--blue); }
-  .lform-input option { background: var(--navy2); }
-</style>
 
 <!-- ── FAQ ──────────────────────────────────────────────────────────────────── -->
 <section id="faq" style="padding:96px 0;background:var(--gray-light)">
@@ -1530,13 +1530,13 @@
      their original document order (that order is load-bearing - they share
      this file's top-level scope the same way they shared the page's global
      scope before). docs/PENDIENTES.md 3.2. -->
-<script src="js/landing-inline.js?v=85c3df9f3a"></script>
+<script src="js/landing-inline.js?v=c9c728e9e8"></script>
 <!-- Same for this page's inline <script type="module"> blocks. -->
 <script type="module" src="js/landing-modules.js?v=72dbfef149"></script>
 <!-- js/app.js is the only entry point - see the note in index.html. Listing
      router.js, supabase.js, components.js or stripe.js here loads each of them
      a second time, under a URL the imports inside app.js never resolve to. -->
-<script src="js/app.js?v=c1a4d28229" type="module"></script>
+<script src="js/app.js?v=5cb803938a" type="module"></script>
 <script src="js/live-prices.js?v=20261025b" defer></script>
 <script src="js/cta-tracking.js?v=20260728a" defer></script>
 <script src="js/utm-capture.js?v=20260728a"></script>

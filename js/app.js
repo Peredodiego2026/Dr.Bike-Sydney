@@ -7320,6 +7320,21 @@ if (window._pendingReview) {
     countLink.textContent = counted(g.count, '{n} review on Google', '{n} reviews on Google');
   }
 
+  // La misma prueba en la portada (#hero-proof, en las dos paginas). Pide el
+  // promedio Y la cantidad: un "5.0" sin cuantas resenas lo respaldan no prueba
+  // nada, y la linea arranca oculta hasta tener las dos.
+  const proof = document.getElementById('hero-proof');
+  if (proof && g.rating && g.count) {
+    proof.querySelector('.hero-proof__stars').textContent = starsFor(g.rating);
+    proof.querySelector('.hero-proof__rating').textContent = g.rating;
+    proof.querySelector('.hero-proof__count').textContent = counted(
+      g.count,
+      '{n} review on Google',
+      '{n} reviews on Google'
+    );
+    proof.hidden = false;
+  }
+
   const o = stats?.own || {};
   if (o.count) {
     show(

@@ -631,6 +631,37 @@
               <p class="hero-p">
                 Mobile bicycle mechanic in Sydney. We come to you, fully equipped.
               </p>
+              <!-- The Google rating and count, filled by loadReviewStats() in
+                   js/app.js - the same line landing.html carries. Hidden until
+                   there is a number. 44px tall: it is a link on a phone. -->
+              <p id="hero-proof" style="margin: 8px 0 0; font-size: 14px" hidden>
+                <a
+                  href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7"
+                  target="_blank"
+                  rel="noopener"
+                  style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    flex-wrap: wrap;
+                    min-height: 44px;
+                    color: var(--white);
+                    text-decoration: none;
+                  "
+                >
+                  <span
+                    class="hero-proof__stars"
+                    style="color: var(--amber-bright); font-size: 16px; letter-spacing: 1px"
+                    aria-hidden="true"
+                  ></span>
+                  <span class="hero-proof__rating" style="font-weight: 800"></span>
+                  <span
+                    class="hero-proof__count"
+                    style="font-weight: 600; text-decoration: underline"
+                    >Reviews on Google</span
+                  >
+                </a>
+              </p>
               <div class="hero-btns">
                 <a href="#book-service" class="btn-primary">Book a Service</a>
                 <a href="tel:+61433963250" class="btn-outline">Call 0433 963 250</a>
@@ -865,6 +896,123 @@
               Sunday &amp; NSW public holiday bookings +20%. Saturday is normal price.<br />
               <button type="button" data-action="parts-prices" style="background:none;border:none;padding:12px 8px;margin:-4px 0 0;font:inherit;font-weight:700;color:var(--blue-text);text-decoration:underline;cursor:pointer">See parts prices</button>
             </p>
+          </div>
+        </section>
+
+        <!-- Testimonials: third, right after the prices (conversion study,
+             2026-11-03). Was seventh, behind How it works, About and Recent
+             work - the one proof a first-time visitor cannot get anywhere else
+             sat below most of the page. -->
+        <section id="reviews" style="padding: 56px 0; background: var(--white)">
+          <div class="lp-container">
+            <div class="section-center">
+              <span class="section-badge">TESTIMONIALS</span>
+              <h2 class="section-h2">What Our Customers Say</h2>
+              <p class="section-sub">
+                Don't just take our word for it. Here's what Sydney cyclists have to say.
+              </p>
+            </div>
+            <!-- ── Reviews on Google ─────────────────────────────────────
+                 The same hand-quoted block landing.html carries, because this
+                 page is where most clients actually land. #382 added it there
+                 and not here, so mobile kept saying "be the first" under a
+                 profile that already had two 5-star reviews.
+                 Rules, unchanged: text verbatim in the English it was written
+                 in, the name as the reviewer published it, and a link to the
+                 real profile so any card can be checked. Never write a card for
+                 a review that does not exist. -->
+            <div style="text-align: center; margin-bottom: 20px">
+              <div
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  gap: 8px;
+                  flex-wrap: wrap;
+                  justify-content: center;
+                "
+              >
+                <img
+                  decoding="async"
+                  loading="lazy"
+                  width="24"
+                  height="24"
+                  src="images/google-logo.svg"
+                  alt="Google"
+                  style="width: 46px"
+                />
+                <!-- Escritos a mano hasta 2026-09-10, y por eso condenados a
+                     quedar viejos. Los llena el modulo de mas abajo desde
+                     /api/chat?type=site-stats; sin dato no se dibuja nada. -->
+                <span
+                  id="google-rating"
+                  style="font-size: 18px; font-weight: 800; color: var(--navy)"
+                  hidden
+                ></span>
+                <span id="google-stars" style="color: var(--amber-bright); font-size: 15px" hidden></span>
+                <a
+                  id="google-count-link"
+                  href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7"
+                  target="_blank"
+                  rel="noopener"
+                  style="
+                    font-size: 14px;
+                    color: var(--blue);
+                    font-weight: 600;
+                    text-decoration: none;
+                  "
+                  >Reviews on Google</a
+                >
+              </div>
+              <div id="own-stats" style="font-size: 13px; color: var(--gray); margin-top: 8px" hidden></div>
+            </div>
+            <div id="rv-carousel" style="position: relative">
+              <div id="rv-viewport" class="rv-viewport">
+                <div class="rv-orb" aria-hidden="true"></div>
+                <div id="google-reviews-grid" class="rv-track">
+        <div class="review-card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">S</div>
+            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Sofia Etchart</div>
+          </div>
+          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p style="font-size:15px;color:var(--gray);line-height:1.6">The best fixing bikes! I didn’t know what happened but he figured out in 20 minutes! I strongly recommend him</p>
+        </div>
+        <div class="review-card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">Q</div>
+            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Quentin Darcheville</div>
+          </div>
+          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p style="font-size:15px;color:var(--gray);line-height:1.6">J’ai contacté Dr Bike Sydney pour un problème de frein sur mon vélo. Le rendez-vous a été facile à organiser et le technicien est venu directement chez moi avec tout le matériel nécessaire. Il a rapidement identifié le problème, fait les réglages et vérifié que tout fonctionnait correctement avant de repartir. Très pratique de ne pas avoir à transporter le vélo jusqu’à un magasin. Service rapide et professionnel, je recommande.</p>
+        </div>
+        <div class="review-card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">A</div>
+            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Aldana Jacquet</div>
+          </div>
+          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p style="font-size:15px;color:var(--gray);line-height:1.6">Amazing service! Super friendly, professional and efficient. They fixed my bike brakes perfectly and did a great job with the service. Highly recommend!</p>
+          <img src="images/review-aldana.webp" alt="Bike photo shared by Aldana Jacquet" width="709" height="836" loading="lazy" decoding="async" style="display:block;width:100%;max-width:100%;height:200px;object-fit:cover;border-radius:10px;margin-top:12px">
+        </div>
+        <div class="review-card">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">S</div>
+            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Shaun Murphy</div>
+          </div>
+          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+          <p style="font-size:15px;color:var(--gray);line-height:1.6">Our electric bike has been regularly serviced and highly recommended these guys. Quick and courteous.</p>
+        </div>
+            </div>
+              </div>
+              <div class="rv-controls">
+                <button type="button" class="rv-btn" id="rv-prev" aria-label="Previous review"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
+                <button type="button" class="rv-btn" id="rv-next" aria-label="Next review"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
+              </div>
+            </div>
+            <div class="reviews-grid" id="reviews-grid"></div>
+            <!-- The "Be the first to leave a review" empty state lived here. The
+                 Google block above is always visible now, so an empty in-app
+                 grid is simply nothing extra to show. -->
           </div>
         </section>
 
@@ -1114,120 +1262,6 @@
               </div>
               <span id="rw-alt" hidden>A bike repaired by Dr. Bike Sydney</span>
             </div>
-          </div>
-        </section>
-
-        <!-- Testimonials -->
-        <section id="reviews" style="padding: 56px 0; background: var(--white)">
-          <div class="lp-container">
-            <div class="section-center">
-              <span class="section-badge">TESTIMONIALS</span>
-              <h2 class="section-h2">What Our Customers Say</h2>
-              <p class="section-sub">
-                Don't just take our word for it. Here's what Sydney cyclists have to say.
-              </p>
-            </div>
-            <!-- ── Reviews on Google ─────────────────────────────────────
-                 The same hand-quoted block landing.html carries, because this
-                 page is where most clients actually land. #382 added it there
-                 and not here, so mobile kept saying "be the first" under a
-                 profile that already had two 5-star reviews.
-                 Rules, unchanged: text verbatim in the English it was written
-                 in, the name as the reviewer published it, and a link to the
-                 real profile so any card can be checked. Never write a card for
-                 a review that does not exist. -->
-            <div style="text-align: center; margin-bottom: 20px">
-              <div
-                style="
-                  display: inline-flex;
-                  align-items: center;
-                  gap: 8px;
-                  flex-wrap: wrap;
-                  justify-content: center;
-                "
-              >
-                <img
-                  decoding="async"
-                  loading="lazy"
-                  width="24"
-                  height="24"
-                  src="images/google-logo.svg"
-                  alt="Google"
-                  style="width: 46px"
-                />
-                <!-- Escritos a mano hasta 2026-09-10, y por eso condenados a
-                     quedar viejos. Los llena el modulo de mas abajo desde
-                     /api/chat?type=site-stats; sin dato no se dibuja nada. -->
-                <span
-                  id="google-rating"
-                  style="font-size: 18px; font-weight: 800; color: var(--navy)"
-                  hidden
-                ></span>
-                <span id="google-stars" style="color: var(--amber-bright); font-size: 15px" hidden></span>
-                <a
-                  id="google-count-link"
-                  href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7"
-                  target="_blank"
-                  rel="noopener"
-                  style="
-                    font-size: 14px;
-                    color: var(--blue);
-                    font-weight: 600;
-                    text-decoration: none;
-                  "
-                  >Reviews on Google</a
-                >
-              </div>
-              <div id="own-stats" style="font-size: 13px; color: var(--gray); margin-top: 8px" hidden></div>
-            </div>
-            <div id="rv-carousel" style="position: relative">
-              <div id="rv-viewport" class="rv-viewport">
-                <div class="rv-orb" aria-hidden="true"></div>
-                <div id="google-reviews-grid" class="rv-track">
-        <div class="review-card">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <div style="width:44px;height:44px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">S</div>
-            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Sofia Etchart</div>
-          </div>
-          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <p style="font-size:15px;color:var(--gray);line-height:1.6">The best fixing bikes! I didn’t know what happened but he figured out in 20 minutes! I strongly recommend him</p>
-        </div>
-        <div class="review-card">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <div style="width:44px;height:44px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">Q</div>
-            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Quentin Darcheville</div>
-          </div>
-          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <p style="font-size:15px;color:var(--gray);line-height:1.6">J’ai contacté Dr Bike Sydney pour un problème de frein sur mon vélo. Le rendez-vous a été facile à organiser et le technicien est venu directement chez moi avec tout le matériel nécessaire. Il a rapidement identifié le problème, fait les réglages et vérifié que tout fonctionnait correctement avant de repartir. Très pratique de ne pas avoir à transporter le vélo jusqu’à un magasin. Service rapide et professionnel, je recommande.</p>
-        </div>
-        <div class="review-card">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <div style="width:44px;height:44px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">A</div>
-            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Aldana Jacquet</div>
-          </div>
-          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <p style="font-size:15px;color:var(--gray);line-height:1.6">Amazing service! Super friendly, professional and efficient. They fixed my bike brakes perfectly and did a great job with the service. Highly recommend!</p>
-          <img src="images/review-aldana.webp" alt="Bike photo shared by Aldana Jacquet" width="709" height="836" loading="lazy" decoding="async" style="display:block;width:100%;max-width:100%;height:200px;object-fit:cover;border-radius:10px;margin-top:12px">
-        </div>
-        <div class="review-card">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-            <div style="width:44px;height:44px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">S</div>
-            <div style="min-width:0;font-weight:700;font-size:15px;color:var(--navy)">Shaun Murphy</div>
-          </div>
-          <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-          <p style="font-size:15px;color:var(--gray);line-height:1.6">Our electric bike has been regularly serviced and highly recommended these guys. Quick and courteous.</p>
-        </div>
-            </div>
-              </div>
-              <div class="rv-controls">
-                <button type="button" class="rv-btn" id="rv-prev" aria-label="Previous review"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
-                <button type="button" class="rv-btn" id="rv-next" aria-label="Next review"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
-              </div>
-            </div>
-            <div class="reviews-grid" id="reviews-grid"></div>
-            <!-- The "Be the first to leave a review" empty state lived here. The
-                 Google block above is always visible now, so an empty in-app
-                 grid is simply nothing extra to show. -->
           </div>
         </section>
 
@@ -2450,7 +2484,7 @@
      (removed 2026-07-28); router.js and components.js got away with it only
      because they hold no state of their own. app.js pulls in the whole graph -
      router, supabase, components, i18n, rider-tier, stripe. -->
-    <script src="js/app.js?v=c1a4d28229" type="module"></script>
+    <script src="js/app.js?v=5cb803938a" type="module"></script>
     <script type="module">
       /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
       import { sb } from './js/supabase.js';
