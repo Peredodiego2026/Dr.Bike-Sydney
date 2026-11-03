@@ -1963,4 +1963,32 @@ export default {
   '🔧 Service in progress': '🔧 Servicio en curso',
   'Should be done around': 'Debería estar listo alrededor de las',
   'Done around FINISH': 'Termina aprox. FINISH',
+  // The phone home, redesigned (3-nov-2026).
+  'Visit fee, from': 'Visita, desde',
+  '{n} Google review': '{n} reseña en Google',
+  '{n} Google reviews': '{n} reseñas en Google',
+  'Favourite jobs: truing and building wheels.':
+    'Trabajos favoritos: centrar y armar ruedas.',
+  'AI check · free': 'Revisión con IA · gratis',
+  "Tell us what's happening. Our AI suggests the right service and its price.":
+    'Cuéntanos qué le pasa. Nuestra IA te sugiere el servicio indicado y su precio.',
+  'e.g. The gears slip when I pedal hard': 'Ej.: los cambios saltan cuando pedaleo fuerte',
+  'Describe the problem first.': 'Primero describe el problema.',
+  'Suggest a service': 'Sugerir un servicio',
+  'Nothing is booked until you choose.': 'No se reserva nada hasta que tú elijas.',
+  'Do you come to my suburb?': '¿Llegan a mi suburbio?',
+  'Same-day within about 45 minutes of our Northern Beaches base: Northern Beaches, North Shore, the CBD, Inner West and Eastern Suburbs. Further out, like Hornsby, by arrangement.':
+    'En el día, a unos 45 minutos de nuestra base en Northern Beaches: Northern Beaches, North Shore, el CBD, Inner West y Eastern Suburbs. Más lejos, como Hornsby, con coordinación previa.',
+  'Suburb or postcode': 'Suburbio o código postal',
+  'e.g. Manly or 2095': 'Ej.: Manly o 2095',
+  'Check fee': 'Ver tarifa',
+  'Good to know': 'Bueno saber',
+  'Visit & diagnosis fee': 'Visita y diagnóstico',
+  'From $35, depending on your suburb.': 'Desde $35, según tu suburbio.',
+  'Parts are extra': 'Los repuestos van aparte',
+  'Charged separately unless stated.': 'Se cobran aparte salvo que se indique lo contrario.',
+  'Sundays & NSW public holidays +20%': 'Domingos y feriados de NSW +20%',
+  'Saturday is normal price.': 'El sábado tiene precio normal.',
+  'Talk to Dr. Bike directly': 'Habla directo con Dr. Bike',
+  'Message on WhatsApp': 'Escribir por WhatsApp',
 };

@@ -259,6 +259,94 @@
   background: #1e3a5f;
   flex-shrink: 0;
 }
+/* index.html only (2026-11-03): the rating, the Tune-Up price and the visit
+   fee where .hero-stats had three words, and Diego where .hero-image had an
+   AI-made van. landing.html loads this file too and still uses those two. */
+[data-screen='home'] .hero-data {
+  display: flex;
+  margin-top: 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+[data-screen='home'] .hero-data__cell {
+  flex: 1;
+  min-width: 0;
+  padding: 14px 0;
+  color: var(--white);
+  text-decoration: none;
+}
+[data-screen='home'] .hero-data__cell[hidden] {
+  display: none;
+}
+/* "4 Google reviews" is the longest label; at a third it wrapped. */
+[data-screen='home'] #hero-rating {
+  flex: 1.25;
+}
+[data-screen='home'] .hero-data__cell + .hero-data__cell {
+  padding-left: 14px;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+/* The rating starts hidden; until it shows, the price is the first cell. */
+[data-screen='home'] .hero-data__cell[hidden] + .hero-data__cell {
+  padding-left: 0;
+  border-left: 0;
+}
+[data-screen='home'] .hero-data__value {
+  display: block;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+[data-screen='home'] .hero-data__star {
+  color: var(--amber-bright);
+  font-size: 18px;
+}
+[data-screen='home'] .hero-data__label {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.72);
+}
+[data-screen='home'] a.hero-data__cell .hero-data__label {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+[data-screen='home'] .hero-diego__card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+[data-screen='home'] .hero-diego__card img {
+  display: block;
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+[data-screen='home'] .hero-diego__name {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--white);
+}
+[data-screen='home'] .hero-diego__role {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--blue-soft);
+}
+[data-screen='home'] .hero-diego__bio {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.75);
+}
 
 /* ── Services ──────────────────────────────────────────────────────────────── */
 [data-screen='home'] .services-grid {
@@ -377,6 +465,302 @@
   color: var(--white);
 }
 
+/* ── Home blocks added 2026-11-03 (index.html) ─────────────────────────────── */
+/* The AI helper after the services. */
+[data-screen='home'] .home-ai {
+  max-width: 680px;
+  margin: 28px auto 0;
+  padding: 22px 18px 16px;
+  border-radius: 16px;
+  background: var(--navy);
+  color: var(--white);
+  text-align: left;
+}
+[data-screen='home'] .home-ai__kicker {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--blue-soft);
+}
+[data-screen='home'] .home-ai__h2 {
+  margin: 8px 0 6px;
+  font-size: 22px;
+  line-height: 1.25;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--white);
+}
+[data-screen='home'] .home-ai__p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.72);
+}
+[data-screen='home'] .home-ai__text {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 96px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--white);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--navy);
+  resize: none;
+}
+[data-screen='home'] .home-ai__err {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--amber-bright);
+}
+[data-screen='home'] .home-ai__btns {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+[data-screen='home'] .home-ai__photo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 50px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: var(--white);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--navy);
+  cursor: pointer;
+}
+/* Kept focusable (a hidden file input is not), so the label shows the ring. */
+[data-screen='home'] .home-ai__photo input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+[data-screen='home'] .home-ai__photo:focus-within {
+  outline: 2px solid var(--blue-soft);
+  outline-offset: 2px;
+}
+[data-screen='home'] .home-ai__go {
+  height: 50px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--blue);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--white);
+  cursor: pointer;
+}
+[data-screen='home'] .home-ai__go:hover {
+  background: var(--blue-dark);
+}
+[data-screen='home'] .home-ai__note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.65);
+}
+[data-screen='home'] .home-ai__note svg {
+  flex: none;
+}
+
+/* The suburb check after the four steps. */
+[data-screen='home'] .home-suburb {
+  max-width: 680px;
+  margin: 24px auto 0;
+  padding: 18px 16px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: left;
+}
+[data-screen='home'] .home-suburb__h3 {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: var(--navy);
+}
+[data-screen='home'] .home-suburb__p {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--gray);
+}
+[data-screen='home'] .home-suburb__label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+}
+[data-screen='home'] .home-suburb__row {
+  display: flex;
+  gap: 8px;
+}
+[data-screen='home'] .home-suburb__input {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  font: inherit;
+  font-size: 15px;
+  color: var(--navy);
+}
+[data-screen='home'] .home-suburb__btn {
+  flex: none;
+  height: 48px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--blue);
+  color: var(--white);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+[data-screen='home'] .home-suburb__btn:hover {
+  background: var(--blue-dark);
+}
+
+/* Good to know, between Our Story and the plans. */
+[data-screen='home'] .home-notes {
+  max-width: 680px;
+  margin: 32px auto 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--white);
+  text-align: left;
+  overflow: hidden;
+}
+[data-screen='home'] .home-notes__h {
+  padding: 14px 16px 2px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--slate);
+}
+[data-screen='home'] .home-notes__list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 16px 10px;
+}
+[data-screen='home'] .home-notes__list li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 9px 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--gray);
+}
+[data-screen='home'] .home-notes__list li + li {
+  border-top: 1px solid var(--border);
+}
+[data-screen='home'] .home-notes__list svg {
+  flex: none;
+}
+[data-screen='home'] .home-notes__list strong {
+  display: block;
+  font-size: 14px;
+  color: var(--navy);
+}
+[data-screen='home'] .home-notes__more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: var(--white);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blue-text);
+  cursor: pointer;
+}
+
+/* Talk to Dr. Bike, where the navy "Ready to Experience" banner was. */
+[data-screen='home'] .home-talk {
+  padding: 48px 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+[data-screen='home'] .home-talk .lp-container {
+  max-width: 680px;
+}
+[data-screen='home'] .home-talk__h2 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--navy);
+}
+[data-screen='home'] .home-talk__hours {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: var(--gray);
+}
+[data-screen='home'] .home-talk__row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 14px 0 12px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--navy);
+  text-decoration: none;
+}
+[data-screen='home'] .home-talk__row + .home-talk__row {
+  margin-top: 10px;
+}
+[data-screen='home'] .home-talk__row > svg {
+  flex: none;
+}
+[data-screen='home'] .home-talk__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+}
+[data-screen='home'] .home-talk__icon--call {
+  background: var(--blue-lt);
+}
+[data-screen='home'] .home-talk__icon--wa {
+  background: var(--green-lt);
+}
+[data-screen='home'] .home-talk__label {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 700;
+}
+
 /* ── About ─────────────────────────────────────────────────────────────────── */
 [data-screen='home'] .about-grid {
   display: grid;
@@ -443,6 +827,12 @@
   aspect-ratio: 3/4;
   overflow: hidden;
   position: relative;
+}
+/* index.html's Our Story lost its picture column (2026-11-03). */
+[data-screen='home'] #about .about-grid {
+  grid-template-columns: 1fr;
+  max-width: 680px;
+  margin: 0 auto;
 }
 
 /* ── Footer ────────────────────────────────────────────────────────────────── */
@@ -519,7 +909,8 @@
     gap: 0;
     padding-bottom: 0;
   }
-  [data-screen='home'] .hero-left {
+  [data-screen='home'] .hero-left,
+  [data-screen='home'] .hero-diego {
     padding: 0 20px 32px;
   }
   [data-screen='home'] .hero-image {
@@ -562,8 +953,37 @@
   [data-screen='home'] .services-grid {
     grid-template-columns: 1fr;
   }
+  /* Services, Company and Contact side by side under the brand (2026-11-03):
+     stacked, the page ended in a single column of fourteen 44px rows.
+     Scoped to .footer-cols, which landing.html does not have. */
   [data-screen='home'] .footer-cols {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 0.9fr 1.3fr;
+    gap: 0 12px;
+    margin-bottom: 28px;
+  }
+  [data-screen='home'] .footer-cols > div:first-child {
+    grid-column: 1 / -1;
+    margin-bottom: 24px;
+  }
+  [data-screen='home'] .footer-cols .footer-h4 {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+  }
+  [data-screen='home'] .footer-cols .footer-link {
+    font-size: 12.5px;
+    line-height: 1.35;
+  }
+  [data-screen='home'] .footer-cols .footer-contact-item {
+    min-height: 44px;
+    margin-bottom: 0;
+    gap: 6px;
+    font-size: 12.5px;
+    line-height: 1.35;
+  }
+  [data-screen='home'] .footer-cols .footer-contact-item svg {
+    flex: none;
   }
 }
 @media (max-width: 700px) {

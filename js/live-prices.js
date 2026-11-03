@@ -121,7 +121,10 @@
 
   async function syncPrices() {
     const cards = document.querySelectorAll('.service-card, .svc-card');
-    if (!cards.length) return;
+    // A lone price outside any card names its service in data-live-price,
+    // by its catalog name (index.html's hero data bar: "Tune-Up").
+    const loose = document.querySelectorAll('[data-live-price]');
+    if (!cards.length && !loose.length) return;
 
     // Every bail-out below leaves the whole grid on the static prices baked into
     // the HTML. That is the right behaviour - a blank price is worse than a
@@ -197,6 +200,16 @@
       } else {
         console.warn(
           '[live-prices] no Supabase match for "' + cardName + '" - showing static price'
+        );
+      }
+    });
+    loose.forEach((el) => {
+      const match = services.find((s) => s.name === el.dataset.livePrice);
+      if (match && match.active !== false && typeof match.price === 'number') {
+        el.textContent = '$' + match.price;
+      } else {
+        console.warn(
+          '[live-prices] no live price for "' + el.dataset.livePrice + '" - showing static price'
         );
       }
     });

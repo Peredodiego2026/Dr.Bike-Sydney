@@ -44,6 +44,7 @@ describe('ninguna imagen hace saltar la pagina', () => {
       'images/logo-db.png': [600, 423],
       'images/hero-van.webp': [1672, 941],
       'images/mechanic-working.webp': [1122, 1402],
+      'images/diego-peredo.webp': [168, 168],
     };
     for (const page of PAGES) {
       for (const tag of imgs(read(page))) {
@@ -72,19 +73,22 @@ describe('lazy donde ayuda, eager donde estorbaria', () => {
 
   // `loading="lazy"` en algo que se ve al abrir la pagina lo RETRASA: el
   // navegador lo descubre mas tarde. El logo y el hero son lo primero que se
-  // ve.
+  // ve. En index.html el hero lleva la foto de Diego desde el 2026-11-03, no
+  // la camioneta.
   it('el hero y el logo cargan de inmediato', () => {
     for (const page of PAGES) {
       for (const tag of imgs(read(page))) {
         const src = srcOf(tag);
-        if (!/logo-db\.png|hero-van\.webp/.test(src)) continue;
+        if (!/logo-db\.png|hero-van\.webp|diego-peredo\.webp/.test(src)) continue;
         expect(tag, `${page} ${src}`).toMatch(/loading="eager"/);
       }
     }
   });
 
+  // mechanic-working.webp era la de abajo en index.html hasta que se fue con
+  // la portada nueva; la foto de la resena de Aldana esta en el carrusel.
   it('y lo de mas abajo espera', () => {
-    const below = imgs(read('index.html')).filter((t) => /mechanic-working/.test(srcOf(t)));
+    const below = imgs(read('index.html')).filter((t) => /review-aldana/.test(srcOf(t)));
     expect(below.length).toBeGreaterThan(0);
     for (const t of below) expect(t).toMatch(/loading="lazy"/);
   });

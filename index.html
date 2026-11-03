@@ -83,7 +83,7 @@
     <link rel="manifest" href="/manifest.json" />
     <link rel="stylesheet" href="css/variables.css?v=b58e9c267c" />
     <link rel="stylesheet" href="css/main.css?v=e74f1714a2" />
-    <link rel="stylesheet" href="css/home.css?v=863962effe" />
+    <link rel="stylesheet" href="css/home.css?v=5e3b78adea" />
     <link rel="stylesheet" href="css/shop.css?v=f28b164290" />
     <!-- Google Analytics -->
     <!-- Meta Pixel removed 2026-07-28. It was initialising with the literal
@@ -631,37 +631,6 @@
               <p class="hero-p">
                 Mobile bicycle mechanic in Sydney. We come to you, fully equipped.
               </p>
-              <!-- The Google rating and count, filled by loadReviewStats() in
-                   js/app.js - the same line landing.html carries. Hidden until
-                   there is a number. 44px tall: it is a link on a phone. -->
-              <p id="hero-proof" style="margin: 8px 0 0; font-size: 14px" hidden>
-                <a
-                  href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7"
-                  target="_blank"
-                  rel="noopener"
-                  style="
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 8px;
-                    flex-wrap: wrap;
-                    min-height: 44px;
-                    color: var(--white);
-                    text-decoration: none;
-                  "
-                >
-                  <span
-                    class="hero-proof__stars"
-                    style="color: var(--amber-bright); font-size: 16px; letter-spacing: 1px"
-                    aria-hidden="true"
-                  ></span>
-                  <span class="hero-proof__rating" style="font-weight: 800"></span>
-                  <span
-                    class="hero-proof__count"
-                    style="font-weight: 600; text-decoration: underline"
-                    >Reviews on Google</span
-                  >
-                </a>
-              </p>
               <div class="hero-btns">
                 <a href="#book-service" class="btn-primary">Book a Service</a>
                 <a href="tel:+61433963250" class="btn-outline">Call 0433 963 250</a>
@@ -681,67 +650,53 @@
                   Check my diagnosis fee
                 </button>
               </div>
-              <div class="hero-stats">
-                <div class="hero-stat">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.6)"
-                    stroke-width="2"
-                    stroke-linecap="round"
+              <!-- Three numbers where three words were (2026-11-03). The rating
+                   is filled by loadReviewStats() in js/app.js and stays hidden
+                   until there is a rating AND a count; the Tune-Up price follows
+                   the services table through js/live-prices.js. -->
+              <div class="hero-data">
+                <a
+                  id="hero-rating"
+                  class="hero-data__cell"
+                  href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7"
+                  target="_blank"
+                  rel="noopener"
+                  hidden
+                >
+                  <span class="hero-data__value"
+                    ><span class="hero-rating__value"></span>
+                    <span class="hero-data__star" aria-hidden="true">&#9733;</span></span
                   >
-                    <path
-                      d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
-                    />
-                  </svg>
-                  Qualified Mechanic
+                  <span class="hero-data__label hero-rating__count">Reviews on Google</span>
+                </a>
+                <div class="hero-data__cell">
+                  <span class="hero-data__value" data-live-price="Tune-Up">$119</span>
+                  <span class="hero-data__label">Tune-Up</span>
                 </div>
-                <div class="hero-stat">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.6)"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  >
-                    <rect x="1" y="3" width="15" height="13" />
-                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
-                    <circle cx="5.5" cy="18.5" r="2.5" />
-                    <circle cx="18.5" cy="18.5" r="2.5" />
-                  </svg>
-                  Fully Equipped Van
-                </div>
-                <div class="hero-stat">
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="rgba(255,255,255,0.6)"
-                    stroke-width="2"
-                  >
-                    <polygon
-                      points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
-                    />
-                  </svg>
-                  5 Star Rated
+                <div class="hero-data__cell">
+                  <span class="hero-data__value">$35</span>
+                  <span class="hero-data__label">Visit fee, from</span>
                 </div>
               </div>
             </div>
-            <div class="hero-image">
-              <img
-                decoding="async"
-                loading="eager"
-                src="images/hero-van.webp"
-                alt="Dr. Bike Sydney mobile van"
-                width="1672"
-                height="941"
-                style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"
-              />
+            <!-- Who comes: Diego, in his own photo. The van picture that sat
+                 here was AI-made. The line under his title is his profile's. -->
+            <div class="hero-diego">
+              <div class="hero-diego__card">
+                <img
+                  decoding="async"
+                  loading="eager"
+                  src="images/diego-peredo.webp"
+                  alt="Diego Peredo"
+                  width="168"
+                  height="168"
+                />
+                <div style="min-width: 0">
+                  <div class="hero-diego__name">Diego Peredo</div>
+                  <div class="hero-diego__role">Founder &amp; Head Mechanic</div>
+                  <div class="hero-diego__bio">Favourite jobs: truing and building wheels.</div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -881,21 +836,62 @@
             <div style="text-align: center">
               <a href="#book-service" class="btn-outline-blue">View All Services &rarr;</a>
             </div>
-            <p
-              style="
-                text-align: center;
-                margin-top: 24px;
-                padding: 0 16px;
-                color: var(--gray);
-                font-size: 13px;
-                line-height: 1.6;
-              "
-            >
-              All prices include a visit & diagnosis fee (from $35, depending on your suburb). Parts
-              charged separately unless stated.<br />
-              Sunday &amp; NSW public holiday bookings +20%. Saturday is normal price.<br />
-              <button type="button" data-action="parts-prices" style="background:none;border:none;padding:12px 8px;margin:-4px 0 0;font:inherit;font-weight:700;color:var(--blue-text);text-decoration:underline;cursor:pointer">See parts prices</button>
-            </p>
+            <!-- The "not sure?" helper from Book a Service, on the home. It runs
+                 there, not here: the answer's Book button selects the service
+                 on that screen (openHomeDiag in js/app.js). The small print
+                 that sat here moved to "Good to know", under Our Story. -->
+            <div id="home-ai" class="home-ai">
+              <p class="home-ai__kicker">AI check &middot; free</p>
+              <h2 class="home-ai__h2">Not sure what your bike needs?</h2>
+              <p class="home-ai__p">Tell us what's happening. Our AI suggests the right service and its price.</p>
+              <textarea
+                id="home-ai-text"
+                class="home-ai__text"
+                rows="3"
+                aria-label="Describe the problem"
+                placeholder="e.g. The gears slip when I pedal hard"
+              ></textarea>
+              <p id="home-ai-err" class="home-ai__err" role="alert" hidden>Describe the problem first.</p>
+              <div class="home-ai__btns">
+                <label class="home-ai__photo">
+                  <input type="file" accept="image/*" id="home-ai-photo" />
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="var(--blue)"
+                    stroke-width="1.9"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
+                    />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                  Photo
+                </label>
+                <button type="button" id="home-ai-btn" class="home-ai__go">Suggest a service</button>
+              </div>
+              <p class="home-ai__note">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--blue-soft)"
+                  stroke-width="2.4"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                Nothing is booked until you choose.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -1100,6 +1096,27 @@
                 <p class="hiw-desc">Your bike is ready to go!</p>
               </div>
             </div>
+            <!-- Opens the same fee check as the hero button, already asking
+                 for what was typed here (openFeeCheckModal in js/app.js). -->
+            <div class="home-suburb">
+              <h3 class="home-suburb__h3">Do you come to my suburb?</h3>
+              <p class="home-suburb__p">
+                Same-day within about 45 minutes of our Northern Beaches base: Northern Beaches,
+                North Shore, the CBD, Inner West and Eastern Suburbs. Further out, like Hornsby, by
+                arrangement.
+              </p>
+              <label for="home-suburb-input" class="home-suburb__label">Suburb or postcode</label>
+              <div class="home-suburb__row">
+                <input
+                  id="home-suburb-input"
+                  class="home-suburb__input"
+                  type="text"
+                  autocomplete="postal-code"
+                  placeholder="e.g. Manly or 2095"
+                />
+                <button type="button" id="home-suburb-btn" class="home-suburb__btn">Check fee</button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -1211,16 +1228,92 @@
                  right above the honest Testimonials empty state. Bring
                  real numbers back once they exist. -->
               </div>
-              <div class="about-image">
-                <img
-                  width="1122"
-                  height="1402"
-                  src="images/mechanic-working.webp"
-                  alt="Dr. Bike Sydney mechanic servicing a bike"
-                  style="width: 100%; height: 100%; object-fit: cover"
-                  loading="lazy"
-                />
-              </div>
+              <!-- The mechanic-working.webp column went on 2026-11-03: an
+                   AI-made picture, and hidden on a phone anyway. -->
+            </div>
+            <!-- The small print that sat under the services, as a list. -->
+            <div class="home-notes">
+              <div class="home-notes__h">Good to know</div>
+              <ul class="home-notes__list">
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="var(--blue)"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="1" y="3" width="15" height="13" />
+                    <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                    <circle cx="5.5" cy="18.5" r="2.5" />
+                    <circle cx="18.5" cy="18.5" r="2.5" />
+                  </svg>
+                  <span
+                    ><strong>Visit &amp; diagnosis fee</strong>From $35, depending on your
+                    suburb.</span
+                  >
+                </li>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="var(--blue)"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
+                    />
+                  </svg>
+                  <span><strong>Parts are extra</strong>Charged separately unless stated.</span>
+                </li>
+                <li>
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="var(--blue)"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="3" y="4" width="18" height="18" rx="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  <span
+                    ><strong>Sundays &amp; NSW public holidays +20%</strong>Saturday is normal
+                    price.</span
+                  >
+                </li>
+              </ul>
+              <button type="button" data-action="parts-prices" class="home-notes__more">
+                See parts prices
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
             </div>
           </div>
         </section>
@@ -1675,75 +1768,79 @@
           </div>
         </section>
 
-        <!-- CTA Banner -->
-        <section style="padding: 64px 20px; background: var(--navy); text-align: center">
-          <div style="max-width: 580px; margin: 0 auto">
-            <h2
-              style="
-                font-size: clamp(1.5rem, 5vw, 2rem);
-                font-weight: 800;
-                color: var(--white);
-                line-height: 1.25;
-                margin-bottom: 12px;
-              "
-            >
-              Ready to Experience<br />Premium Bike Service?
-            </h2>
-            <p style="color: rgba(255, 255, 255, 0.7); font-size: 15px; margin-bottom: 32px">
-              Book your service today and join hundreds of satisfied cyclists across Sydney.
-            </p>
-            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap">
-              <a
-                href="#book-service"
-                style="
-                  display: inline-flex;
-                  align-items: center;
-                  justify-content: center;
-                  padding: 14px 32px;
-                  background: var(--white);
-                  color: var(--navy);
-                  border-radius: 8px;
-                  font-weight: 700;
-                  font-size: 15px;
-                  text-decoration: none;
-                  min-height: 48px;
-                  cursor: pointer;
-                "
-                >Book Now</a
-              >
-              <a
-                href="tel:+61433963250"
-                style="
-                  display: inline-flex;
-                  align-items: center;
-                  justify-content: center;
-                  gap: 8px;
-                  padding: 14px 28px;
-                  border: 2px solid rgba(255, 255, 255, 0.35);
-                  color: var(--white);
-                  border-radius: 8px;
-                  font-weight: 600;
-                  font-size: 15px;
-                  text-decoration: none;
-                  min-height: 48px;
-                "
-              >
+        <!-- Talk to Dr. Bike: the last ask is a person, not another "Book
+             Now" (2026-11-03). Was "Ready to Experience Premium Bike Service?"
+             with "join hundreds of satisfied cyclists", a number nobody had. -->
+        <section class="home-talk">
+          <div class="lp-container">
+            <h2 class="home-talk__h2">Talk to Dr. Bike directly</h2>
+            <p class="home-talk__hours">Mon &ndash; Sun: 8:00AM &ndash; 5:00PM</p>
+            <a href="tel:+61433963250" class="home-talk__row">
+              <span class="home-talk__icon home-talk__icon--call">
                 <svg
-                  width="15"
-                  height="15"
+                  width="17"
+                  height="17"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="currentColor"
+                  stroke="var(--blue)"
                   stroke-width="2"
                   stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
                 >
                   <path
                     d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.41 2 2 0 0 1 3.56 1.25h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.77a16 16 0 0 0 6.29 6.29l1.68-1.68a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"
                   />
                 </svg>
-                Call 0433 963 250
-              </a>
-            </div>
+              </span>
+              <span class="home-talk__label">Call 0433 963 250</span>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--gray-lt)"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </a>
+            <a href="https://wa.me/61433963250" target="_blank" rel="noopener" class="home-talk__row">
+              <span class="home-talk__icon home-talk__icon--wa">
+                <svg
+                  width="17"
+                  height="17"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="var(--green)"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"
+                  />
+                </svg>
+              </span>
+              <span class="home-talk__label">Message on WhatsApp</span>
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="var(--gray-lt)"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </a>
           </div>
         </section>
 
@@ -2284,7 +2381,7 @@
                   <a
                     href="mailto:contact@drbikesydney.com.au"
                     style="color: var(--gray); text-decoration: none"
-                    >contact@drbikesydney.com.au</a
+                    >contact@<wbr />drbikesydney.com.au</a
                   >
                 </div>
                 <div class="footer-contact-item">
@@ -2484,7 +2581,7 @@
      (removed 2026-07-28); router.js and components.js got away with it only
      because they hold no state of their own. app.js pulls in the whole graph -
      router, supabase, components, i18n, rider-tier, stripe. -->
-    <script src="js/app.js?v=5cb803938a" type="module"></script>
+    <script src="js/app.js?v=5be17227c9" type="module"></script>
     <script type="module">
       /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
       import { sb } from './js/supabase.js';
@@ -2553,7 +2650,7 @@
         window.drbikeReloadReviews = loadReviews;
       })();
     </script>
-    <script src="js/live-prices.js?v=20261025b" defer></script>
+    <script src="js/live-prices.js?v=20261103a" defer></script>
     <script src="js/cta-tracking.js?v=20260728a" defer></script>
 
     <script>

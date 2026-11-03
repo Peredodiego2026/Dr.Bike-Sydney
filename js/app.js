@@ -653,7 +653,10 @@ function feeCheckAnimateAmount(el) {
   requestAnimationFrame(tick);
 }
 
-function openFeeCheckModal() {
+// `suburb`: what the home's "Do you come to my suburb?" box typed, checked
+// straight away. The hero button passes its click event, so only a string
+// counts.
+function openFeeCheckModal(suburb) {
   document.getElementById('fee-check-overlay')?.remove();
   const overlay = document.createElement('div');
   overlay.id = 'fee-check-overlay';
@@ -732,7 +735,14 @@ function openFeeCheckModal() {
       box.querySelector('.fee-check-submit')?.click();
     }
   });
-  box.querySelector('.fee-check-input').focus();
+  const typed = typeof suburb === 'string' ? suburb.trim() : '';
+  if (typed.length >= 3) {
+    submit(typed);
+    return;
+  }
+  const input = box.querySelector('.fee-check-input');
+  input.value = typed;
+  input.focus();
 }
 
 // ── Book a Service (3-step wizard) ───────────────────────────────────────────
@@ -1246,6 +1256,19 @@ async function renderBookService() {
         runAIDiagnosisText(screen);
       }
     });
+
+    // A question asked on the home (openHomeDiag) is answered here, and only
+    // once the services are in: the answer's Book button selects their card.
+    const handoff = window.__pendingDiag;
+    if (handoff && _services) {
+      window.__pendingDiag = null;
+      if (handoff.file) {
+        runAIDiagnosis(screen, handoff.file);
+      } else {
+        screen.querySelector('#diag-text').value = handoff.text;
+        runAIDiagnosisText(screen);
+      }
+    }
 
     const continueBtn = screen.querySelector('#s1-continue');
 
@@ -6851,10 +6874,9 @@ document.addEventListener('screenchange', ({ detail }) => {
 });
 
 // ── AI Bike Diagnosis ────────────────────────────────────────────────────────
-async function runAIDiagnosis(screen) {
-  const input = screen.querySelector('#diag-photo');
-  if (!input || !input.files[0]) return;
-  const file = input.files[0];
+// `file`: a photo picked on the home instead of on this screen.
+async function runAIDiagnosis(screen, file = screen.querySelector('#diag-photo')?.files?.[0]) {
+  if (!file) return;
   const resultEl = screen.querySelector('#diag-result');
   resultEl.style.display = 'block';
   resultEl.innerHTML =
@@ -7262,6 +7284,36 @@ initShopAccess();
 if (!window.__landingOwnsFeeCheck) {
   document.getElementById('hero-fee-btn')?.addEventListener('click', openFeeCheckModal);
 }
+
+// index.html's "Do you come to my suburb?" box: the same check, already asked.
+document.getElementById('home-suburb-btn')?.addEventListener('click', () => {
+  openFeeCheckModal(document.getElementById('home-suburb-input').value);
+});
+document.getElementById('home-suburb-input')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('home-suburb-btn').click();
+});
+
+// index.html's "Not sure what your bike needs?" box asks nothing itself: Book a
+// Service runs the same diagnosis, where the answer's Book button can select
+// the service it names (renderStep1 picks the question up).
+function openHomeDiag(handoff) {
+  window.__pendingDiag = handoff;
+  router.navigate('book-service');
+}
+document.getElementById('home-ai-btn')?.addEventListener('click', () => {
+  const text = document.getElementById('home-ai-text').value.trim();
+  document.getElementById('home-ai-err').hidden = !!text;
+  if (text) openHomeDiag({ text });
+});
+document.getElementById('home-ai-text')?.addEventListener('input', () => {
+  document.getElementById('home-ai-err').hidden = true;
+});
+document.getElementById('home-ai-photo')?.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  // Cleared so picking the same photo again still fires a change.
+  e.target.value = '';
+  if (file) openHomeDiag({ file });
+});
 if (window._pendingReview) {
   setTimeout(() => router.navigate('review'), 200);
 }
@@ -7333,6 +7385,18 @@ if (window._pendingReview) {
       '{n} reviews on Google'
     );
     proof.hidden = false;
+  }
+  // index.html carries it as the first cell of the data bar under the hero
+  // buttons instead (#hero-rating). Same rule: both numbers, or nothing.
+  const heroRating = document.getElementById('hero-rating');
+  if (heroRating && g.rating && g.count) {
+    heroRating.querySelector('.hero-rating__value').textContent = g.rating;
+    heroRating.querySelector('.hero-rating__count').textContent = counted(
+      g.count,
+      '{n} Google review',
+      '{n} Google reviews'
+    );
+    heroRating.hidden = false;
   }
 
   const o = stats?.own || {};
