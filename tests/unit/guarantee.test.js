@@ -49,6 +49,19 @@ describe('one guarantee, 14 days, everywhere it is stated', () => {
     }
   });
 
+  // Phase 3 of the conversion study: claims with no number behind them. The
+  // hero already shows the live Google rating (#hero-proof), so a hand-typed
+  // "5 Star Rated" beside it could only ever go stale; the guarantee is ours
+  // to state.
+  it('the hero states the guarantee, not a hand-typed rating', () => {
+    for (const html of [landing, index]) {
+      const page = html.replace(/<!--[\s\S]*?-->/g, '');
+      expect(page).toMatch(/<\/svg>\s*14-Day Guarantee\s*<\/div>/);
+      expect(page).not.toContain('5 Star Rated');
+      expect(page).not.toMatch(/hundreds of satisfied/i);
+    }
+  });
+
   it('no generated page promises "100% satisfaction" any more', () => {
     for (const file of ['scripts/generate-suburb-pages.mjs', 'business.html', 'cbd.html', 'es/cbd.html', 'zh/cbd.html']) {
       expect(read(file), file).not.toMatch(/100% Satisfaction|Satisfaction guarantee|100% de satisfacción|100% 满意/);

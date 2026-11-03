@@ -598,10 +598,9 @@ export default {
     '我们接受所有主流信用卡和借记卡、Apple Pay和Google Pay。预订时收取上门检查费押金（从$35起，视郊区而定），其余金额在服务完成后收取。',
   "Still have questions? We're here to help!": '还有疑问？我们随时为您解答！',
   'Contact Us': '联系我们',
-  'Ready to Experience': '准备好体验',
-  'Premium Bike Service?': '高端自行车服务了吗？',
-  'Book your service today and join hundreds of satisfied cyclists across Sydney.':
-    '立即预订，加入悉尼数百位满意骑行者的行列。',
+  'Bike Not Riding Right?': '自行车骑着不顺？',
+  'Book online in a couple of minutes and we come to your door.':
+    '几分钟就能在线预约，我们上门服务。',
   'Book Now': '立即预订',
   'Start Your Membership': '开始您的会员',
   'Phone Number (04XX XXX XXX)': '电话号码 (04XX XXX XXX)',
@@ -653,7 +652,7 @@ export default {
   'Get Your Free Quote': '获取免费报价',
   'Qualified Mechanic': '专业技工',
   'Fully Equipped Van': '装备齐全的服务车',
-  '5 Star Rated': '五星好评',
+  '14-Day Guarantee': '14天保修',
   // Mechanics 3D carousel
   'OUR TEAM': '我们的团队',
   'Meet Your Mechanics': '认识我们的技工',
@@ -1163,7 +1162,6 @@ export default {
   'Something went wrong. Please email us directly.': '出现问题，请直接给我们发邮件。',
 
   // ── Final CTA ───────────────────────────────────────────────────────────
-  'Ready to Experience Premium Bike Service?': '准备好体验高端自行车服务了吗？',
 
   // ── Footer ──────────────────────────────────────────────────────────────
   'Professional bike service at your doorstep.': '上门专业自行车服务。',

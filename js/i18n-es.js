@@ -653,10 +653,9 @@ export default {
     'Aceptamos todas las tarjetas de crédito y débito principales, Apple Pay y Google Pay. Se cobra un depósito por la visita (desde $35, según tu suburbio) al reservar; el resto se cobra al completar el servicio.',
   "Still have questions? We're here to help!": '¿Tenés más preguntas? ¡Estamos para ayudarte!',
   'Contact Us': 'Contactanos',
-  'Ready to Experience': 'Listo para Experimentar',
-  'Premium Bike Service?': 'un Servicio Premium?',
-  'Book your service today and join hundreds of satisfied cyclists across Sydney.':
-    'Reservá tu servicio hoy y sumate a cientos de ciclistas satisfechos en toda Sydney.',
+  'Bike Not Riding Right?': '¿Tu bici no anda bien?',
+  'Book online in a couple of minutes and we come to your door.':
+    'Reservá online en un par de minutos y vamos hasta tu puerta.',
   'Book Now': 'Reservar Ahora',
   'Start Your Membership': 'Comenzá tu Membresía',
   'Phone Number (04XX XXX XXX)': 'Número de Teléfono (04XX XXX XXX)',
@@ -711,7 +710,7 @@ export default {
   'Get Your Free Quote': 'Obtené tu Cotización Gratis',
   'Qualified Mechanic': 'Mecánico Calificado',
   'Fully Equipped Van': 'Van Totalmente Equipada',
-  '5 Star Rated': 'Calificación 5 Estrellas',
+  '14-Day Guarantee': 'Garantía de 14 Días',
   // Mechanics 3D carousel
   'OUR TEAM': 'NUESTRO EQUIPO',
   'Meet Your Mechanics': 'Conocé a Nuestros Mecánicos',
@@ -1254,7 +1253,6 @@ export default {
     'Algo salió mal. Por favor escribinos directamente.',
 
   // ── Final CTA ───────────────────────────────────────────────────────────
-  'Ready to Experience Premium Bike Service?': '¿Listo para Experimentar un Servicio Premium?',
 
   // ── Footer ──────────────────────────────────────────────────────────────
   'Professional bike service at your doorstep.': 'Servicio profesional de bicicletas en tu puerta.',
