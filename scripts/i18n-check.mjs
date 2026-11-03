@@ -94,6 +94,10 @@ const ALLOWED = new Set([
   'Color',
   // Contact details, codes and sample placeholders
   'contact@drbikesydney.com.au',
+  // The same address with a <wbr> in it, so it can wrap in index.html's
+  // three-column phone footer: two text nodes.
+  'contact@',
+  'drbikesydney.com.au',
   'your@email.com',
   'your@email.com.au',
   'jane@acme.com',

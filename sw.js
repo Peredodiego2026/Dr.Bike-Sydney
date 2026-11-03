@@ -281,7 +281,10 @@
 // v164: fuera "Verified Mechanic", "Background Checked", "Fully Insured",
 // "Qualified/Certified" y las cifras de flotas (Diego: no son ciertas); entran
 // los 10 anos de experiencia, en los dos diccionarios.
-// v166 (v165 is #575's): los tramos de flota pasan a 1-3/4-8/9-15/16+ y
+// v165: la portada del telefono nueva (barra de datos, Diego, la IA, el
+// suburbio, "Good to know", hablar con Dr. Bike); sus textos en los dos
+// diccionarios.
+// v166: los tramos de flota pasan a 1-3/4-8/9-15/16+ y
 // "Custom rates for 5+ bikes" a "from 4 bikes", en los dos diccionarios.
 const CACHE_STATIC = 'drbike-static-v166';
 const CACHE_PAGES  = 'drbike-pages-v78';

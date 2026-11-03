@@ -125,27 +125,34 @@ describe('desktop: one main action in the hero', () => {
 });
 
 describe('the real rating, on the first screen of both pages', () => {
-  for (const [name, html] of [
-    ['landing.html', landing],
-    ['index.html', index],
-  ]) {
-    it(`${name} carries it inside the hero, hidden until there is data`, () => {
-      const hero = sectionOf(html, '<section class="hero">');
-      expect(hero).toMatch(/<p id="hero-proof"[^>]*hidden>/);
-      for (const part of ['hero-proof__stars', 'hero-proof__rating', 'hero-proof__count']) {
-        expect(hero).toContain(`class="${part}"`);
-      }
-      // Empty in the HTML: a number typed here would go stale the day of the
-      // next review, which is exactly what happened to the old "2 reviews".
-      expect(hero).toMatch(/class="hero-proof__rating"[^>]*><\/span>/);
-    });
-  }
+  it('landing.html carries it inside the hero, hidden until there is data', () => {
+    const hero = sectionOf(landing, '<section class="hero">');
+    expect(hero).toMatch(/<p id="hero-proof"[^>]*hidden>/);
+    for (const part of ['hero-proof__stars', 'hero-proof__rating', 'hero-proof__count']) {
+      expect(hero).toContain(`class="${part}"`);
+    }
+    // Empty in the HTML: a number typed here would go stale the day of the
+    // next review, which is exactly what happened to the old "2 reviews".
+    expect(hero).toMatch(/class="hero-proof__rating"[^>]*><\/span>/);
+  });
+
+  // The phone home (2026-11-03) shows it as the first cell of the data bar
+  // under the hero buttons, by the same rules.
+  it('index.html carries it in the hero data bar, hidden and empty until there is data', () => {
+    const hero = sectionOf(index, '<section class="hero">');
+    expect(hero).not.toContain('id="hero-proof"');
+    expect(hero).toMatch(/<a\s+id="hero-rating"[^>]*\shidden\s*>/);
+    expect(hero).toMatch(/class="hero-rating__value"><\/span>/);
+    expect(hero).toContain('class="hero-data__label hero-rating__count"');
+  });
 
   // "5.0" with no count behind it proves nothing, and "0 reviews" proves the
   // opposite - so it needs both before it shows.
   it('js/app.js shows it only with a rating AND a count', () => {
     expect(app).toMatch(/if \(proof && g\.rating && g\.count\) \{/);
     expect(app).toMatch(/proof\.hidden = false;/);
+    expect(app).toMatch(/if \(heroRating && g\.rating && g\.count\) \{/);
+    expect(app).toMatch(/heroRating\.hidden = false;/);
   });
 });
 

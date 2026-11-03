@@ -53,10 +53,17 @@ describe('one guarantee, 14 days, everywhere it is stated', () => {
   // hero already shows the live Google rating (#hero-proof), so a hand-typed
   // "5 Star Rated" beside it could only ever go stale; the guarantee is ours
   // to state.
+  // index.html's hero traded its three words for the data bar on 2026-11-03
+  // (the phone redesign Diego approved: live rating, Tune-Up price, visit fee),
+  // so on the phone the guarantee is the chip just above the hero.
   it('the hero states the guarantee, not a hand-typed rating', () => {
     for (const html of [landing, index]) {
       const page = html.replace(/<!--[\s\S]*?-->/g, '');
-      expect(page).toMatch(/<\/svg>\s*14-Day Guarantee\s*<\/div>/);
+      expect(page).toMatch(
+        html === landing
+          ? /<\/svg>\s*14-Day Guarantee\s*<\/div>/
+          : /<\/svg>\s*14-day guarantee\s*<\/span>/
+      );
       expect(page).not.toContain('5 Star Rated');
       expect(page).not.toMatch(/hundreds of satisfied/i);
     }
