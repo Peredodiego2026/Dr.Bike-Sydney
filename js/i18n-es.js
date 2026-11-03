@@ -728,7 +728,7 @@ export default {
   'Within about 45 minutes': 'A unos 45 minutos',
   'North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs':
     'North Shore, Hornsby, el CBD, Inner West y Eastern Suburbs',
-  'Up to $55': 'Hasta $55',
+  'Up to $60': 'Hasta $60',
   'Further out': 'Más lejos',
   'Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.':
     'Western Sydney, Sutherland Shire y las Blue Mountains. No se cobra nada online: mandanos tu dirección y te cotizamos el viaje.',

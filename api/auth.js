@@ -3307,7 +3307,7 @@ async function notifyAdminCancellation(bk, SERVICE_KEY) {
 
   let refunded = false;
   let refundAttempted = false;
-  // The visit fee is the zone's ($35, $45, $55...), not the flat $20 this
+  // The visit fee is the zone's ($35, $45, $60...), not the flat $20 this
   // message used to quote. Stripe says what it actually gave back; the
   // booking's own fee is what Diego has to refund by hand if Stripe failed.
   let refundAmount = Number(bk.callout_fee) || 0;
@@ -7801,7 +7801,11 @@ async function readPostHog(days) {
     // sequence, it just counts each value of the `step` property.
     funnel: list('funnel', ([step, people]) => ({ step, people })),
     booking_completed: completed ? (completed[0]?.[0] ?? 0) : null,
-    sections: list('sections', ([section, visitors, avg_seconds]) => ({ section, visitors, avg_seconds })),
+    sections: list('sections', ([section, visitors, avg_seconds]) => ({
+      section,
+      visitors,
+      avg_seconds,
+    })),
     screens: list('screens', ([screen, exits, avg_seconds]) => ({ screen, exits, avg_seconds })),
     clicks: list('clicks', ([label, clicks]) => ({ label, clicks })),
   };
