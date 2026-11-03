@@ -135,10 +135,11 @@ describe('the list the client sees', () => {
 describe('every surface opens the same list', () => {
   const read = (p) => fs.readFileSync(new URL('../../' + p, import.meta.url), 'utf8');
 
+  // index.html's sits at the foot of "Good to know", with a chevron after it.
   it('the price notes on index.html and landing.html link to it', () => {
     for (const page of ['index.html', 'landing.html']) {
       expect(read(page)).toMatch(
-        /<button type="button" data-action="parts-prices"[^>]*>See parts prices<\/button>/
+        /<button type="button" data-action="parts-prices"[^>]*>\s*See parts prices\s*(<svg[\s\S]*?<\/svg>\s*)?<\/button>/
       );
     }
   });

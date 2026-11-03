@@ -50,7 +50,9 @@ describe('no claim Diego said is untrue', () => {
 
   it('the true version is on both home pages', () => {
     for (const page of ['landing.html', 'index.html']) {
-      expect(visible(page)).toContain('10 Years of Experience');
+      // The landing's hero says it in title case; the phone's hero became the
+      // data bar (2026-11-03) and the phone says it in its chip row.
+      expect(visible(page)).toMatch(/10 Years of Experience/i);
       expect(visible(page)).toContain('10 years of experience as a mechanic');
     }
     expect(visible('business.html')).toContain('<div class="stat-num">10</div><div class="stat-label">Years experience</div>');

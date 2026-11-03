@@ -281,7 +281,10 @@
 // v164: fuera "Verified Mechanic", "Background Checked", "Fully Insured",
 // "Qualified/Certified" y las cifras de flotas (Diego: no son ciertas); entran
 // los 10 anos de experiencia, en los dos diccionarios.
-const CACHE_STATIC = 'drbike-static-v164';
+// v165: la portada del telefono nueva (barra de datos, Diego, la IA, el
+// suburbio, "Good to know", hablar con Dr. Bike); sus textos en los dos
+// diccionarios.
+const CACHE_STATIC = 'drbike-static-v165';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
