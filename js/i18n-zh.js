@@ -1120,8 +1120,8 @@ export default {
   'We come to your office, warehouse or depot. Zero travel time for your team.':
     '我们上门到您的办公室、仓库或车队基地，为您的团队节省全部往返时间。',
   'Volume pricing': '批量优惠',
-  'Custom rates for 5+ bikes. The more bikes, the better the deal.':
-    '5辆以上自行车享定制价格，车辆越多优惠越大。',
+  'Custom rates from 4 bikes. The more bikes, the better the deal.':
+    '4辆起享定制价格，车辆越多优惠越大。',
   'Priority scheduling': '优先排期',
   'Fleet clients get first access to bookings and a dedicated point of contact.':
     '车队客户享有优先预约权和专属联系人。',
