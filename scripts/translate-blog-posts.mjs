@@ -115,8 +115,8 @@ const DICT = {
     es: {
       'How to Choose a Bike Mechanic in Sydney | Dr. Bike Sydney':
         'Cómo Elegir un Mecánico de Bicicletas en Sídney | Dr. Bike Sydney',
-      'What to look for when choosing a bike mechanic in Sydney — experience, mobile vs workshop, pricing transparency, insurance and what questions to ask.':
-        'Qué tener en cuenta al elegir un mecánico de bicicletas en Sídney: experiencia, a domicilio vs taller, transparencia de precios, seguro y qué preguntas hacer.',
+      'What to look for when choosing a bike mechanic in Sydney — experience, mobile vs workshop, pricing transparency, reviews and what questions to ask.':
+        'Qué tener en cuenta al elegir un mecánico de bicicletas en Sídney: experiencia, a domicilio vs taller, transparencia de precios, reseñas y qué preguntas hacer.',
       'How to Choose a Bike Mechanic in Sydney': 'Cómo Elegir un Mecánico de Bicicletas en Sídney',
       '🔍 Guide': '🔍 Guía',
       'By Dr. Bike Sydney · June 2026 · 5 min read': 'Por Dr. Bike Sydney · junio 2026 · 5 min de lectura',
@@ -145,7 +145,6 @@ const DICT = {
       'For the vast majority of Sydney riders — commuters, casual riders, enthusiasts — a mobile mechanic is faster, more convenient and equally capable.':
         'Para la gran mayoría de los ciclistas de Sídney (los que van al trabajo, los ocasionales, los entusiastas) un mecánico a domicilio es más rápido, más cómodo e igual de capaz.',
       '3. What to Ask Before Booking': '3. Qué Preguntar Antes de Reservar',
-      'Are you fully insured for mobile/on-site repairs?': '¿Tenés seguro completo para reparaciones a domicilio?',
       'What brands do you service? Can you work on my [brand]?':
         '¿Qué marcas atendés? ¿Podés trabajar con mi [marca]?',
       'What does your [tune-up / standard service] include?': '¿Qué incluye tu [ajuste / servicio estándar]?',
@@ -162,8 +161,8 @@ const DICT = {
         'Cotizan precios inusualmente bajos que no reflejan el trabajo real',
       'Can\'t tell you which parts they\'ve replaced after a service':
         'No pueden decirte qué repuestos cambiaron después del servicio',
-      'At Dr. Bike Sydney, all prices are published: Tune-Up $119, Standard $159, Major $209, Ultimate $379. No hidden fees, mobile call-out included.':
-        'En Dr. Bike Sydney todos los precios están publicados: Ajuste $119, Estándar $159, Mayor $209, Definitivo $379. Sin cargos ocultos, la visita a domicilio ya está incluida.',
+      'At Dr. Bike Sydney, all prices are published: Tune-Up $119, Standard $159, Major $209, Ultimate $379. No hidden fees: the visit and diagnosis fee is charged separately, and you see it before you pay.':
+        'En Dr. Bike Sydney todos los precios están publicados: Ajuste $119, Estándar $159, Mayor $209, Definitivo $379. Sin cargos ocultos: la visita y diagnóstico se cobra aparte, y la ves antes de pagar.',
       '5. Read Reviews Critically': '5. Leé las Reseñas con Ojo Crítico',
       'Google Reviews are the most reliable source in Sydney. Look for:':
         'Las reseñas de Google son la fuente más confiable en Sídney. Fijate en:',
@@ -173,9 +172,6 @@ const DICT = {
       'Reviews mentioning punctuality and communication': 'Reseñas que mencionan la puntualidad y la comunicación',
       'Verified reviews rather than a sudden burst of 5-star reviews':
         'Reseñas verificadas, en vez de una lluvia repentina de reseñas de 5 estrellas',
-      '6. Insurance and Professionalism': '6. Seguro y Profesionalismo',
-      'Any mechanic working on your bike has access to your property and is performing work that, if done incorrectly, could cause an accident. A professional mobile mechanic should carry public liability insurance and be able to confirm this on request.':
-        'Cualquier mecánico que trabaje en tu bici tiene acceso a tu propiedad y hace un trabajo que, si sale mal, puede causar un accidente. Un mecánico a domicilio profesional debería tener seguro de responsabilidad civil y poder confirmarlo si se lo pedís.',
       'Book a Dr. Bike Sydney service': 'Reservá un servicio con Dr. Bike Sydney',
       'Experienced, with transparent pricing. We come to you anywhere across Sydney — home, work or park.':
         'Experiencia y precios transparentes. Vamos hasta vos a cualquier parte de Sídney: casa, trabajo o parque.',
@@ -183,8 +179,8 @@ const DICT = {
     },
     zh: {
       'How to Choose a Bike Mechanic in Sydney | Dr. Bike Sydney': '如何在悉尼选择自行车技师 | Dr. Bike Sydney',
-      'What to look for when choosing a bike mechanic in Sydney — experience, mobile vs workshop, pricing transparency, insurance and what questions to ask.':
-        '在悉尼选择自行车技师时该注意什么——经验、上门服务与实体店对比、价格透明度、保险，以及该问哪些问题。',
+      'What to look for when choosing a bike mechanic in Sydney — experience, mobile vs workshop, pricing transparency, reviews and what questions to ask.':
+        '在悉尼选择自行车技师时该注意什么——经验、上门服务与实体店对比、价格透明度、评价，以及该问哪些问题。',
       'How to Choose a Bike Mechanic in Sydney': '如何在悉尼选择自行车技师',
       '🔍 Guide': '🔍 指南',
       'By Dr. Bike Sydney · June 2026 · 5 min read': '作者：Dr. Bike Sydney · 2026年6月 · 阅读需5分钟',
@@ -213,7 +209,6 @@ const DICT = {
       'For the vast majority of Sydney riders — commuters, casual riders, enthusiasts — a mobile mechanic is faster, more convenient and equally capable.':
         '对于绝大多数悉尼骑行者——通勤者、休闲骑行爱好者、发烧友来说，上门技师更快、更方便，能力也丝毫不逊色。',
       '3. What to Ask Before Booking': '3. 预订前该问哪些问题',
-      'Are you fully insured for mobile/on-site repairs?': '您是否为上门维修投保了完整保险？',
       'What brands do you service? Can you work on my [brand]?': '您服务哪些品牌？能维修我的[品牌]吗？',
       'What does your [tune-up / standard service] include?': '您的[基础保养/标准服务]包含哪些内容？',
       'Do you carry parts on the van, or do I need to wait for parts orders?':
@@ -226,8 +221,8 @@ const DICT = {
       'Add significant charges not mentioned in the booking': '在预订时未提及，事后却增加大额费用',
       'Quote unusually low prices that don\'t reflect the work involved': '报价异常低廉，与实际工作量不符',
       'Can\'t tell you which parts they\'ve replaced after a service': '服务结束后说不清楚更换了哪些零件',
-      'At Dr. Bike Sydney, all prices are published: Tune-Up $119, Standard $159, Major $209, Ultimate $379. No hidden fees, mobile call-out included.':
-        '在 Dr. Bike Sydney，所有价格全部公开：基础保养 $119，标准服务 $159，中级服务 $209，全面服务 $379。无隐藏费用，已包含上门服务费。',
+      'At Dr. Bike Sydney, all prices are published: Tune-Up $119, Standard $159, Major $209, Ultimate $379. No hidden fees: the visit and diagnosis fee is charged separately, and you see it before you pay.':
+        '在 Dr. Bike Sydney，所有价格全部公开：基础保养 $119，标准服务 $159，中级服务 $209，全面服务 $379。无隐藏费用：上门检查费另计，付款前即可看到。',
       '5. Read Reviews Critically': '5. 批判性地看待评价',
       'Google Reviews are the most reliable source in Sydney. Look for:':
         '在悉尼，Google 评价是最可靠的信息来源。请留意：',
@@ -236,9 +231,6 @@ const DICT = {
       'How the mechanic responds to negative reviews': '技师如何回应负面评价',
       'Reviews mentioning punctuality and communication': '提到准时性和沟通情况的评价',
       'Verified reviews rather than a sudden burst of 5-star reviews': '已验证的评价，而不是突然涌现的大量五星好评',
-      '6. Insurance and Professionalism': '6. 保险与专业性',
-      'Any mechanic working on your bike has access to your property and is performing work that, if done incorrectly, could cause an accident. A professional mobile mechanic should carry public liability insurance and be able to confirm this on request.':
-        '任何为您维修自行车的技师都能接触到您的财物，所进行的工作若操作不当，也可能引发事故。专业的上门技师应当持有公共责任险，并能在您要求时予以确认。',
       'Book a Dr. Bike Sydney service': '预订 Dr. Bike Sydney 服务',
       'Experienced, with transparent pricing. We come to you anywhere across Sydney — home, work or park.':
         '经验丰富、价格透明。我们上门服务悉尼全境——家中、办公室或公园均可。',

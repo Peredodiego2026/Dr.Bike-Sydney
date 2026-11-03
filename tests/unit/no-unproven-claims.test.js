@@ -48,6 +48,17 @@ describe('no claim Diego said is untrue', () => {
     }
   });
 
+  // Then Diego, same day: the general advice goes too. A post that tells
+  // readers to ask about insurance, on the site of a mechanic who has none,
+  // sends them to the question we can't answer. And the visit & diagnosis fee
+  // is charged on its own, so "call-out included" was never true.
+  it('the how-to-choose post no longer brings up insurance or an included call-out', () => {
+    for (const l of ['', 'es/', 'zh/']) {
+      const html = visible(`${l}blog/how-to-choose-a-bike-mechanic-sydney.html`);
+      expect(html, l || 'en').not.toMatch(/insur|seguro|保险|call-out included|ya está incluida|已包含上门/i);
+    }
+  });
+
   it('the true version is on both home pages', () => {
     for (const page of ['landing.html', 'index.html']) {
       // The landing's hero says it in title case; the phone's hero became the
