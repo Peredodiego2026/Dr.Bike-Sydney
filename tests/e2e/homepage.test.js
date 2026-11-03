@@ -35,9 +35,10 @@ test.describe('Landing page', () => {
   });
 
   // 'Services' dejo de ser un enlace a #services: hoy es un boton que abre
-  // el modal de precios, y la seccion #services ya no existe (un clic en vez
-  // de dos, js/landing-inline.js). El test seguia buscando el enlace viejo y
-  // llevaba tiempo en rojo, que es como una suite deja de mirarse.
+  // el modal de precios (un clic en vez de dos, js/landing-inline.js). El test
+  // seguia buscando el enlace viejo y llevaba tiempo en rojo, que es como una
+  // suite deja de mirarse. La seccion #services volvio el 3-nov-2026 con seis
+  // precios a la vista; el menu sigue abriendo la lista completa.
   //
   // Ahora cubre las dos clases de item que tiene el menu, no una sola.
   test('the Services button opens the price list', async ({ page }) => {

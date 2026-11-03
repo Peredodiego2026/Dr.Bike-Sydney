@@ -305,11 +305,6 @@ function lpDateLocale() {
 })();
 
 
-/* ── Date input min ─────────────────────────────────────────────────────── */
-const ldate = document.getElementById('lform-date');
-if (ldate) ldate.min = new Date().toISOString().split('T')[0];
-
-
 (function() {
   const form = document.getElementById('fleet-form');
   if (!form) return;
@@ -1560,21 +1555,6 @@ document.addEventListener('DOMContentLoaded', function() {
   const heroFeeBtn = document.getElementById('hero-fee-btn');
   if (heroFeeBtn) heroFeeBtn.addEventListener('click', openFeeCheckModal);
 
-  // "Book A Service" static section - previously had no handler at all,
-  // looked like a working form but did nothing on submit (see
-  // docs/cro-audit-landing.md). Opens the real booking modal, pre-selecting
-  // whatever service was chosen in the dropdown if any.
-  const lformContinueBtn = document.getElementById('lform-continue-btn');
-  if (lformContinueBtn) {
-    lformContinueBtn.addEventListener('click', function() {
-      // The <option>s carry no value attribute, so .value is their visible
-      // text - already translated on a Spanish or Chinese page. Same mapping
-      // back to the table's English name as the service cards use.
-      const svcEl = document.getElementById('lform-service');
-      openBooking(svcEl && svcEl.value ? bkServiceName(svcEl.value) : null);
-    });
-  }
-
   // TASK-023: inline onclick handlers converted to addEventListener (see
   // tasks.md - done incrementally per page, landing.html first).
   const byId = function(id) { return document.getElementById(id); };
@@ -1680,6 +1660,9 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelectorAll('.svc-btn').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
       e.stopPropagation();
+      // The "Repairs" card names a category, not a service: there is nothing
+      // to preselect, so it opens the full list instead of the wizard.
+      if (btn.hasAttribute('data-open-services')) { openServicesModal(); return; }
       const modal = document.getElementById('services-modal');
       if (modal) modal.style.display = 'none';
       // .svc-card, not .service-card: these cards have never carried the
