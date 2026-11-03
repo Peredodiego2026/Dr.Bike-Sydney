@@ -1208,8 +1208,8 @@ export default {
   'We come to your office, warehouse or depot. Zero travel time for your team.':
     'Vamos a tu oficina, depósito o almacén. Cero tiempo de viaje para tu equipo.',
   'Volume pricing': 'Precios por volumen',
-  'Custom rates for 5+ bikes. The more bikes, the better the deal.':
-    'Tarifas personalizadas para 5+ bicis. Cuantas más bicis, mejor el precio.',
+  'Custom rates from 4 bikes. The more bikes, the better the deal.':
+    'Tarifas personalizadas desde 4 bicis. Cuantas más bicis, mejor el precio.',
   'Priority scheduling': 'Turnos prioritarios',
   'Fleet clients get first access to bookings and a dedicated point of contact.':
     'Los clientes de flota tienen acceso prioritario a turnos y un contacto dedicado.',
@@ -1971,8 +1971,7 @@ export default {
   'Visit fee, from': 'Visita, desde',
   '{n} Google review': '{n} reseña en Google',
   '{n} Google reviews': '{n} reseñas en Google',
-  'Favourite jobs: truing and building wheels.':
-    'Trabajos favoritos: centrar y armar ruedas.',
+  'Favourite jobs: truing and building wheels.': 'Trabajos favoritos: centrar y armar ruedas.',
   'AI check · free': 'Revisión con IA · gratis',
   "Tell us what's happening. Our AI suggests the right service and its price.":
     'Cuéntanos qué le pasa. Nuestra IA te sugiere el servicio indicado y su precio.',
