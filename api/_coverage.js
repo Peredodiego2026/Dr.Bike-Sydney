@@ -10,7 +10,7 @@
 // not.
 //
 // The rule now: DRIVING TIME from the base decides. Diego's own prices were
-// already a time ladder (Northern Beaches $35 is 10 min away, the CBD $55 is
+// already a time ladder (Northern Beaches $35 is 10 min away, the CBD $60 is
 // 40 min across the Spit) - they just were not being computed that way. A
 // straight-line distance would have broken them: Hornsby and the CBD are both
 // ~15 km out, but one is 30 minutes of motorway and the other 40 of bridge.
@@ -70,7 +70,8 @@ export const PERIMETER_MAX_MINUTES = 45;
 // or a booking made while routing is down is priced on the old one.
 export const FEE_BANDS = [
   { maxMinutes: 25, fee: 35 },
-  { maxMinutes: PERIMETER_MAX_MINUTES, fee: 55 },
+  // $55 until 3-nov-2026 (Diego: "a unos 45 min que cueste 60").
+  { maxMinutes: PERIMETER_MAX_MINUTES, fee: 60 },
 ];
 
 // The fees a booking is ever allowed to be charged. Used to sanity-check a
@@ -291,7 +292,8 @@ export function resolveCoverage({ minutes = null, zone = null, km = null, addres
 
   // Layer 2: routing was unavailable, but the suburb is one we have priced.
   // The fee is trusted as-is. Whether it is inside the perimeter is inferred
-  // from that fee: the bands above stop at $55 ($45 before 24-oct-2026), so a
+  // from that fee: the bands above stop at $60 ($55 before 3-nov-2026, $45
+  // before 24-oct-2026), so a
   // zone priced higher was always a trip beyond the 45-minute line.
   if (zone && Number.isFinite(Number(zone.calloutFee))) {
     const fee = Number(zone.calloutFee);

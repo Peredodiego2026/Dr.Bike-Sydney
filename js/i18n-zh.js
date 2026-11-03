@@ -670,7 +670,7 @@ export default {
   'Within about 45 minutes': '约 45 分钟车程内',
   'North Shore, Hornsby, the CBD, Inner West and Eastern Suburbs':
     'North Shore、Hornsby、CBD、Inner West 和 Eastern Suburbs',
-  'Up to $55': '最高 $55',
+  'Up to $60': '最高 $60',
   'Further out': '更远的地区',
   'Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.':
     'Western Sydney、Sutherland Shire 和 Blue Mountains。线上不收取任何费用：发送您的地址，我们为您报价。',

@@ -1,6 +1,6 @@
 // tests/unit/cancel-refund-real-amount.test.js - when a client cancels with
 // 24h+ notice, Diego's WhatsApp said "Reembolso de $20" (25-oct-2026). The
-// visit fee has been per zone ($35, $45, $55...) since the flat $20 went away,
+// visit fee has been per zone ($35, $45, $60...) since the flat $20 went away,
 // so the message quoted an amount nobody was ever refunded.
 //
 // The real client-cancel handler against a fake Supabase and Stripe, then the
