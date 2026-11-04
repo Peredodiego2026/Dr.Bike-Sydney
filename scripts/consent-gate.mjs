@@ -67,11 +67,26 @@ function isAnalytics(attrs, body) {
   return null;
 }
 
-function gate(html) {
+// data-consent="cookieless" is the one tag allowed to run before consent:
+// PostHog in index.html since 2026-11-04, which counts visitors who decline
+// without storing anything on the device. The marker is not a free pass - a
+// tag carrying it that is not PostHog configured with cookieless_mode
+// 'on_reject' is reported, in both modes, like any other live tag.
+const misusedCookieless = [];
+
+function gate(html, rel) {
   let found = 0;
   let alreadyGated = 0;
 
   const out = html.replace(SCRIPT_RE, (whole, attrs, body) => {
+    if (/data-consent\s*=\s*["']cookieless["']/i.test(attrs)) {
+      const ok =
+        isAnalytics(attrs, body) === 'PostHog' &&
+        /cookieless_mode\s*=\s*['"]on_reject['"]/.test(body);
+      if (!ok) misusedCookieless.push(rel);
+      alreadyGated++;
+      return whole;
+    }
     if (/data-consent\s*=/i.test(attrs)) {
       alreadyGated++;
       return whole;
@@ -120,7 +135,7 @@ let totalTags = 0;
 for (const file of files) {
   const rel = path.relative(root, file).replace(/\\/g, '/');
   const original = fs.readFileSync(file, 'utf8');
-  const { out, found, alreadyGated } = gate(original);
+  const { out, found, alreadyGated } = gate(original, rel);
   totalTags += found + alreadyGated;
 
   if (!found && !alreadyGated) continue; // no analytics on this page at all
@@ -185,6 +200,15 @@ for (const file of files) {
       }
     }
   }
+}
+
+if (misusedCookieless.length) {
+  console.error(
+    `\nconsent: ${misusedCookieless.length} tag(s) marked data-consent="cookieless" that are not PostHog in cookieless_mode 'on_reject'\n`
+  );
+  for (const f of misusedCookieless) console.error(`  x ${f}`);
+  console.error('\n  fix: gate it as data-consent="analytics" instead.\n');
+  process.exit(1);
 }
 
 if (checkOnly && leaks.length) {
