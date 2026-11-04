@@ -72,6 +72,16 @@ describe('no claim Diego said is untrue', () => {
     }
   });
 
+  // The mechanic card is built in JS, so the page sweep above never saw it:
+  // "Qualified & background-checked" outlived every HTML fix until 4-nov.
+  it('the mechanic card in js/landing-inline.js makes none of those claims', () => {
+    const js = read('js/landing-inline.js').replace(/\/\/.*$/gm, '');
+    expect(js).not.toMatch(FALSE_EN);
+    for (const dict of ['js/i18n-es.js', 'js/i18n-zh.js']) {
+      expect(read(dict), dict).not.toContain('background-checked');
+    }
+  });
+
   it('the true version is on both home pages', () => {
     for (const page of ['landing.html', 'index.html']) {
       // The landing's hero says it in title case; the phone's hero became the

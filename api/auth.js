@@ -5652,7 +5652,7 @@ async function handlePublicMechanics(req, res) {
   if (!contacts.length) return res.status(200).json([]);
 
   // Then whatever record they have, which may be none. A mechanic with no
-  // completed jobs yet is still a real, background-checked person to introduce.
+  // completed jobs yet is still a real person to introduce.
   const bookingsResp = await fetch(
     `${SUPABASE_URL}/rest/v1/bookings?select=mechanic_id,client_rating,client_review,client_name&status=eq.completed&mechanic_id=not.is.null`,
     { headers: hdrs }

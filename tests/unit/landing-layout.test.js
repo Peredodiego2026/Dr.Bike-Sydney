@@ -65,7 +65,7 @@ describe('the two big sections land as one screenful', () => {
   // only honest way to do this without a browser to measure in.
   it('and the spacing inside them follows the viewport', () => {
     expect(landing).toMatch(/padding:clamp\(36px,5vh,72px\) 0 clamp\(40px,6vh,80px\)/);
-    expect(landing).toMatch(/height:clamp\(300px,42vh,420px\);perspective:1400px/);
+    expect(landing).toMatch(/height:clamp\(400px,64vh,540px\);perspective:1400px/);
     expect(landing).toMatch(/<section id="memberships"[^>]*padding:clamp\(12px,2vh,44px\) 0/);
     expect(landing).toMatch(/gap:clamp\(12px,1\.6vw,24px\)/);
   });
@@ -78,7 +78,8 @@ describe('the two big sections land as one screenful', () => {
 
 describe('the mechanic card is an object, not a stamp', () => {
   it('it is bigger, and fluid', () => {
-    expect(landing).toMatch(/width: clamp\(250px, 23vw, 320px\);/);
+    // Bigger again on 4-nov (Diego: "se ve muy chica").
+    expect(landing).toMatch(/width: clamp\(300px, 29vw, 400px\);/);
     expect(landing).not.toMatch(/\.mech-card \{[^}]*width: 240px/s);
   });
 

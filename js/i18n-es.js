@@ -461,7 +461,6 @@ export default {
   "We'll confirm the visit & diagnosis fee for your address when we reply.":
     'Te confirmamos el costo de la visita y diagnóstico para tu dirección cuando te respondamos.',
   'Promo discount': 'Descuento promocional',
-  'Qualified & background-checked': 'Calificado y con antecedentes verificados',
   ETA: 'Llegada',
   'by road': 'por ruta',
   'straight line': 'en línea recta',
