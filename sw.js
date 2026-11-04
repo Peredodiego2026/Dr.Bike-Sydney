@@ -288,7 +288,9 @@
 // "Custom rates for 5+ bikes" a "from 4 bikes", en los dos diccionarios.
 // v167: la visita se cobra aparte del servicio: "All prices include a visit &
 // diagnosis fee" pasa a "Plus a visit & diagnosis fee", en los dos diccionarios.
-const CACHE_STATIC = 'drbike-static-v167';
+// v168: Trails HQ (Hamilton Island) en "Who Comes to Your Home" y en "Our
+// story" del celular, en los dos diccionarios.
+const CACHE_STATIC = 'drbike-static-v168';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

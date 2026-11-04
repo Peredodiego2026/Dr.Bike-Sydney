@@ -527,6 +527,8 @@ export default {
   'Dr. Bike Sydney was founded with a simple mission: to provide professional, convenient, and reliable bike servicing to cyclists across Sydney.':
     'Dr. Bike Sydney 的创立使命很简单：为悉尼各地的骑行者提供专业、便捷、可靠的自行车服务。',
   '10 years of experience as a mechanic': '10年技师经验',
+  'Lead mechanic who set up the Bosch e-bike rental fleet at Trails HQ, Hamilton Island':
+    '曾任汉密尔顿岛 Trails HQ 首席技师，组建其 Bosch 电动自行车租赁车队',
   'Fully equipped mobile workshop': '配备齐全的移动车间',
   'Premium tools and quality parts': '优质工具和高品质零件',
   '14-day workmanship guarantee': '14天工艺保修',

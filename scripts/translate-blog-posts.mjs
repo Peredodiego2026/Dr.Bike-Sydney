@@ -131,8 +131,8 @@ const DICT = {
         '<strong>Especialización por marca</strong>: las e-bikes (sobre todo con Bosch Smart System), las bicis de carrera y las de carga requieren conocimientos específicos',
       '<strong>Trail background</strong> — mechanics who ride regularly understand problems cyclists actually face':
         '<strong>Experiencia sobre el terreno</strong>: los mecánicos que andan en bici seguido entienden mejor los problemas reales de los ciclistas',
-      '💡 At Dr. Bike Sydney, our lead mechanic has 10 years of experience including managing a fleet of Bosch-equipped e-bikes. Every service is performed by an experienced mechanic — not a junior trainee.':
-        '💡 En Dr. Bike Sydney, nuestro mecánico principal tiene 10 años de experiencia, incluyendo la gestión de una flota de e-bikes con sistema Bosch. Cada servicio lo hace un mecánico experimentado, no un aprendiz.',
+      '💡 At Dr. Bike Sydney, our lead mechanic has 10 years of experience, including a year and a half as lead mechanic at Trails HQ on Hamilton Island: setting up and maintaining its rental fleet of Cannondale e-mountain bikes with Bosch motors. Every service is performed by an experienced mechanic — not a junior trainee.':
+        '💡 En Dr. Bike Sydney, nuestro mecánico principal tiene 10 años de experiencia, incluido un año y medio como mecánico principal de Trails HQ en Hamilton Island: armó y mantuvo su flota de alquiler de e-MTB Cannondale con motor Bosch. Cada servicio lo hace un mecánico experimentado, no un aprendiz.',
       '2. Mobile vs. Workshop — Which is Better?': '2. A Domicilio vs. Taller: ¿Cuál Conviene Más?',
       'Sydney\'s traditional workshop model requires you to transport your bike, wait days for an appointment slot, and collect it again. A quality mobile mechanic brings a fully-equipped van directly to you, often available same-day.':
         'El modelo tradicional de taller en Sídney te obliga a trasladar la bici, esperar días por un turno y después ir a buscarla de nuevo. Un buen mecánico a domicilio lleva una camioneta totalmente equipada directo hasta vos, muchas veces disponible el mismo día.',
@@ -195,8 +195,8 @@ const DICT = {
         '<strong>品牌专长</strong>——电动自行车（尤其是搭载 Bosch Smart System 的车型）、公路赛车和货运自行车都需要专门的知识',
       '<strong>Trail background</strong> — mechanics who ride regularly understand problems cyclists actually face':
         '<strong>骑行背景</strong>——经常骑车的技师更了解骑行者真正会遇到的问题',
-      '💡 At Dr. Bike Sydney, our lead mechanic has 10 years of experience including managing a fleet of Bosch-equipped e-bikes. Every service is performed by an experienced mechanic — not a junior trainee.':
-        '💡 在 Dr. Bike Sydney，我们的主理技师拥有 10 年经验，曾负责管理一支配备 Bosch 系统的电动自行车车队。每一次服务都由经验丰富的技师亲自完成，绝非新手学徒。',
+      '💡 At Dr. Bike Sydney, our lead mechanic has 10 years of experience, including a year and a half as lead mechanic at Trails HQ on Hamilton Island: setting up and maintaining its rental fleet of Cannondale e-mountain bikes with Bosch motors. Every service is performed by an experienced mechanic — not a junior trainee.':
+        '💡 在 Dr. Bike Sydney，我们的主理技师拥有 10 年经验，其中一年半在汉密尔顿岛的 Trails HQ 担任首席技师：组建并维护其 Cannondale 电动山地车租赁车队（Bosch 电机）。每一次服务都由经验丰富的技师亲自完成，绝非新手学徒。',
       '2. Mobile vs. Workshop — Which is Better?': '2. 上门服务 vs. 实体店——哪个更好？',
       'Sydney\'s traditional workshop model requires you to transport your bike, wait days for an appointment slot, and collect it again. A quality mobile mechanic brings a fully-equipped van directly to you, often available same-day.':
         '悉尼传统的实体店模式需要您自己运送自行车、等待数天预约，再取车。而优质的上门技师会直接开着装备齐全的服务车来找您，通常当天即可安排。',
