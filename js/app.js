@@ -6933,17 +6933,20 @@ async function runAIDiagnosisText(screen) {
   }
 }
 
+// Every field of `data` is the AI's answer to text the client typed, so it is
+// escaped like any other user input: a description that talks the model into
+// answering with markup must not become markup on this screen.
 function showDiagResult(screen, data) {
   const resultEl = screen.querySelector('#diag-result');
   if (!resultEl) return;
-  const sev = data.severity || 'medium';
+  const sev = String(data.severity || 'medium');
   const sevColor = sev === 'high' ? '#CF2020' : sev === 'low' ? '#15803D' : '#B45309';
   const urgColor =
     data.urgency === 'Urgent' ? '#CF2020' : data.urgency === 'Book soon' ? '#B45309' : '#15803D';
   const bookLabel = data.recommended_service_name
     ? 'Book ' +
-      data.recommended_service_name +
-      (data.recommended_service_price ? ' - $' + data.recommended_service_price : '') +
+      escapeHtml(data.recommended_service_name) +
+      (data.recommended_service_price ? ' - $' + escapeHtml(data.recommended_service_price) : '') +
       ' →'
     : '';
   const bookHtml =
@@ -6953,12 +6956,12 @@ function showDiagResult(screen, data) {
   resultEl.innerHTML = `
     <div style="background:var(--color-bg);border-radius:8px;padding:12px;border:1px solid var(--color-border)">
       <div style="font-size:13px;font-weight:700;color:var(--color-text);margin-bottom:6px">&#129302; AI Recommendation</div>
-      <div style="font-size:13px;color:var(--color-text);margin-bottom:8px">${data.diagnosis || 'Bike issue detected'}</div>
+      <div style="font-size:13px;color:var(--color-text);margin-bottom:8px">${escapeHtml(data.diagnosis || 'Bike issue detected')}</div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <span style="font-size:11px;color:${sevColor};font-weight:600">${sev.charAt(0).toUpperCase() + sev.slice(1)} severity</span>
+        <span style="font-size:11px;color:${sevColor};font-weight:600">${escapeHtml(sev.charAt(0).toUpperCase() + sev.slice(1))} severity</span>
         <span style="color:var(--color-border)">&#183;</span>
-        <span style="font-size:11px;color:${urgColor};font-weight:600">${data.urgency || 'Book soon'}</span>
-        ${data.details ? `<span style="color:var(--color-border)">&#183;</span><span style="font-size:11px;color:var(--color-text-secondary)">${data.details}</span>` : ''}
+        <span style="font-size:11px;color:${urgColor};font-weight:600">${escapeHtml(data.urgency || 'Book soon')}</span>
+        ${data.details ? `<span style="color:var(--color-border)">&#183;</span><span style="font-size:11px;color:var(--color-text-secondary)">${escapeHtml(data.details)}</span>` : ''}
       </div>
       ${bookHtml}
     </div>`;
