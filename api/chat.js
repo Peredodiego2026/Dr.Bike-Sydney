@@ -20,9 +20,20 @@ export function formatFeeBands(bands = FEE_BANDS, peninsulaFee = PENINSULA_FAR_F
     return `- ${from} ${b.maxMinutes} minutes away: $${b.fee}`;
   });
   lines.push(
-    `- The northern end of the Northern Beaches (Newport, Bilgola, Avalon, Clareville, Whale Beach, Palm Beach, Bayview, Church Point): $${peninsulaFee} flat, however far up it is. One road, no bridge, no tolls - it is the corridor the van already works in, so it is not priced like a trip across the city.`
+    `- The northern end of the Northern Beaches (Newport, Bilgola, Avalon, Clareville, Whale Beach, Palm Beach, Bayview, Church Point): $${peninsulaFee} flat, however far up it is. One road, no bridge, no tolls - it is the corridor the mechanic already works in, so it is not priced like a trip across the city.`
   );
   return lines.join('\n');
+}
+
+// The widget (js/landing-inline.js) prints the reply with textContent, so
+// markdown reaches the client as raw symbols: "call or WhatsApp
+// **0433 963 250**" (seen live 5-nov-2026). The prompt asks for plain text;
+// this catches what slips through.
+export function plainText(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/__(.+?)__/g, '$1')
+    .replace(/^#{1,6}\s+/gm, '');
 }
 
 // ── Services & prices for the chatbot's system prompt ─────────────────────
@@ -337,6 +348,7 @@ ${userProfile ? `CURRENT USER: ${userProfile.full_name || 'Guest'}${userProfile.
 
 RULES:
 - Keep responses SHORT — 2-3 sentences max. Never write lists unless asked.
+- PLAIN TEXT ONLY: the chat window prints your reply exactly as written, so markdown shows up as raw symbols. Never use **bold**, # headings or [links](url).
 - Warm, casual Australian tone. Use 1 emoji per message max.
 - LANGUAGE: Detect the user's language from their message and reply entirely in that language. The site ships in English, Spanish and Chinese (Simplified), so those three are the common cases - Spanish in, Spanish out; Chinese in, Chinese out. Never mix languages in one reply.
 - If asked about specific bike issues (noises, problems), give a brief diagnosis and recommend the right service.
@@ -373,7 +385,7 @@ SECURITY RULES - ALWAYS FOLLOW:
     const reply =
       data.content?.[0]?.text ||
       "Sorry, I couldn't process that. Call or WhatsApp us on 0433 963 250.";
-    return res.status(200).json({ reply });
+    return res.status(200).json({ reply: plainText(reply) });
   } catch (error) {
     console.error('Chat error:', error);
     return res.status(500).json({
