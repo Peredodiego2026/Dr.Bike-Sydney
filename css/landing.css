@@ -271,10 +271,15 @@ section[id] {
    the stats row in half (3-nov). Most of it was the third button wrapping to a
    row of its own; slightly narrower buttons keep all three on one line. The
    base values come from css/home.css, which the phone home screen shares - so
-   they are overridden here, for the landing only, instead of changed there. */
+   they are overridden here, for the landing only, instead of changed there.
+   And it fills that screen (Diego, 4-nov): the services heading used to peek
+   in under the navy, so the first screen ended in a cut. min-height only
+   grows it - a hero taller than the screen still pushes the services down. */
 @media (min-width: 901px) {
   body[data-surface='landing'] .hero {
     padding-top: clamp(16px, 3vh, 48px);
+    min-height: calc(100vh - var(--navbar-h));
+    min-height: calc(100svh - var(--navbar-h));
   }
   body[data-surface='landing'] .hero .container {
     padding-top: 0;
