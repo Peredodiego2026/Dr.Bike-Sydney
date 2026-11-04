@@ -414,7 +414,6 @@ export default {
   "We'll confirm the visit & diagnosis fee for your address when we reply.":
     '我们回复时会确认您所在地址的上门检查费。',
   'Promo discount': '优惠折扣',
-  'Qualified & background-checked': '持证并通过背景审查',
   ETA: '预计到达',
   'by road': '实际路线',
   'straight line': '直线距离',

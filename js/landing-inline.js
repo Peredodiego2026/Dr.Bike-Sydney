@@ -145,21 +145,26 @@ function lpDateLocale() {
     const track = document.getElementById('mech-carousel-track');
     track.innerHTML = mechanics
       .map((m, i) => {
+        // 150px, up from 76: the photo is the point of the card (Diego, 4-nov).
         const avatarHTML = m.photo_url
-          ? `<img src="${escapeMechHtml(m.photo_url)}" alt="${escapeMechHtml(m.name)}" style="width:76px;height:76px;border-radius:50%;object-fit:cover;border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2)">`
-          : `<div style="width:76px;height:76px;border-radius:50%;background:var(--blue-lt);border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:var(--blue-text)">${mechInitials(m.name)}</div>`;
+          ? `<img src="${escapeMechHtml(m.photo_url)}" alt="${escapeMechHtml(m.name)}" style="width:150px;height:150px;border-radius:50%;object-fit:cover;border:5px solid var(--white);box-shadow:0 6px 18px rgba(0,0,0,0.22)">`
+          : `<div style="width:150px;height:150px;border-radius:50%;background:var(--blue-lt);border:5px solid var(--white);box-shadow:0 6px 18px rgba(0,0,0,0.22);display:flex;align-items:center;justify-content:center;font-size:44px;font-weight:700;color:var(--blue-text)">${mechInitials(m.name)}</div>`;
         const roundedRating = m.rating ? Math.round(m.rating) : 0;
         const stars = m.rating ? '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating) : '';
+        // With no jobs yet the card used to say "Qualified & background-checked",
+        // which is not true (Diego, 3-nov). The mechanic's own bio says who they
+        // are instead, and nothing is said when there is none.
         return `
       <div class="mech-card" data-index="${i}">
         <div class="mech-card__float">
           <div class="mech-card__banner"><img src="images/mechanic-working.webp" alt=""></div>
-          <div style="display:flex;justify-content:center;margin-top:-40px">${avatarHTML}</div>
-          <div style="text-align:center;padding:10px 18px 22px">
-            <div style="font-size:17px;font-weight:700;color:var(--navy)">${escapeMechHtml(m.name)}</div>
-            <div style="font-size:13px;color:var(--gray);margin-top:3px">Dr. Bike Mobile Mechanic</div>
-            ${m.rating ? `<div style="color:var(--amber-bright);font-size:17px;margin-top:10px">${stars} <span style="color:var(--gray);font-size:13px">${m.rating}</span></div>` : ''}
-            ${m.jobs_completed > 0 ? `<div style="font-size:13px;color:var(--gray);margin-top:5px">${m.jobs_completed} <span>${m.jobs_completed === 1 ? 'service completed' : 'services completed'}</span></div>` : '<div style="font-size:13px;color:var(--gray);margin-top:5px">Qualified &amp; background-checked</div>'}
+          <div style="display:flex;justify-content:center;margin-top:-75px">${avatarHTML}</div>
+          <div style="text-align:center;padding:12px 24px 24px">
+            <div style="font-size:22px;font-weight:700;color:var(--navy)">${escapeMechHtml(m.name)}</div>
+            <div style="font-size:15px;color:var(--gray);margin-top:4px">Dr. Bike Mobile Mechanic</div>
+            ${m.rating ? `<div style="color:var(--amber-bright);font-size:19px;margin-top:10px">${stars} <span style="color:var(--gray);font-size:15px">${m.rating}</span></div>` : ''}
+            ${m.jobs_completed > 0 ? `<div style="font-size:15px;color:var(--gray);margin-top:6px">${m.jobs_completed} <span>${m.jobs_completed === 1 ? 'service completed' : 'services completed'}</span></div>` : ''}
+            ${m.bio ? `<div style="font-size:15px;color:var(--gray);margin-top:10px;line-height:1.5">${escapeMechHtml(m.bio)}</div>` : ''}
           </div>
         </div>
       </div>`;
