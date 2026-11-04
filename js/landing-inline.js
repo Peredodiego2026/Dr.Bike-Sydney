@@ -248,10 +248,16 @@ function lpDateLocale() {
         <div style="font-size:13px;color:var(--gray);margin-top:2px">Dr. Bike Mobile Mechanic</div>
         ${m.bio ? `<div style="font-size:15px;color:var(--gray);margin-top:12px;line-height:1.6">${escapeMechHtml(m.bio)}</div>` : ''}
       </div>
-      <div style="display:flex;justify-content:center;gap:32px;padding:18px 20px;margin-top:8px;border-top:1px solid var(--border-lt)">
-        <div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--navy)">${m.jobs_completed}</div><div style="font-size:11px;color:var(--gray)">Jobs done</div></div>
+      ${
+        // Same rule as the card above and the phone profile (js/app.js): a "0"
+        // is not a stat, so the row only shows what there is.
+        m.jobs_completed > 0 || m.rating
+          ? `<div style="display:flex;justify-content:center;gap:32px;padding:18px 20px;margin-top:8px;border-top:1px solid var(--border-lt)">
+        ${m.jobs_completed > 0 ? `<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--navy)">${m.jobs_completed}</div><div style="font-size:11px;color:var(--gray)">Jobs done</div></div>` : ''}
         ${m.rating ? `<div style="text-align:center"><div style="font-size:18px;font-weight:800;color:var(--navy)">★ ${m.rating}</div><div style="font-size:11px;color:var(--gray)">Rating</div></div>` : ''}
-      </div>
+      </div>`
+          : ''
+      }
       ${
         m.reviews && m.reviews.length
           ? `
