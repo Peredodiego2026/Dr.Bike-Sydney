@@ -134,8 +134,8 @@ const DICT = {
       '💡 At Dr. Bike Sydney, our lead mechanic has 10 years of experience, including a year and a half as lead mechanic at Trails HQ on Hamilton Island: setting up and maintaining its rental fleet of Cannondale e-mountain bikes with Bosch motors. Every service is performed by an experienced mechanic — not a junior trainee.':
         '💡 En Dr. Bike Sydney, nuestro mecánico principal tiene 10 años de experiencia, incluido un año y medio como mecánico principal de Trails HQ en Hamilton Island: armó y mantuvo su flota de alquiler de e-MTB Cannondale con motor Bosch. Cada servicio lo hace un mecánico experimentado, no un aprendiz.',
       '2. Mobile vs. Workshop — Which is Better?': '2. A Domicilio vs. Taller: ¿Cuál Conviene Más?',
-      'Sydney\'s traditional workshop model requires you to transport your bike, wait days for an appointment slot, and collect it again. A quality mobile mechanic brings a fully-equipped van directly to you, often available same-day.':
-        'El modelo tradicional de taller en Sídney te obliga a trasladar la bici, esperar días por un turno y después ir a buscarla de nuevo. Un buen mecánico a domicilio lleva una camioneta totalmente equipada directo hasta vos, muchas veces disponible el mismo día.',
+      'Sydney\'s traditional workshop model requires you to transport your bike, wait days for an appointment slot, and collect it again. A quality mobile mechanic brings a fully equipped mobile workshop directly to you, often available same-day.':
+        'El modelo tradicional de taller en Sídney te obliga a trasladar la bici, esperar días por un turno y después ir a buscarla de nuevo. Un buen mecánico a domicilio lleva un taller móvil totalmente equipado directo hasta vos, muchas veces disponible el mismo día.',
       'Mobile mechanic advantages': 'Ventajas del mecánico a domicilio',
       'No transport needed · Same-day availability · You watch the work being done · Your bike doesn\'t sit in a queue for days':
         'No hace falta trasladar la bici · Disponibilidad el mismo día · Podés ver cómo trabajan · Tu bici no queda en cola durante días',
@@ -148,8 +148,8 @@ const DICT = {
       'What brands do you service? Can you work on my [brand]?':
         '¿Qué marcas atendés? ¿Podés trabajar con mi [marca]?',
       'What does your [tune-up / standard service] include?': '¿Qué incluye tu [ajuste / servicio estándar]?',
-      'Do you carry parts on the van, or do I need to wait for parts orders?':
-        '¿Llevás repuestos en la camioneta, o tengo que esperar a que los pidas?',
+      'Do you carry common parts with you, or do I need to wait for parts orders?':
+        '¿Llevás repuestos comunes con vos, o tengo que esperar a que los pidas?',
       'Do you provide a written service report?': '¿Entregás un informe escrito del servicio?',
       '4. Transparent Pricing — Red and Green Flags': '4. Precios Transparentes: Señales Buenas y Malas',
       'Reputable mechanics price clearly upfront. Be cautious of mechanics who:':
@@ -198,8 +198,8 @@ const DICT = {
       '💡 At Dr. Bike Sydney, our lead mechanic has 10 years of experience, including a year and a half as lead mechanic at Trails HQ on Hamilton Island: setting up and maintaining its rental fleet of Cannondale e-mountain bikes with Bosch motors. Every service is performed by an experienced mechanic — not a junior trainee.':
         '💡 在 Dr. Bike Sydney，我们的主理技师拥有 10 年经验，其中一年半在汉密尔顿岛的 Trails HQ 担任首席技师：组建并维护其 Cannondale 电动山地车租赁车队（Bosch 电机）。每一次服务都由经验丰富的技师亲自完成，绝非新手学徒。',
       '2. Mobile vs. Workshop — Which is Better?': '2. 上门服务 vs. 实体店——哪个更好？',
-      'Sydney\'s traditional workshop model requires you to transport your bike, wait days for an appointment slot, and collect it again. A quality mobile mechanic brings a fully-equipped van directly to you, often available same-day.':
-        '悉尼传统的实体店模式需要您自己运送自行车、等待数天预约，再取车。而优质的上门技师会直接开着装备齐全的服务车来找您，通常当天即可安排。',
+      'Sydney\'s traditional workshop model requires you to transport your bike, wait days for an appointment slot, and collect it again. A quality mobile mechanic brings a fully equipped mobile workshop directly to you, often available same-day.':
+        '悉尼传统的实体店模式需要您自己运送自行车、等待数天预约，再取车。而优质的上门技师会直接带着设备齐全的移动维修车间来找您，通常当天即可安排。',
       'Mobile mechanic advantages': '上门技师的优势',
       'No transport needed · Same-day availability · You watch the work being done · Your bike doesn\'t sit in a queue for days':
         '无需运送自行车 · 当天可预约 · 您可以全程查看维修过程 · 自行车不用排队等候数日',
@@ -211,8 +211,8 @@ const DICT = {
       '3. What to Ask Before Booking': '3. 预订前该问哪些问题',
       'What brands do you service? Can you work on my [brand]?': '您服务哪些品牌？能维修我的[品牌]吗？',
       'What does your [tune-up / standard service] include?': '您的[基础保养/标准服务]包含哪些内容？',
-      'Do you carry parts on the van, or do I need to wait for parts orders?':
-        '您的服务车上是否备有零件，还是我需要等待订购？',
+      'Do you carry common parts with you, or do I need to wait for parts orders?':
+        '您是否随身携带常用零件，还是我需要等待订购？',
       'Do you provide a written service report?': '您是否提供书面服务报告？',
       '4. Transparent Pricing — Red and Green Flags': '4. 价格透明——好信号与坏信号',
       'Reputable mechanics price clearly upfront. Be cautious of mechanics who:':

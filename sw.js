@@ -294,7 +294,10 @@
 // es cierto) y de los dos diccionarios.
 // v170: "within 2 business hours" -> "within one business day" en el
 // formulario de flotas (landing) y su mensaje de gracias, en los dos diccionarios.
-const CACHE_STATIC = 'drbike-static-v170';
+// v171: fuera "van" de lo que ve el cliente (el vehiculo es una Musso):
+// "Fully Equipped Workshop", FAQ de repuestos, pista de la foto y
+// "Mechanic" en el seguimiento, en los dos diccionarios.
+const CACHE_STATIC = 'drbike-static-v171';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

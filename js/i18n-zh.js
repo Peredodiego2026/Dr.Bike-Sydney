@@ -636,7 +636,7 @@ export default {
   // Trust badges bar
   '100% Satisfaction Guarantee': '100%满意保证',
   '10 years of experience': '10年经验',
-  'Fully equipped van': '装备齐全的服务车',
+  'Fully equipped mobile workshop': '设备齐全的移动维修车间',
   'ASAP Response': '即时响应',
   'Transparent Pricing': '价格透明',
   'Sydney Wide': '覆盖全悉尼',
@@ -651,7 +651,7 @@ export default {
   'Book a service': '预约服务',
   'Get Your Free Quote': '获取免费报价',
   '10 Years of Experience': '10年经验',
-  'Fully Equipped Van': '装备齐全的服务车',
+  'Fully Equipped Workshop': '设备齐全的移动维修车间',
   '14-Day Guarantee': '14天保修',
   // Mechanics 3D carousel
   'OUR TEAM': '我们的团队',
@@ -1102,7 +1102,7 @@ export default {
     '我们覆盖悉尼都会区所有区域，包括Inner West、Eastern Suburbs、CBD、North Shore、Manly和Northern Beaches。',
   "You can reschedule or cancel from the link in your booking confirmation, or by calling us. It's free with more than 24 hours' notice; with less, a fee of up to the visit & diagnosis fee may apply.":
     '您可以通过预订确认中的链接或致电我们来改期或取消。提前24小时以上免费；不足24小时，可能收取最高相当于上门检查费的费用。',
-  "Yes. The van carries inner tubes in the common sizes, and any other part your bike needs we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately.":
+  "Yes. We carry inner tubes in the common sizes, and any other part your bike needs we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately.":
     '是的。车上备有常见尺寸的内胎，您的自行车需要的其他零件我们会采购后再上门安装。零件不包含在服务价格内 - 技师会在安装前先报价，费用另计。',
   "A Tune-Up takes about an hour, a Standard Service about 1.5 hours, a Standard+ Service about 2.5 hours and an Ultimate Overhaul about 4 hours. You'll see the estimate when you book.":
     '基础保养约1小时，标准服务约1.5小时，标准+服务约2.5小时，全面翻新约4小时。预订时会显示预计时间。',
@@ -1379,9 +1379,10 @@ export default {
   'Live updates stopped. Reload to try again.': '实时更新已停止。请重新加载后重试。',
   '⏳ Pending confirmation': '⏳ 等待确认',
   '✅ Confirmed': '✅ 已确认',
-  '🚐 Mechanic on the way!': '🚐 技师正在路上！',
+  '🛻 Mechanic on the way!': '🛻 技师正在路上！',
   '✅ Service completed': '✅ 服务已完成',
   Van: '服务车',
+  Mechanic: '技师',
   'Service price': '服务价格',
   'Locating mechanic...': '正在定位技师...',
   Live: '实时',
@@ -1572,8 +1573,8 @@ export default {
   'Most stocked': '款式最全',
   'See all': '查看全部',
   'Our workshop has wheels': '我们的车间装在车轮上',
-  'There is no shop to drive to. The van carries the tools and the mechanic, and it comes to your door anywhere in Sydney.':
-    '无需前往门店。我们的工作车载着工具和技师，开到悉尼任何地方的家门口。',
+  'There is no shop to drive to. The mechanic brings the tools to your door, anywhere in Sydney.':
+    '无需前往门店。技师带着工具上门，悉尼任何地方都可以。',
   'The parts in this shop are the ones our mechanics reach for. Not sure which one fits your bike? Send us a photo on WhatsApp and we tell you.':
     '本店的配件都是我们技师常用的。不确定哪个适合你的自行车？通过 WhatsApp 发照片给我们，我们告诉你。',
   products: '件商品',
@@ -1782,7 +1783,7 @@ export default {
   // La foto del triage. 'Remove photo' ya esta mas arriba (la resena lo usa de
   // aria-label) y una clave repetida hace fallar scripts/i18n-check.mjs.
   'Add a photo of your bike': '添加一张您自行车的照片',
-  'It is how the mechanic knows which part to load in the van before he drives out.':
+  'It is how the mechanic knows which parts to bring before he heads out.':
     '这样技师出车前就知道该带上哪个零件。',
   'Take a photo': '拍一张照片',
   'That photo is too big to send. Your booking is not affected.':

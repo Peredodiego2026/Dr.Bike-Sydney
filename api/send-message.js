@@ -186,7 +186,7 @@ function buildWAMessage(template, data, lang) {
       // The ETA line is dropped entirely when the real driving time is
       // unavailable - the old `d.eta || '20'` default sent every client the
       // same made-up number.
-      return `Your Dr. Bike mechanic is on the way! 🚐\n\nHi ${d.name || 'there'}, *${d.mechanic || 'your mechanic'}* is heading to you now.\n${d.eta ? `\n⏱️ ETA: ~${d.eta} minutes` : ''}\n📍 Heading to: ${d.suburb || 'your location'}\n\nTrack live: ${d.trackUrl || 'https://drbikesydney.com.au/track.html'}\n\n— Dr. Bike Sydney 🚲`;
+      return `Your Dr. Bike mechanic is on the way! 🛻\n\nHi ${d.name || 'there'}, *${d.mechanic || 'your mechanic'}* is heading to you now.\n${d.eta ? `\n⏱️ ETA: ~${d.eta} minutes` : ''}\n📍 Heading to: ${d.suburb || 'your location'}\n\nTrack live: ${d.trackUrl || 'https://drbikesydney.com.au/track.html'}\n\n— Dr. Bike Sydney 🚲`;
     case 'completed':
       return `Job complete! ✅\n\nHi ${d.name || 'there'}, your bike has been serviced by *${d.mechanic || 'your mechanic'}*.\n\n🔧 ${d.service || 'Service'} — done!\n\nRate your experience: ${d.reviewUrl || 'https://drbikesydney.com.au'}\n\nThank you for choosing Dr. Bike Sydney! 🚲`;
     case 'reminder':

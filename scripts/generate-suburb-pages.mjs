@@ -188,7 +188,7 @@ const COPY = {
     bookNow: 'Book Now',
     // Until 3-nov-2026 also 'Verified Mechanic', 'Background Checked' and
     // 'Fully Insured' - Diego: none of the three is true. Keep to facts.
-    badges: ['14-Day Workmanship Guarantee', '10 Years of Experience', 'Fully Equipped Van'],
+    badges: ['14-Day Workmanship Guarantee', '10 Years of Experience', 'Fully Equipped Mobile Workshop'],
     heroH1: 'Mobile Bike Mechanic<br>{name}, Sydney',
     heroP:
       'Professional bicycle repair at your doorstep. We come to you — home, work or park. No need to transport your bike.',
@@ -196,7 +196,7 @@ const COPY = {
     call: 'Call 0433 963 250',
     repairsH2: 'Bike Repairs in {name}',
     repairsP1:
-      'Dr. Bike Sydney provides professional mobile bicycle repair and servicing throughout {name} and surrounding suburbs. Our mechanic, with 10 years of experience, arrives in a fully-equipped van with all the tools and parts needed to fix your bike on the spot.',
+      'Dr. Bike Sydney provides professional mobile bicycle repair and servicing throughout {name} and surrounding suburbs. Our mechanic, with 10 years of experience, arrives with a fully equipped mobile workshop: all the tools and parts needed to fix your bike on the spot.',
     repairsP2:
       "We cover {areas} and all nearby streets. Whether you're at home, at work, or at the park — we come to you.",
     areasLabel: '📍 Areas covered: {areas}',
@@ -213,7 +213,7 @@ const COPY = {
     whyH2: 'Why Choose Dr. Bike in {name}?',
     pillars: [
       ['🔧', '10 Years Fixing Bikes', 'A bicycle mechanic with 10 years of hands-on experience'],
-      ['🚐', 'Fully Equipped Van', 'Mobile workshop stocked with professional tools and common parts'],
+      ['🛻', 'Fully Equipped Mobile Workshop', 'Stocked with professional tools and common parts'],
       ['⭐', '5-Star Rated', 'Trusted by cyclists across {name} and greater Sydney'],
       ['📱', 'Easy Online Booking', 'Book in 4 taps. Same-day slots available most days'],
     ],
@@ -247,7 +247,7 @@ const COPY = {
     footer2: 'Serving {name} and all of Sydney · Mon–Sun 8am–5pm',
     footerLinks: ['Home', 'Services', 'Terms', 'Privacy'],
     nearbyH2: 'Bike repair near {name}',
-    nearbyP: 'We also service these neighbouring areas - same mechanic, same van, same day rates:',
+    nearbyP: 'We also service these neighbouring areas - same mechanic, same rates:',
     readMore: 'Bike care guides',
     breadcrumbHome: 'Home',
   },
@@ -260,7 +260,7 @@ const COPY = {
     badges: [
       'Garantía de 14 días en el trabajo',
       '10 años de experiencia',
-      'Camioneta totalmente equipada',
+      'Taller móvil totalmente equipado',
     ],
     heroH1: 'Mecánico de Bicicletas a Domicilio<br>{name}, Sídney',
     heroP:
@@ -269,7 +269,7 @@ const COPY = {
     call: 'Llamar al 0433 963 250',
     repairsH2: 'Reparación de bicicletas en {name}',
     repairsP1:
-      'Dr. Bike Sydney ofrece reparación y mantenimiento de bicicletas a domicilio en {name} y los barrios vecinos. Nuestro mecánico, con 10 años de experiencia, llega en una camioneta totalmente equipada, con las herramientas y los repuestos necesarios para arreglar tu bici en el lugar.',
+      'Dr. Bike Sydney ofrece reparación y mantenimiento de bicicletas a domicilio en {name} y los barrios vecinos. Nuestro mecánico, con 10 años de experiencia, llega con un taller móvil totalmente equipado, con las herramientas y los repuestos necesarios para arreglar tu bici en el lugar.',
     repairsP2:
       'Cubrimos {areas} y todas las calles cercanas. Estés en casa, en el trabajo o en el parque, vamos a donde estés.',
     areasLabel: '📍 Zonas que cubrimos: {areas}',
@@ -286,7 +286,7 @@ const COPY = {
     whyH2: '¿Por qué elegir Dr. Bike en {name}?',
     pillars: [
       ['🔧', '10 años arreglando bicis', 'Mecánico de bicicletas con 10 años de experiencia real'],
-      ['🚐', 'Camioneta equipada', 'Taller móvil con herramientas profesionales y repuestos comunes'],
+      ['🛻', 'Taller móvil equipado', 'Con herramientas profesionales y repuestos comunes'],
       ['⭐', 'Calificación 5 estrellas', 'Nos eligen ciclistas de {name} y de todo Sídney'],
       ['📱', 'Reserva online fácil', 'Reservá en 4 toques. Casi siempre hay turnos el mismo día'],
     ],
@@ -320,7 +320,7 @@ const COPY = {
     footer2: 'Atendemos {name} y todo Sídney · lun–dom 8:00–17:00',
     footerLinks: ['Inicio', 'Servicios', 'Términos', 'Privacidad'],
     nearbyH2: 'Reparación de bicicletas cerca de {name}',
-    nearbyP: 'También atendemos estas zonas vecinas: el mismo mecánico, la misma camioneta y las mismas tarifas del día:',
+    nearbyP: 'También atendemos estas zonas vecinas: el mismo mecánico y las mismas tarifas:',
     readMore: 'Guías de cuidado de la bici',
     breadcrumbHome: 'Inicio',
   },
@@ -330,14 +330,14 @@ const COPY = {
     description:
       '{name}（悉尼）专业上门自行车维修。我们到您指定的地点服务：家里、公司或公园。服务范围：{areas}。可在线预订，多数日期当天可约。',
     bookNow: '立即预订',
-    badges: ['14天工艺保修', '10年经验', '装备齐全的服务车'],
+    badges: ['14天工艺保修', '10年经验', '设备齐全的移动维修车间'],
     heroH1: '{name}（悉尼）<br>上门自行车维修',
     heroP: '专业自行车维修，直接到您门口。家里、公司或公园都可以，无需自己搬运车子。',
     bookService: '预订服务',
     call: '致电 0433 963 250',
     repairsH2: '{name} 自行车维修',
     repairsP1:
-      'Dr. Bike Sydney 为 {name} 及周边地区提供专业的上门自行车维修与保养。我们拥有10年经验的技师开着装备齐全的服务车上门，带齐所需工具和常用零件，现场完成维修。',
+      'Dr. Bike Sydney 为 {name} 及周边地区提供专业的上门自行车维修与保养。我们拥有10年经验的技师带着设备齐全的移动维修车间上门，备齐所需工具和常用零件，现场完成维修。',
     repairsP2:
       '我们的服务范围覆盖 {areas} 及附近街区。无论您在家、在公司还是在公园，我们都能上门。',
     areasLabel: '📍 服务范围：{areas}',
@@ -354,7 +354,7 @@ const COPY = {
     whyH2: '为什么在 {name} 选择 Dr. Bike？',
     pillars: [
       ['🔧', '10年维修经验', '拥有 10 年实战经验的自行车技师'],
-      ['🚐', '装备齐全的服务车', '移动工作间，配备专业工具与常用零件'],
+      ['🛻', '设备齐全的移动维修车间', '配备专业工具与常用零件'],
       ['⭐', '五星好评', '{name} 及大悉尼地区的骑行者都信赖我们'],
       ['📱', '在线预订便捷', '4 步完成预订，多数日期当天有空位'],
     ],
@@ -388,7 +388,7 @@ const COPY = {
     footer2: '服务 {name} 及整个悉尼 · 周一至周日 8:00–17:00',
     footerLinks: ['首页', '服务', '条款', '隐私'],
     nearbyH2: '{name} 附近的自行车维修',
-    nearbyP: '我们同样服务这些邻近区域：同一位技师、同一辆服务车、同样的当日价格：',
+    nearbyP: '我们同样服务这些邻近区域：同一位技师、同样的价格：',
     readMore: '自行车保养指南',
     breadcrumbHome: '首页',
   },

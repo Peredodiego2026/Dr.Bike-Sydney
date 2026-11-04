@@ -902,7 +902,7 @@ function renderTriage(service, answers = {}) {
       ${body}
       <div class="triage__photo" role="group" aria-labelledby="tq-photo" aria-describedby="tq-photo-hint">
         <div class="triage__ask" id="tq-photo">Add a photo of your bike</div>
-        <div class="triage__hint" id="tq-photo-hint">It is how the mechanic knows which part to load in the van before he drives out.</div>
+        <div class="triage__hint" id="tq-photo-hint">It is how the mechanic knows which parts to bring before he heads out.</div>
         <input type="file" accept="image/*" capture="environment" class="triage__photo-file" id="tq-photo-file">
         <button type="button" class="triage__photo-btn"><span aria-hidden="true">&#128247;</span> Take a photo</button>
         ${shot}

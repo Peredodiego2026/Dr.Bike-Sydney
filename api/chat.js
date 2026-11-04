@@ -325,8 +325,8 @@ MEMBERSHIPS:
 SUNDAY & PUBLIC HOLIDAY SURCHARGE: bookings on a Sunday or a NSW public holiday cost 20% more - the surcharge applies to both the service price and the visit & diagnosis fee for their zone. Saturday is normal price. Example: a $119 Tune-Up booked for a Sunday is $142.80 for the service alone, before adding their zone's visit & diagnosis fee (also +20% that day). Never quote a Sunday/holiday job at the plain price.
 
 COVERAGE AREAS:
-- Van 1: Inner West (Newtown, Glebe, Balmain, Leichhardt), Eastern Suburbs (Bondi, Paddington, Randwick), CBD
-- Van 2: North Shore (Chatswood, Mosman, Lane Cove), Manly, Northern Beaches, Neutral Bay
+- Inner West (Newtown, Glebe, Balmain, Leichhardt), Eastern Suburbs (Bondi, Paddington, Randwick), CBD
+- North Shore (Chatswood, Mosman, Lane Cove), Manly, Northern Beaches, Neutral Bay
 
 BOOKING: drbikesydney.com.au — pick service, date, time, address. Same-day often available. Confirmed within 30 min.
 PAYMENT: Card via Stripe after job completion. PARTS are charged separately on top of the service: the mechanic quotes them and the customer approves before anything is fitted (Terms, section 3). Never say parts are sold at cost or with no markup - that is not true.
