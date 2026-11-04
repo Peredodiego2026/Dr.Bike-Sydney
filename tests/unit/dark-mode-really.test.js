@@ -203,10 +203,13 @@ describe('the team section is not empty on day one', () => {
     expect(fn.slice(0, 2000)).not.toMatch(/if \(!mechIds\.length\) return res\.status\(200\)\.json\(\[\]\);/);
   });
 
-  // "0 services completed" is worse than saying nothing.
+  // "0 services completed" is worse than saying nothing. The fallback it had,
+  // "Qualified & background-checked", was not true (Diego, 3-nov): with no jobs
+  // the card shows the mechanic's own bio, or nothing.
   it('the card does not boast a zero', () => {
     expect(inline).toMatch(/m\.jobs_completed > 0 \?/);
-    expect(inline).toMatch(/Qualified &amp; background-checked/);
+    expect(inline).not.toMatch(/Qualified &amp; background-checked/);
+    expect(inline).toMatch(/\$\{m\.bio \? `<div[^`]*\$\{escapeMechHtml\(m\.bio\)\}/);
   });
 });
 
