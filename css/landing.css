@@ -274,35 +274,64 @@ section[id] {
    they are overridden here, for the landing only, instead of changed there.
    And it fills that screen (Diego, 4-nov): the services heading used to peek
    in under the navy, so the first screen ended in a cut. min-height only
-   grows it - a hero taller than the screen still pushes the services down. */
+   grows it - a hero taller than the screen still pushes the services down.
+   Then the type and the photo grow, so the navy is filled instead of empty
+   (Diego, same day). The type rides on vh and is sized for the longest
+   language (es) at 635px tall. The heading does not: it is held to two lines
+   by the column's width (552px at most, vw/2 - 48px below 1200px), and the
+   Spanish one goes to four lines, not three, the moment it is let past 44px. */
 @media (min-width: 901px) {
   body[data-surface='landing'] .hero {
     padding-top: clamp(16px, 3vh, 48px);
     min-height: calc(100vh - var(--navbar-h));
     min-height: calc(100svh - var(--navbar-h));
+    /* Read by the hero lines that carry an inline style (landing.html). */
+    --hero-slogan: clamp(18px, 2.9vh, 22px);
+    --hero-line: clamp(15px, 2.4vh, 18px);
   }
   body[data-surface='landing'] .hero .container {
     padding-top: 0;
     padding-bottom: clamp(16px, 3vh, 48px);
     align-items: center;
+    gap: 48px;
   }
   body[data-surface='landing'] .hero-badge {
     margin-bottom: 12px;
+    font-size: clamp(13px, 2.1vh, 15px);
   }
   body[data-surface='landing'] .hero-h1 {
-    font-size: clamp(2rem, 6.5vh, 2.75rem);
+    font-size: clamp(2rem, min(6.9vh, 3.9vw - 4px), 2.75rem);
+    text-wrap: balance;
+  }
+  body[data-surface='landing'] .hero-p {
+    font-size: clamp(18px, 2.8vh, 21px);
+    text-wrap: balance;
   }
   body[data-surface='landing'] .hero-btns {
-    margin-top: 18px;
+    margin-top: clamp(18px, 2.8vh, 28px);
     gap: 10px;
   }
   body[data-surface='landing'] .hero-btns > button {
-    padding-left: 18px;
-    padding-right: 18px;
+    /* 17px and 22px are the most the Spanish pair takes on one row. */
+    font-size: clamp(16px, 2.55vh, 17px);
+    padding: clamp(12px, 2vh, 16px) clamp(18px, 2.8vh, 22px);
+    /* .btn-white is pinned at 48px in home.css; the row's stretch keeps the
+       two buttons one height once the padding grows. */
+    height: auto;
   }
   body[data-surface='landing'] .hero-stats {
-    margin-top: 18px;
-    padding-top: 14px;
+    margin-top: clamp(18px, 2.8vh, 28px);
+    padding-top: clamp(14px, 2.2vh, 20px);
+    /* One row in Spanish too: "Garantía de 14 Días" wrapped at 28px. For the
+       same reason the three stay at home.css's 13px: at 14px the Spanish row
+       no longer fits 552px. */
+    gap: 20px;
+  }
+  /* 4:3 instead of 16:9: the photo is as wide as before and a third taller.
+     The crop keeps the van's lettering and the mechanic (img's inline
+     object-position). */
+  body[data-surface='landing'] .hero-image {
+    aspect-ratio: 4/3;
   }
 }
 
