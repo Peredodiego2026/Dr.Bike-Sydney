@@ -79,18 +79,41 @@ export const MEASURED_MINUTES = [
   ['Hornsby', 96],
 ];
 
+// One line per suburb, the fee beside the name. The first version grouped
+// them under "$35:" / "$60:" headings and the model still answered "Bondi
+// Beach is $35 ... about 44 minutes" three times out of three.
+function suburbLine(name, minutes) {
+  const fee = feeForMinutes(minutes);
+  return fee === null
+    ? `- ${name}: ${minutes} min - outside the same-day area, by arrangement, no fixed price`
+    : `- ${name}: ${minutes} min - visit & diagnosis fee $${fee}`;
+}
+
 export function formatSuburbFees(list = MEASURED_MINUTES) {
-  const byFee = new Map();
-  const outside = [];
-  for (const [name, minutes] of list) {
-    const fee = feeForMinutes(minutes);
-    const label = `${name} (${minutes} min)`;
-    if (fee === null) outside.push(label);
-    else byFee.set(fee, [...(byFee.get(fee) || []), label]);
+  return list.map(([name, minutes]) => suburbLine(name, minutes)).join('\n');
+}
+
+// Reading a fee off a 34-line list is a lookup, and a lookup is code's job:
+// the suburbs the customer names are found here and their fee is put to the
+// model as a fact for this one reply. "Bondi" alone means both Bondi suburbs
+// (both $60); "CBD" and "the city" mean the CBD.
+const SUBURB_ALIASES = [
+  ['bondi', ['Bondi Beach', 'Bondi Junction']],
+  ['cbd', ['Sydney CBD']],
+  ['the city', ['Sydney CBD']],
+];
+
+export function suburbFactsFor(text, list = MEASURED_MINUTES) {
+  const lower = String(text || '').toLowerCase();
+  const says = (words) => new RegExp(`\\b${words}\\b`).test(lower);
+  const named = new Set(list.filter(([name]) => says(name.toLowerCase())).map(([name]) => name));
+  for (const [alias, targets] of SUBURB_ALIASES) {
+    if (says(alias) && !targets.some((t) => named.has(t))) targets.forEach((t) => named.add(t));
   }
-  const lines = [...byFee].map(([fee, names]) => `- $${fee}: ${names.join(', ')}`);
-  if (outside.length) lines.push(`- Outside the same-day area: ${outside.join(', ')}`);
-  return lines.join('\n');
+  return list
+    .filter(([name]) => named.has(name))
+    .map(([name, minutes]) => suburbLine(name, minutes))
+    .join('\n');
 }
 
 // The widget (js/landing-inline.js) prints the reply with textContent, so
@@ -382,6 +405,13 @@ async function handler(req, res) {
 
   try {
     const servicesBlock = await getServicesPromptBlock();
+    const suburbFacts = suburbFactsFor(
+      safeMessages
+        .filter((m) => m.role === 'user')
+        .slice(-3)
+        .map((m) => m.content)
+        .join('\n')
+    );
     const systemPrompt = `You are the Dr. Bike Sydney virtual assistant — friendly, expert, and concise. Dr. Bike is Sydney's premium mobile bicycle repair service. Our mechanic comes to your door — home, work or park — every day from 8am to 5pm (Sundays and NSW public holidays cost 20% more - see below).
 
 SERVICES & PRICES (the visit & diagnosis fee below is ADDED ON TOP of these - it is NOT included):
@@ -414,6 +444,7 @@ GUARANTEE: 14-day workmanship guarantee. If the issue we worked on comes back or
 REFERRALS: Each client gets a referral code — both you and your friend get $15 off when they use it.
 
 ${userProfile ? `CURRENT USER: ${userProfile.full_name || 'Guest'}${userProfile.membership_plan ? `, ${userProfile.membership_plan} member` : ' (not yet a member)'}` : ''}
+${suburbFacts ? `THE CUSTOMER HAS NAMED THESE SUBURBS. Their fees are exactly these - quote them as written, never work them out yourself:\n${suburbFacts}\n` : ''}
 
 RULES:
 - Keep responses SHORT — 2-3 sentences max. Never write lists unless asked.
