@@ -25,6 +25,7 @@ import {
   isGoogleCalendarConfigured,
   saveGoogleRefreshToken,
 } from './_google-calendar.js';
+import { readSearchConsole } from './_search-console.js';
 import {
   buildCompletionCalls,
   dispatchCompletionCalls,
@@ -6395,7 +6396,11 @@ async function handleGoogleCalendarConnect(req, res) {
     response_type: 'code',
     access_type: 'offline',
     prompt: 'consent', // forces a refresh_token even if this account connected before
-    scope: 'https://www.googleapis.com/auth/calendar',
+    // webmasters.readonly feeds the Google Search card on Admin > Analytics
+    // (api/_search-console.js). It is read-only, but it covers every Search
+    // Console property this Google account can see, not just this site.
+    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/webmasters.readonly',
+    include_granted_scopes: 'true',
     state: req.query.ticket,
   });
   res.writeHead(302, { Location: `https://accounts.google.com/o/oauth2/v2/auth?${params}` });
@@ -7565,6 +7570,8 @@ async function handleAdminServicesDelete(req, res) {
 //     role sees the table, which means only this file can count it.
 //  2. PostHog - the Personal API Key reads every event of the business. It is
 //     read here from the environment and never sent to the browser.
+//  3. Google Search Console - read with the stored Google refresh token
+//     (api/_search-console.js), which never leaves the server either.
 //
 // Lives in auth.js rather than its own api/analytics.js because the Hobby plan
 // caps a deployment at 12 Serverless Functions and /api is already at 12 (same
@@ -7579,13 +7586,20 @@ async function handleAdminAnalytics(req, res) {
   const days = Math.min(Math.max(parseInt(req.body?.days, 10) || 30, 1), 730);
 
   // allSettled-style independence: reconciliation talks to Stripe, and a slow
-  // or down Stripe must not take the traffic card with it.
-  const [checkout, traffic, recon] = await Promise.all([
+  // or down Stripe must not take the traffic card with it. Search Console is
+  // the same: Google failing costs the Google Search card and nothing else.
+  const [checkout, traffic, recon, search] = await Promise.all([
     readCheckoutAttempts(auth.sb),
     readPostHog(days),
     readReconciliation(auth.sb, days).catch((e) => ({ days, error: e.message })),
+    readSearchConsole(days).catch((e) => ({
+      configured: true,
+      connected: true,
+      code: 'error',
+      error: e.message,
+    })),
   ]);
-  return res.status(200).json({ checkout, traffic, recon });
+  return res.status(200).json({ checkout, traffic, recon, search });
 }
 
 // A snapshot, NOT a running total: js/app.js upserts one row per client when

@@ -4888,6 +4888,7 @@ function renderAnalytics() {
   renderSources(inRange, d);
   renderCheckoutCard();
   renderTrafficCard();
+  renderSearchCard();
   renderVisitorsCard();
 
   // Lifetime by design - their subtitles say so.
@@ -6020,6 +6021,126 @@ function renderTrafficCard() {
     </div>`;
 }
 
+// ── Google Search (Search Console, see api/_search-console.js) ───────────────
+// Every state the server can answer with has its own sentence, because each
+// one is a different thing for Diego to do - and none of them may look like
+// "Google showed you to nobody". Self-contained HTML builder so the tests can
+// lift it from source.
+function anSearchHtml(g) {
+  const steps = {
+    not_configured: [
+      'Google is not set up on the server',
+      'GOOGLE_CALENDAR_CLIENT_ID and GOOGLE_CALENDAR_CLIENT_SECRET are missing in Vercel.',
+    ],
+    not_connected: [
+      'Google is not connected',
+      'Settings > Google Calendar & Search Console > Connect Google.',
+    ],
+    reconnect: [
+      'Reconnect Google to allow Search Console',
+      'The saved connection does not include Search Console. Settings > Connect Google, and tick both permissions on the Google screen.',
+    ],
+    api_disabled: [
+      'The Search Console API is switched off in Google Cloud',
+      'Enable "Google Search Console API" in the Google Cloud project of the calendar connection, then reload this page.',
+    ],
+    permission: [
+      'This Google account cannot see drbikesydney.com.au in Search Console',
+      'Reconnect with the account that owns the site in Search Console, or add the connected account in Search Console > Settings > Users and permissions.',
+    ],
+  };
+  if (!g) return anError('No Search Console data in the response.');
+  if (g.code && g.code !== 'ok' && g.code !== 'error' && steps[g.code]) {
+    const [title, how] = steps[g.code];
+    return anState(
+      `<span class="an-state-icon">&#9679;</span><strong>${esc(title)}</strong>${esc(how)}` +
+        (g.error ? `<br><br><small>${esc(g.error)}</small>` : '')
+    );
+  }
+  if (g.error) return anError(g.error);
+
+  const tot = g.totals;
+  const tiles = [
+    ['Shown in Google', tot ? anCompact(tot.impressions) : null, 'times you appeared in results'],
+    ['Clicks', tot ? anCompact(tot.clicks) : null, 'visits that came from Google'],
+    [
+      'Click rate',
+      tot ? (tot.impressions ? (tot.ctr * 100).toFixed(1) + '%' : '—') : null,
+      'clicks out of times shown',
+    ],
+    [
+      'Avg position',
+      tot ? (tot.position === null ? '—' : tot.position.toFixed(1)) : null,
+      '1 = first result on the page',
+    ],
+  ];
+  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  const list = (title, rows, fmt, emptyDetail) =>
+    `<div><div class="an-tile-label" style="margin-bottom:10px">${esc(title)}</div>` +
+    (rows === null || rows === undefined
+      ? anError('this query did not come back')
+      : rows.length
+        ? `<div class="an-bars">${anBarList(rows.map(fmt))}</div>`
+        : anEmpty('Nothing recorded', emptyDetail)) +
+    '</div>';
+  const failedNote = g.failed
+    ? `<div class="an-note" style="padding:0 0 14px;color:var(--an-crit)">Some queries failed and are shown as "could not load": ${esc(
+        Object.entries(g.failed)
+          .map(([k, v]) => `${k} (${v})`)
+          .join(' · ')
+      )}</div>`
+    : '';
+
+  return `<div class="an-body">
+      ${failedNote}
+      <div class="an-kpis" style="margin-bottom:20px">${tiles
+        .map(
+          ([l, v, n]) =>
+            `<div class="an-tile"><div class="an-tile-label">${esc(l)}</div>${
+              v === null
+                ? '<div class="an-tile-value is-empty">Could not load</div>'
+                : `<div class="an-tile-value" style="font-size:24px">${esc(v)}</div>`
+            }${v !== null ? `<div class="an-tile-note">${esc(n)}</div>` : ''}</div>`
+        )
+        .join('')}</div>
+      <div class="an-grid-2" style="gap:24px">
+        ${list(
+          'What people searched (times shown)',
+          g.queries,
+          (r) => ({
+            name: r.query || 'unknown',
+            value: r.impressions,
+            sub: `${plural(r.clicks, 'click')} · #${r.position === null ? '—' : r.position.toFixed(1)}`,
+          }),
+          'Google has not shown the site for any search in this range.'
+        )}
+        ${list(
+          'Pages shown in Google (times shown)',
+          g.pages,
+          (r) => ({ name: r.path || 'unknown', value: r.impressions, sub: plural(r.clicks, 'click') }),
+          'No page appeared in Google in this range.'
+        )}
+      </div>
+      <div class="an-note" style="padding:14px 0 0">Google hides rare searches for privacy, so the searches listed add up to less than the total shown above.</div>
+    </div>`;
+}
+
+function renderSearchCard() {
+  const el = document.getElementById('an-search');
+  const sub = document.getElementById('an-search-sub');
+  if (!el) return;
+  const s = _anServer;
+  if (!s) return void (el.innerHTML = anError('The analytics endpoint did not respond.'));
+  if (s.error) return void (el.innerHTML = anError(s.error));
+  const g = s.search;
+  if (sub)
+    sub.textContent =
+      g && g.code === 'ok'
+        ? `Search Console · last ${Number(g.days || 0).toLocaleString('en-AU')} days, to ${g.end}`
+        : 'What people searched before they found you — from Search Console';
+  el.innerHTML = anSearchHtml(g);
+}
+
 // ── Visitors (PostHog: sections, screen time, autocaptured clicks) ───────────
 // Reads the same server response as the Traffic card. When that card says
 // PostHog is not connected, this one says nothing of its own.
@@ -6079,6 +6200,7 @@ function wireAnalytics() {
         _anServer = s;
         renderCheckoutCard();
         renderTrafficCard();
+        renderSearchCard();
         renderVisitorsCard();
       });
       return;
@@ -11762,6 +11884,6 @@ byId('gcal-connect-btn').addEventListener('click', async (e) => {
   } catch (err) {
     btn.disabled = false;
     btn.textContent = original;
-    showToast('Google Calendar: ' + err.message);
+    showToast('Google: ' + err.message);
   }
 });

@@ -1137,6 +1137,12 @@
       </div>
 
       <div class="card">
+        <div class="card-hdr"><div><div class="card-title">Google Search</div><div class="card-sub" id="an-search-sub">What people searched before they found you &mdash; from Search Console</div></div></div>
+        <div id="an-search"><div class="an-state">Loading&hellip;</div></div>
+        <div class="an-note">&ldquo;Shown in Google&rdquo; counts every time Dr. Bike appeared in Google results, including people who never clicked &mdash; the visitors the Traffic card cannot see. Google reports about two days late, so the most recent days are always low. Search Console keeps 16 months, so &ldquo;All time&rdquo; shows 16 months.</div>
+      </div>
+
+      <div class="card">
         <div class="card-hdr"><div><div class="card-title">Visitors</div><div class="card-sub" id="an-visitors-sub">Sections seen, time per screen and clicks &mdash; from PostHog</div></div></div>
         <div id="an-visitors"><div class="an-state">Loading&hellip;</div></div>
         <div class="an-note">Seconds are counted in the visitor's browser, only while a section is on screen or a screen is open. Button labels with a digit or an @ are left out on purpose, so no address, phone or email reaches this page.</div>
@@ -1330,10 +1336,10 @@
 
         <!-- ══ GOOGLE CALENDAR ══ -->
         <div class="setting-card">
-          <div class="setting-title">Google Calendar sync</div>
-          <div class="setting-sub">Confirmed jobs are added to your Google Calendar and the assigned mechanic is invited - they get native alarms and notifications on their phone.</div>
+          <div class="setting-title">Google Calendar &amp; Search Console</div>
+          <div class="setting-sub">Confirmed jobs are added to your Google Calendar and the assigned mechanic is invited - they get native alarms and notifications on their phone. The same connection lets Analytics read Google Search Console (read-only). Connect with the Google account that owns drbikesydney.com.au in Search Console, and tick both permissions.</div>
           <div id="gcal-status" style="font-size:13px;color:var(--mgray);margin-bottom:12px"></div>
-          <button id="gcal-connect-btn" style="display:inline-block;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Connect Google Calendar</button>
+          <button id="gcal-connect-btn" style="display:inline-block;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Connect Google</button>
         </div>
 
         <!-- ══ WHATSAPP BUSINESS ══ -->
@@ -1718,5 +1724,5 @@
 
 
 <script type="module" src="js/shop-import.js?v=bfc77bc7e1"></script>
-<script src="js/admin.js?v=ca3535b096"></script>
+<script src="js/admin.js?v=44aa1d80f2"></script>
 </body></html>

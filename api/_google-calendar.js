@@ -57,7 +57,11 @@ async function getStoredRefreshToken() {
 // Exchanges the stored refresh token for a fresh ~1h access token. Never
 // throws - returns null if not configured, not connected yet, or the Google
 // call fails, so every sync function below stays safe to fire-and-forget.
-async function getAccessToken() {
+//
+// Exported for api/_search-console.js: the same connection is granted
+// webmasters.readonly next to calendar, so the Analytics screen reads Search
+// Console with this token instead of a second Google login.
+export async function getAccessToken() {
   if (!isGoogleCalendarConfigured()) return null;
   const refreshToken = await getStoredRefreshToken();
   if (!refreshToken) return null;
