@@ -290,7 +290,9 @@
 // diagnosis fee" pasa a "Plus a visit & diagnosis fee", en los dos diccionarios.
 // v168: Trails HQ (Hamilton Island) en "Who Comes to Your Home" y en "Our
 // story" del celular, en los dos diccionarios.
-const CACHE_STATIC = 'drbike-static-v168';
+// v169: "within 2 business hours" -> "within one business day" en el
+// formulario de flotas (landing) y su mensaje de gracias, en los dos diccionarios.
+const CACHE_STATIC = 'drbike-static-v169';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

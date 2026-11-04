@@ -137,8 +137,8 @@ describe('fleet enquiry echo', () => {
     expect(echo.subject).toBe('Recibimos tu consulta de flota — Dr. Bike Sydney');
     expect(echo.html).toContain('Gracias por tu consulta, Ana');
     expect(echo.html).toContain('Recibimos tu consulta de flota para');
-    expect(echo.html).toContain('2 horas hábiles');
-    expect(echo.html).not.toMatch(/We received|business hours|Sydney time/);
+    expect(echo.html).toContain('un día hábil</strong>.');
+    expect(echo.html).not.toMatch(/We received|business day|business hours|Sydney time/);
     // The copy to Diego stays in English.
     expect(lastTo('contact@drbikesydney.com.au').html).toContain('New B2B Fleet Enquiry');
   });

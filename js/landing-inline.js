@@ -343,7 +343,7 @@ function lpDateLocale() {
       msg.style.background = 'var(--green-lt)';
       msg.style.color = 'var(--green)';
       msg.style.border = '1px solid #BBF7D0';
-      msg.innerHTML = '<strong>Thanks! We\'ll be in touch within 2 business hours.</strong> Check your inbox for a confirmation.';
+      msg.innerHTML = '<strong>Thanks! We\'ll be in touch within one business day.</strong> Check your inbox for a confirmation.';
       msg.style.display = 'block';
       btn.textContent = 'Quote Requested';
     } catch(err) {

@@ -320,9 +320,8 @@ const dict = {
     // b2b echo
     'Thanks for your enquiry, ': 'Gracias por tu consulta, ',
     'We received your fleet enquiry for ': 'Recibimos tu consulta de flota para ',
-    " bikes). We'll get back to you within ": ' bicis). Te respondemos en menos de ',
-    '2 business hours': '2 horas hábiles',
-    ' (every day 8am–5pm, Sydney time).': ' (todos los días de 8 a 17 h, hora de Sídney).',
+    " bikes). We'll get back to you within ": ' bicis). Te respondemos dentro de ',
+    'one business day</strong>.': 'un día hábil</strong>.',
 
     // newsletter welcome
     'Thanks for subscribing': '¡Gracias por suscribirte',
@@ -424,8 +423,7 @@ const dict = {
     '⚠️ Warn': '⚠️ Revisar',
     '🔴 Critical': '🔴 Crítico',
     'Your next recommended service is on ': 'Tu próximo servicio recomendado es el ',
-    'We recommend a service check every 3–6 months.':
-      'Recomendamos una revisión cada 3 a 6 meses.',
+    'We recommend a service check every 3–6 months.': 'Recomendamos una revisión cada 3 a 6 meses.',
   },
 
   zh: {
@@ -661,7 +659,8 @@ const dict = {
       '前刹车皮已磨损 — 现在更换可避免损伤碟片。',
     'Rear brake pads are due for replacement.': '后刹车皮需要更换了。',
     'Chain is stretched and will damage cassette soon.': '链条已拉长，很快会损坏飞轮。',
-    'Cassette cogs are worn — best replaced with new chain.': '飞轮齿片已磨损 — 最好和新链条一起更换。',
+    'Cassette cogs are worn — best replaced with new chain.':
+      '飞轮齿片已磨损 — 最好和新链条一起更换。',
     'Cables are frayed — replacing improves shifting and braking.':
       '线缆已磨损起毛 — 更换后变速和刹车都会更好。',
     'Tyres cracked or worn — safety concern.': '轮胎开裂或磨损 — 存在安全隐患。',
@@ -674,8 +673,7 @@ const dict = {
     'Thanks for your enquiry, ': '感谢您的咨询，',
     'We received your fleet enquiry for ': '我们已收到您为 ',
     " bikes). We'll get back to you within ": ' 辆车) 提交的车队咨询。我们会在 ',
-    '2 business hours': '2 个工作小时',
-    ' (every day 8am–5pm, Sydney time).': ' 内回复您（每天 8:00–17:00，悉尼时间）。',
+    'one business day</strong>.': '一个工作日</strong>内回复您。',
 
     'Thanks for subscribing': '感谢订阅',
     "You'll receive cycling tips, maintenance reminders and exclusive offers for Dr. Bike Sydney members.":

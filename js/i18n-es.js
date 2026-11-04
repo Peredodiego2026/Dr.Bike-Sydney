@@ -1219,7 +1219,7 @@ export default {
   'Full PDF report per bike after every visit. Track the health of your entire fleet.':
     'Informe PDF completo por bici después de cada visita. Seguí el estado de toda tu flota.',
   'Get a fleet quote': 'Cotizá tu flota',
-  "We'll reply within 2 business hours": 'Te respondemos dentro de 2 horas hábiles',
+  "We'll reply within one business day": 'Te respondemos dentro de un día hábil',
   'Business name *': 'Nombre de la empresa *',
   'Your name *': 'Tu nombre *',
   'Work email *': 'Correo laboral *',
@@ -1243,8 +1243,8 @@ export default {
   'Request Fleet Quote': 'Solicitar Cotización de Flota',
   "No commitment required. We'll build a custom plan for your team.":
     'Sin compromiso. Armamos un plan a medida para tu equipo.',
-  "Thanks! We'll be in touch within 2 business hours.":
-    '¡Gracias! Te contactamos dentro de 2 horas hábiles.',
+  "Thanks! We'll be in touch within one business day.":
+    '¡Gracias! Te contactamos dentro de un día hábil.',
   'Check your inbox for a confirmation.': 'Revisá tu correo para la confirmación.',
   'Quote Requested': 'Cotización Solicitada',
   'Something went wrong. Please email us directly.':
