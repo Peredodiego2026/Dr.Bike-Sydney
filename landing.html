@@ -62,7 +62,7 @@
   {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What areas do you service?","acceptedAnswer":{"@type":"Answer","text":"Same-day visits cover everything within about 45 minutes of our Northern Beaches base — Northern Beaches, North Shore, the CBD, Inner West and Eastern Suburbs. Further out, like Hornsby, Western Sydney, the Sutherland Shire or the Blue Mountains, we still come, but by arrangement rather than same-day. Enter your address when you book and we'll tell you which one you are."}},{"@type":"Question","name":"What if I need to reschedule?","acceptedAnswer":{"@type":"Answer","text":"You can reschedule or cancel from the link in your booking confirmation, or by calling us. It's free with more than 24 hours' notice; with less, a fee of up to the visit & diagnosis fee may apply."}},{"@type":"Question","name":"Do you bring spare parts?","acceptedAnswer":{"@type":"Answer","text":"Yes. The van carries inner tubes in the common sizes, and any other part your bike needs we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately."}},{"@type":"Question","name":"How long does a service take?","acceptedAnswer":{"@type":"Answer","text":"A Tune-Up takes about an hour, a Standard Service about 1.5 hours, a Standard+ Service about 2.5 hours and an Ultimate Overhaul about 4 hours. You'll see the estimate when you book."}},{"@type":"Question","name":"What payment methods do you accept?","acceptedAnswer":{"@type":"Answer","text":"We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $35, depending on your suburb) is charged at booking; the remainder is charged on completion."}}]}
   </script>
 
-  <link rel="stylesheet" href="css/landing.css?v=f3789c6158">
+  <link rel="stylesheet" href="css/landing.css?v=4a4c3fd105">
   <link rel="stylesheet" href="css/shop.css?v=f28b164290">
   <script src="https://js.stripe.com/v3/"></script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
@@ -169,13 +169,13 @@
     <div class="hero-left">
       <span class="hero-badge">Mobile Service &middot; Sydney Wide</span>
       <h1 class="hero-h1">Professional Bike Service at Your Doorstep</h1>
-      <p style="font-size:18px;font-weight:600;color:var(--blue-text);margin:0 0 12px;letter-spacing:0.01em">Healthy bikes, happy riders</p>
+      <p style="font-size:var(--hero-slogan,18px);font-weight:600;color:var(--blue-text);margin:0 0 12px;letter-spacing:0.01em">Healthy bikes, happy riders</p>
       <p class="hero-p">Mobile bicycle mechanic in Sydney. We come to you, fully equipped.</p>
       <!-- Real proof on the first screen: the Google rating and count, filled by
            loadReviewStats() in js/app.js from the same site-stats the reviews
            section uses. Hidden until there is a number - never a zero, never a
            figure typed by hand. -->
-      <p id="hero-proof" style="margin-top:12px;font-size:15px" hidden>
+      <p id="hero-proof" style="margin-top:12px;font-size:var(--hero-line,15px)" hidden>
         <a href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--white);text-decoration:none">
           <span class="hero-proof__stars" style="color:var(--amber-bright);font-size:18px;letter-spacing:1px" aria-hidden="true"></span>
           <span class="hero-proof__rating" style="font-weight:800"></span>
@@ -197,10 +197,10 @@
            from the booking calendar's own rules (api/auth.js
            handleNextAvailable). Hidden until there is one - never typed by
            hand, never a guess. -->
-      <p id="hero-next" style="margin-top:14px;font-size:15px;font-weight:600;color:var(--white)" hidden>
+      <p id="hero-next" style="margin-top:14px;font-size:var(--hero-line,15px);font-weight:600;color:var(--white)" hidden>
         <span style="display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:50%;background:var(--green-bright);vertical-align:middle" aria-hidden="true"></span><span class="hero-next__text"></span>
       </p>
-      <p style="margin-top:12px;font-size:15px;color:var(--gray)">Or call <a href="tel:+61433963250" style="color:var(--blue-text);font-weight:600">0433 963 250</a> / <a href="https://wa.me/61433963250" target="_blank" rel="noopener" style="color:var(--blue-text);font-weight:600">WhatsApp</a></p>
+      <p style="margin-top:12px;font-size:var(--hero-line,15px);color:var(--gray)">Or call <a href="tel:+61433963250" style="color:var(--blue-text);font-weight:600">0433 963 250</a> / <a href="https://wa.me/61433963250" target="_blank" rel="noopener" style="color:var(--blue-text);font-weight:600">WhatsApp</a></p>
 
       <div class="hero-stats">
         <div class="hero-stat">
@@ -226,7 +226,7 @@
     </div>
 
     <div class="hero-image" style="padding:0;overflow:hidden">
-      <img decoding="async" loading="eager" src="images/hero-van.webp" alt="Dr. Bike Sydney mobile van" width="1672" height="941" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:16px">
+      <img decoding="async" loading="eager" src="images/hero-van.webp" alt="Dr. Bike Sydney mobile van" width="1672" height="941" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:40% 50%;border-radius:16px">
     </div>
   </div>
 </section>
