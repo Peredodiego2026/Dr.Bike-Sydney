@@ -6,6 +6,12 @@ is added, renamed, or removed - it should always match the code.
 
 ## Overview
 - Tools: PostHog (`eu.i.posthog.com`), Google Analytics 4 (`G-GXYD68JXZW`)
+- Who is counted (since 2026-11-04): GA4 only sees visitors who press Accept
+  on the cookie banner. PostHog sees everyone on `index.html` and
+  `landing.html` - cookieless (`cookieless_mode: 'on_reject'`) for anyone who
+  declined or never answered, with cookies after Accept. Cookieless visitors
+  are a new person every day and carry no country. Needs "Enable cookieless
+  tracking" on in PostHog > Settings > Web analytics, or PostHog drops them.
 - Booking/revenue source of truth: Supabase `bookings` table (not an event
   stream - query it directly for anything money-related, events are for
   behavior/funnel analysis)

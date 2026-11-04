@@ -44,39 +44,52 @@
   // "/C:/Users/.../landing.html" and referrers "localhost:3000" sitting beside
   // real visitors. Same guard as admin.html and mechanic.html.
   // The snippet above only installs a stub; nothing reaches PostHog until
-  // init() runs, which is what inserts their script tag. So consent gates
-  // init(), not the snippet.
+  // init() runs, which is what inserts their script tag.
   //
   // The stub has to be stashed and the global cleared first: js/app.js and
   // js/cta-tracking.js guard every capture() on `window.posthog` being
-  // truthy alone, so leaving the stub in place would make them all think
-  // tracking is live and silently queue events for a consent that may never
-  // come. Cleared now, restored only if the visitor accepts.
+  // truthy alone, so off production a leftover stub would make them all
+  // think tracking is live and queue events that never go anywhere.
+  // Restored only when init() really runs.
   const _phStub = window.posthog;
   window.posthog = undefined;
 
   const _initPosthog = () => {
-    // Production only. Without this guard PostHog counted localhost, file://
-    // and Vercel previews as real traffic: production numbers showed pages
-    // like "/C:/Users/.../landing.html" and referrers "localhost:3000"
-    // sitting beside real visitors. Same guard as admin.html and mechanic.html.
     if (_noTrack) return;
     if (location.hostname !== 'drbikesydney.com.au' && location.hostname !== 'www.drbikesydney.com.au')
       return;
     window.posthog = _phStub;
-    posthog.init('phc_p3bN9qdguBGXMaWWtCiEQ3TjdFztVJPyG2yAsLdeUTzV', {
+    // Every visitor is counted; only the ones who press Accept get cookies.
+    // Same config, for the same reasons, as the PostHog block in index.html:
+    // until 2026-11-04 this waited for Accept, so anyone who declined or never
+    // answered the banner did not exist in the numbers. cookieless_mode
+    // 'on_reject' counts them without writing anything to the device, and
+    // needs "Enable cookieless tracking" on in the PostHog project settings.
+    // A visitor who already accepted gets the same init as always.
+    let _accepted = false;
+    try {
+      _accepted = localStorage.getItem('drbike-consent') === 'granted';
+    } catch (e) {}
+    const _phConfig = {
       api_host: 'https://eu.i.posthog.com',
       person_profiles: 'identified_only',
       capture_pageview: true,
       capture_pageleave: true,
-    });
+    };
+    if (!_accepted) {
+      _phConfig.cookieless_mode = 'on_reject';
+      _phConfig.opt_out_capturing_by_default = true;
+    }
+    posthog.init('phc_p3bN9qdguBGXMaWWtCiEQ3TjdFztVJPyG2yAsLdeUTzV', _phConfig);
+    // Accept on this page switches to cookies now, not on the next load.
+    if (!_accepted && typeof window.drbikeOnConsent === 'function') {
+      window.drbikeOnConsent(() => posthog.opt_in_capturing());
+    }
   };
 
-  // js/consent.js is loaded first and synchronously by scripts/consent-gate.mjs,
-  // so this hook exists. The fallback is deliberately "do nothing": if the
-  // consent script ever fails to load, the safe outcome is no tracking, not
-  // tracking without being asked.
-  if (typeof window.drbikeOnConsent === 'function') window.drbikeOnConsent(_initPosthog);
+  // Not behind window.drbikeOnConsent any more: cookieless_mode decides what
+  // is stored, and Accept only upgrades it to cookies.
+  _initPosthog();
 
 
 // Dates rendered by the classic inline scripts below must follow the chosen

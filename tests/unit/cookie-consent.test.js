@@ -147,9 +147,11 @@ describe('the default is no tracking, in every direction', () => {
   });
 });
 
-describe('analytics that is not a script tag is gated too', () => {
+describe('analytics that is not a script tag uses the same hook', () => {
   // PostHog on the landing is started from inside js/landing-inline.js, so
-  // there is no tag to make inert. It registers a callback instead.
+  // there is no tag to make inert. Since 2026-11-04 it starts for everyone in
+  // cookieless mode and only the upgrade to cookies waits for Accept - what
+  // each choice actually configures is pinned in posthog-cookieless.test.js.
   const landing = read('js/landing-inline.js');
 
   it('consent.js exposes the hook', () => {
@@ -157,27 +159,17 @@ describe('analytics that is not a script tag is gated too', () => {
     expect(consent).toMatch(/window\.drbikeAnalyticsAllowed = function/);
   });
 
-  it('the landing initialises PostHog through it, not directly', () => {
-    expect(landing).toMatch(/window\.drbikeOnConsent\(_initPosthog\)/);
-    // The init call must not sit at top level any more.
-    const idx = landing.indexOf('posthog.init(');
-    const initFn = landing.indexOf('const _initPosthog');
-    expect(initFn).toBeGreaterThan(-1);
-    expect(idx).toBeGreaterThan(initFn);
-  });
-
   // js/app.js and js/cta-tracking.js guard every capture() on `window.posthog`
-  // being truthy. The install snippet leaves a truthy stub behind, so it has to
-  // be cleared or they would all believe tracking is live and queue events for
-  // a consent that may never come.
-  it('the stub is cleared until consent, so capture() guards read false', () => {
+  // being truthy. The install snippet leaves a truthy stub behind, so off
+  // production it has to be cleared or they would all believe tracking is live.
+  it('the stub is cleared until init really runs, so capture() guards read false', () => {
     expect(landing).toMatch(/window\.posthog = undefined;/);
     expect(landing).toMatch(/const _phStub = window\.posthog;/);
   });
 
-  // If consent.js ever fails to load, the safe outcome is no tracking - never
-  // tracking without being asked.
-  it('fails closed when the consent script is missing', () => {
+  // If consent.js ever fails to load there is no hook to call, and calling it
+  // anyway would throw in the one top-level scope every listener shares.
+  it('does not assume the consent script loaded', () => {
     expect(landing).toMatch(/typeof window\.drbikeOnConsent === 'function'/);
   });
 });

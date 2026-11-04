@@ -145,7 +145,11 @@
       })();
     </script>
     <!-- ── PostHog (product analytics + A/B testing) ──────────────────────── -->
-    <script type="text/plain" data-consent="analytics">
+    <!-- Not gated like the tags above: it runs for every visitor, cookieless
+         until they press Accept (see the comment before posthog.init below).
+         data-consent="cookieless" is what tells scripts/consent-gate.mjs this
+         is on purpose, and js/consent.js leaves it alone. -->
+    <script data-consent="cookieless">
       !(function (t, e) {
         var o, n, p, r;
         e.__SV ||
@@ -212,12 +216,40 @@
         (location.hostname === 'drbikesydney.com.au' ||
           location.hostname === 'www.drbikesydney.com.au')
       ) {
-        posthog.init('phc_p3bN9qdguBGXMaWWtCiEQ3TjdFztVJPyG2yAsLdeUTzV', {
+        // Every visitor is counted; only the ones who press Accept get cookies.
+        //
+        // Until 2026-11-04 this block waited for Accept, so anyone who declined
+        // or never answered the banner did not exist in the numbers. With
+        // cookieless_mode 'on_reject' and opt_out_capturing_by_default, PostHog
+        // counts them without writing anything to the device - no cookie, no
+        // localStorage - from a hash it computes on its own servers. That needs
+        // "Enable cookieless tracking" on in the PostHog project settings;
+        // without it PostHog drops those events and nothing else changes.
+        //
+        // A visitor who already accepted gets the same init as always, so
+        // their returning-visitor cookie is not reset. 'drbike-consent' is the
+        // key js/consent.js writes.
+        var _accepted = false;
+        try {
+          _accepted = localStorage.getItem('drbike-consent') === 'granted';
+        } catch (e) {}
+        var _phConfig = {
           api_host: 'https://eu.i.posthog.com',
           person_profiles: 'identified_only',
           capture_pageview: true,
           capture_pageleave: true,
-        });
+        };
+        if (!_accepted) {
+          _phConfig.cookieless_mode = 'on_reject';
+          _phConfig.opt_out_capturing_by_default = true;
+        }
+        posthog.init('phc_p3bN9qdguBGXMaWWtCiEQ3TjdFztVJPyG2yAsLdeUTzV', _phConfig);
+        // Accept on this page switches to cookies now, not on the next load.
+        if (!_accepted && typeof window.drbikeOnConsent === 'function') {
+          window.drbikeOnConsent(function () {
+            posthog.opt_in_capturing();
+          });
+        }
       } else {
         // MUST clear the stub. The snippet above sets window.posthog to an array
         // and only hangs capture/identify/etc on it INSIDE init(). Skip init and
