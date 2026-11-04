@@ -64,8 +64,8 @@ const DICT = {
       'Managing a bike fleet is time-consuming and costly. We eliminate the logistics — one call and we come to you.':
         'Gestionar una flota de bicicletas consume tiempo y plata. Nosotros nos encargamos de la logística: un llamado y vamos hasta vos.',
       'On-Site Service': 'Servicio en el Lugar',
-      'Our fully-equipped van arrives at your premises. No need to transport bikes anywhere.':
-        'Nuestra camioneta totalmente equipada llega hasta tus instalaciones. No hace falta trasladar las bicis a ningún lado.',
+      'Our mechanic arrives at your premises with a fully equipped mobile workshop. No need to transport bikes anywhere.':
+        'Nuestro mecánico llega a tus instalaciones con un taller móvil totalmente equipado. No hace falta trasladar las bicis a ningún lado.',
       'Zero Downtime': 'Cero Tiempos Muertos',
       'We service multiple bikes simultaneously. Fleet of 10 bikes done in under 3 hours.':
         'Mantenemos varias bicis al mismo tiempo. Una flota de 10 bicis, lista en menos de 3 horas.',
@@ -168,8 +168,8 @@ const DICT = {
       'Managing a bike fleet is time-consuming and costly. We eliminate the logistics — one call and we come to you.':
         '管理自行车车队既耗时又费钱。我们帮您搞定所有物流——一通电话，我们就上门服务。',
       'On-Site Service': '现场服务',
-      'Our fully-equipped van arrives at your premises. No need to transport bikes anywhere.':
-        '我们装备齐全的服务车会开到您的场所。无需将自行车运往任何地方。',
+      'Our mechanic arrives at your premises with a fully equipped mobile workshop. No need to transport bikes anywhere.':
+        '我们的技师带着设备齐全的移动维修车间来到您的场所。无需将自行车运往任何地方。',
       'Zero Downtime': '零停工',
       'We service multiple bikes simultaneously. Fleet of 10 bikes done in under 3 hours.':
         '我们可同时维保多辆自行车。10 辆车的车队不到 3 小时即可完成。',

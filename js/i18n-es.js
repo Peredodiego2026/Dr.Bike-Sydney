@@ -691,7 +691,7 @@ export default {
   // Trust badges bar
   '100% Satisfaction Guarantee': '100% Satisfacción Garantizada',
   '10 years of experience': '10 años de experiencia',
-  'Fully equipped van': 'Van totalmente equipada',
+  'Fully equipped mobile workshop': 'Taller móvil totalmente equipado',
   'ASAP Response': 'Respuesta Inmediata',
   'Transparent Pricing': 'Precios Transparentes',
   'Sydney Wide': 'Toda Sydney',
@@ -709,7 +709,7 @@ export default {
   'Book a service': 'Reservar Servicio',
   'Get Your Free Quote': 'Obtené tu Cotización Gratis',
   '10 Years of Experience': '10 Años de Experiencia',
-  'Fully Equipped Van': 'Van Totalmente Equipada',
+  'Fully Equipped Workshop': 'Taller Totalmente Equipado',
   '14-Day Guarantee': 'Garantía de 14 Días',
   // Mechanics 3D carousel
   'OUR TEAM': 'NUESTRO EQUIPO',
@@ -1190,8 +1190,8 @@ export default {
     'Cubrimos toda el área metropolitana de Sydney, incluyendo Inner West, Eastern Suburbs, CBD, North Shore, Manly y Northern Beaches.',
   "You can reschedule or cancel from the link in your booking confirmation, or by calling us. It's free with more than 24 hours' notice; with less, a fee of up to the visit & diagnosis fee may apply.":
     'Podés reprogramar o cancelar desde el enlace de tu confirmación de reserva, o llamándonos. Es gratis con más de 24 horas de aviso; con menos, puede cobrarse hasta el valor de la visita y diagnóstico.',
-  "Yes. The van carries inner tubes in the common sizes, and any other part your bike needs we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately.":
-    'Sí. La van lleva cámaras de aire en las medidas más comunes, y cualquier otro repuesto que necesite tu bici lo conseguimos y volvemos a colocarlo. Los repuestos no están incluidos en el precio del servicio - el mecánico te los cotiza antes de colocar nada, y se cobran aparte.',
+  "Yes. We carry inner tubes in the common sizes, and any other part your bike needs we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately.":
+    'Sí. Llevamos cámaras de aire en las medidas más comunes, y cualquier otro repuesto que necesite tu bici lo conseguimos y volvemos a colocarlo. Los repuestos no están incluidos en el precio del servicio - el mecánico te los cotiza antes de colocar nada, y se cobran aparte.',
   "A Tune-Up takes about an hour, a Standard Service about 1.5 hours, a Standard+ Service about 2.5 hours and an Ultimate Overhaul about 4 hours. You'll see the estimate when you book.":
     'Un Ajuste lleva cerca de una hora, un Servicio Estándar unas 1,5 horas, un Servicio Estándar+ unas 2,5 horas y una Revisión Completa unas 4 horas. Vas a ver la estimación al reservar.',
   'We accept all major credit cards, debit cards, Apple Pay, and Google Pay. Payment is taken after service completion.':
@@ -1508,9 +1508,10 @@ export default {
     'Las actualizaciones en vivo se detuvieron. Recargá para reintentar.',
   '⏳ Pending confirmation': '⏳ Pendiente de confirmación',
   '✅ Confirmed': '✅ Confirmada',
-  '🚐 Mechanic on the way!': '🚐 ¡El mecánico está en camino!',
+  '🛻 Mechanic on the way!': '🛻 ¡El mecánico está en camino!',
   '✅ Service completed': '✅ Servicio completado',
   Van: 'Camioneta',
+  Mechanic: 'Mecánico',
   'Service price': 'Precio del servicio',
   'Locating mechanic...': 'Ubicando al mecánico...',
   Live: 'En vivo',
@@ -1729,8 +1730,8 @@ export default {
   'Most stocked': 'Más surtido',
   'See all': 'Ver todo',
   'Our workshop has wheels': 'Nuestro taller tiene ruedas',
-  'There is no shop to drive to. The van carries the tools and the mechanic, and it comes to your door anywhere in Sydney.':
-    'No hay un local al que ir. La van lleva las herramientas y al mecánico, y llega a tu puerta en cualquier parte de Sydney.',
+  'There is no shop to drive to. The mechanic brings the tools to your door, anywhere in Sydney.':
+    'No hay un local al que ir. El mecánico lleva las herramientas hasta tu puerta, en cualquier parte de Sydney.',
   'The parts in this shop are the ones our mechanics reach for. Not sure which one fits your bike? Send us a photo on WhatsApp and we tell you.':
     'Los repuestos de esta tienda son los que usan nuestros mecánicos. ¿No sabés cuál le sirve a tu bici? Mandanos una foto por WhatsApp y te decimos.',
   products: 'productos',
@@ -1942,8 +1943,8 @@ export default {
   // La foto del triage. 'Remove photo' ya esta mas arriba (la resena lo usa de
   // aria-label) y una clave repetida hace fallar scripts/i18n-check.mjs.
   'Add a photo of your bike': 'Sumá una foto de tu bici',
-  'It is how the mechanic knows which part to load in the van before he drives out.':
-    'Así el mecánico sabe qué pieza cargar en la van antes de salir.',
+  'It is how the mechanic knows which parts to bring before he heads out.':
+    'Así el mecánico sabe qué repuestos llevar antes de salir.',
   'Take a photo': 'Sacar una foto',
   'That photo is too big to send. Your booking is not affected.':
     'Esa foto es demasiado grande para enviarla. Tu reserva no se ve afectada.',

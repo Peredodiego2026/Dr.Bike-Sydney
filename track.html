@@ -76,7 +76,7 @@ function tVal(s) {
 }
 
 const stColors={pending:'pending',confirmed:'confirmed',enroute:'enroute',in_progress:'enroute',completed:'completed'};
-const stLabels={pending:'⏳ Pending confirmation',confirmed:'✅ Confirmed',enroute:'🚐 Mechanic on the way!',in_progress:'🔧 Service in progress',completed:'✅ Service completed'};
+const stLabels={pending:'⏳ Pending confirmation',confirmed:'✅ Confirmed',enroute:'🛻 Mechanic on the way!',in_progress:'🔧 Service in progress',completed:'✅ Service completed'};
 // The arrival writes 'inprogress', and older rows say 'arrived'; this page only
 // knew 'in_progress', so once the mechanic arrived the client saw a raw
 // "inprogress", no "has arrived" card and no live updates. One name for all
@@ -183,12 +183,10 @@ async function init(){
          <span class="status-chip ${statusClass}">${escHtml(statusLabel)}</span>
        </div>
        <div class="row"><span class="lbl">Address</span><span>${escHtml(bkg.address||'—')}</span></div>
-       <!-- The value used to be "Van 1 · Mechanic 1": the word Van repeated the
-            label beside it, "Mechanic 1" named nobody, and both were built by
-            interpolation so they could never match a dictionary key - they read
-            in English on a Spanish page. The label already says Van, so the
-            value is the number and the person. -->
-       <div class="row"><span class="lbl">Van</span><span>${Number(bkg.van_number)||1}${mech.name?' · '+escHtml(mech.name):''}</span></div>
+       <!-- This row said "Van 1 · <name>". There is no van (the vehicle is a
+            ute), and the number is a routing zone the client has no use for -
+            so it names the mechanic, once there is one. -->
+       ${mech.name?`<div class="row"><span class="lbl">Mechanic</span><span>${escHtml(mech.name)}</span></div>`:''}
        <div class="row"><span class="lbl">Service price</span><span style="font-weight:700;color:var(--blue-text)">$${Number(bkg.service_price)||0}</span></div>
        ${(bkg.status==='enroute'||bkg.status==='in_progress')?`<div id="track-map"></div><div id="map-status" style="font-size:11px;color:var(--mgray);text-align:center;margin-top:6px">Locating mechanic...</div><div id="track-eta" style="display:none;font-size:13px;font-weight:700;color:var(--blue-text);text-align:center;margin-top:6px"></div>`:''}
      </div>
@@ -213,7 +211,7 @@ async function init(){
        </div>
      </div>
      <div class="card" style="background:var(--green-lt);border-color:#6EE7B7">
-       <div style="font-size:24px;margin-bottom:8px">🚐</div>
+       <div style="font-size:24px;margin-bottom:8px">🛻</div>
        <div style="font-size:14px;font-weight:700;color:var(--green-ink)">${bkg.status==='enroute'?'Your mechanic is on the way!':'Your mechanic has arrived!'}</div>
        ${finishAt?`<div id="track-finish" style="font-size:15px;font-weight:700;color:var(--navy);margin-top:8px"><span>Should be done around</span> <span style="white-space:nowrap">${escHtml(finishAt)}</span></div>`:''}
        <div style="font-size:12px;color:var(--green-text);margin-top:4px">This page updates automatically</div>
@@ -276,7 +274,7 @@ async function init(){
     if(mechMarker) {
       mechMarker.setLatLng([lat, lng]);
     } else {
-      mechMarker = L.marker([lat, lng], {icon: L.divIcon({html:'🚐', className:'', iconSize:[24,24]})}).addTo(trackMap);
+      mechMarker = L.marker([lat, lng], {icon: L.divIcon({html:'🛻', className:'', iconSize:[24,24]})}).addTo(trackMap);
     }
     if(destLat && destLng && !destMarker) {
       destMarker = L.marker([destLat, destLng], {icon: L.divIcon({html:'🏠', className:'', iconSize:[22,22]})}).addTo(trackMap);
