@@ -292,7 +292,9 @@
 // story" del celular, en los dos diccionarios.
 // v169: fuera "Qualified & background-checked" de la tarjeta del mecanico (no
 // es cierto) y de los dos diccionarios.
-const CACHE_STATIC = 'drbike-static-v169';
+// v170: "within 2 business hours" -> "within one business day" en el
+// formulario de flotas (landing) y su mensaje de gracias, en los dos diccionarios.
+const CACHE_STATIC = 'drbike-static-v170';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

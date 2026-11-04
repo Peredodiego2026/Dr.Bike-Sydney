@@ -1130,7 +1130,7 @@ export default {
   'Full PDF report per bike after every visit. Track the health of your entire fleet.':
     '每次上门后为每辆车提供完整PDF报告，追踪整个车队的健康状况。',
   'Get a fleet quote': '获取车队报价',
-  "We'll reply within 2 business hours": '我们会在2个工作小时内回复',
+  "We'll reply within one business day": '我们会在一个工作日内回复',
   'Business name *': '企业名称 *',
   'Your name *': '您的姓名 *',
   'Work email *': '工作邮箱 *',
@@ -1153,7 +1153,7 @@ export default {
   'Request Fleet Quote': '申请车队报价',
   "No commitment required. We'll build a custom plan for your team.":
     '无需承诺，我们会为您的团队制定专属方案。',
-  "Thanks! We'll be in touch within 2 business hours.": '谢谢！我们会在2个工作小时内联系您。',
+  "Thanks! We'll be in touch within one business day.": '谢谢！我们会在一个工作日内联系您。',
   'Check your inbox for a confirmation.': '请查收邮箱中的确认信息。',
   'Quote Requested': '已申请报价',
   'Something went wrong. Please email us directly.': '出现问题，请直接给我们发邮件。',

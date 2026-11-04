@@ -112,8 +112,8 @@ const DICT = {
       'Contact us': 'Contactanos',
       '📌 Standard, Major and Ultimate services available at equivalent volume discounts. Emergency callout available.':
         '📌 Los servicios Estándar, Mayor y Definitivo también tienen descuentos por volumen equivalentes. Servicio de urgencia disponible.',
-      'Tell us about your fleet and we\'ll get back to you within 2 business hours.':
-        'Contanos sobre tu flota y te respondemos dentro de 2 horas hábiles.',
+      'Tell us about your fleet and we\'ll get back to you within one business day.':
+        'Contanos sobre tu flota y te respondemos dentro de un día hábil.',
       'Business Name *': 'Nombre de la Empresa *',
       'e.g. Acme Deliveries Pty Ltd': 'ej. Acme Deliveries Pty Ltd',
       'Contact Name *': 'Nombre de Contacto *',
@@ -132,8 +132,8 @@ const DICT = {
       'Type of bikes, location, any specific issues...':
         'Tipo de bicis, ubicación, algún problema en particular...',
       'Send Enquiry →': 'Enviar Consulta →',
-      '✅ Enquiry sent! We\'ll be in touch within 2 business hours.':
-        '✅ ¡Consulta enviada! Te contactamos dentro de 2 horas hábiles.',
+      '✅ Enquiry sent! We\'ll be in touch within one business day.':
+        '✅ ¡Consulta enviada! Te contactamos dentro de un día hábil.',
       Home: 'Inicio',
       'For Business': 'Para Empresas',
       'Book a Service': 'Reservar Servicio',
@@ -216,8 +216,8 @@ const DICT = {
       'Contact us': '联系我们',
       '📌 Standard, Major and Ultimate services available at equivalent volume discounts. Emergency callout available.':
         '📌 标准、中级和全面保养服务同样享有相应的批量折扣。可提供紧急上门服务。',
-      'Tell us about your fleet and we\'ll get back to you within 2 business hours.':
-        '告诉我们您的车队情况，我们会在 2 个工作小时内回复您。',
+      'Tell us about your fleet and we\'ll get back to you within one business day.':
+        '告诉我们您的车队情况，我们会在一个工作日内回复您。',
       'Business Name *': '企业名称 *',
       'e.g. Acme Deliveries Pty Ltd': '例如 Acme Deliveries Pty Ltd',
       'Contact Name *': '联系人姓名 *',
@@ -235,8 +235,8 @@ const DICT = {
       'Tell us more (optional)': '补充说明（可选）',
       'Type of bikes, location, any specific issues...': '自行车类型、地点、具体问题……',
       'Send Enquiry →': '发送咨询 →',
-      '✅ Enquiry sent! We\'ll be in touch within 2 business hours.':
-        '✅ 咨询已发送！我们会在 2 个工作小时内与您联系。',
+      '✅ Enquiry sent! We\'ll be in touch within one business day.':
+        '✅ 咨询已发送！我们会在一个工作日内与您联系。',
       Home: '首页',
       'For Business': '企业服务',
       'Book a Service': '预约服务',

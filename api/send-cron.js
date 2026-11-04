@@ -1183,7 +1183,7 @@ async function handleB2B(req, res) {
         <tr><td style="padding:8px;border-bottom:1px solid #E2E8F0;font-weight:600">Email</td><td style="padding:8px;border-bottom:1px solid #E2E8F0">${email}</td></tr>
         <tr><td style="padding:8px;border-bottom:1px solid #E2E8F0;font-weight:600">Fleet / Frequency</td><td style="padding:8px;border-bottom:1px solid #E2E8F0">${fleetSize} bikes · ${frequency || 'N/A'}</td></tr>
         <tr><td style="padding:8px;font-weight:600">Notes</td><td style="padding:8px">${notes || 'N/A'}</td></tr>
-      </table><p style="color:#475569;margin-top:16px">Reply within 2 business hours.</p>`,
+      </table><p style="color:#475569;margin-top:16px">Reply within one business day.</p>`,
     });
     if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 200)}`);
   } catch (e) {
@@ -1207,7 +1207,7 @@ async function handleB2B(req, res) {
       html: translateEmailHtml(
         emailFrame({
           title: `Thanks for your enquiry, ${contactName}`,
-          body: `<p style="margin:0">We received your fleet enquiry for <strong style="color:${INK}">${businessName}</strong> (${fleetSize} bikes). We'll get back to you within <strong style="color:${INK}">2 business hours</strong> (every day 8am–5pm, Sydney time).</p>`,
+          body: `<p style="margin:0">We received your fleet enquiry for <strong style="color:${INK}">${businessName}</strong> (${fleetSize} bikes). We'll get back to you within <strong style="color:${INK}">one business day</strong>.</p>`,
         }),
         lang
       ),
