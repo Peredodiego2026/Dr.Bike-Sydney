@@ -1273,6 +1273,8 @@ describe('programmatic card taps leave the scrolling to the card handler', () =>
 
   it('the AI recommendation button clicks the card and the last scroll is the handler own', () => {
     const ctx = runtime();
+    // showDiagResult escapes the AI's answer (tests/unit/ai-diagnosis-escaped.test.js).
+    vm.runInContext(sliceFn('function escapeHtml('), ctx);
     vm.runInContext(sliceFn('function showDiagResult('), ctx);
     const { card, scrolls } = handlerCard();
     let bookClick;
