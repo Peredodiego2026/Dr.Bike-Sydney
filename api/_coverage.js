@@ -68,9 +68,14 @@ export const PERIMETER_MAX_MINUTES = 45;
 // them. So did every `callout_zones` row (scripts/raise-prices-10.sql) - that
 // table is layer 2 of resolveCoverage() and has to stay on the same ladder,
 // or a booking made while routing is down is priced on the old one.
+//
+// Three bands again from 5-nov-2026, set by Diego: "35 hasta 20 min nomas,
+// despues de 20 a 35 min manejando 45 aus y 35 min a 45 min a 60 aus". Until
+// then it was $35 up to 25 minutes and $60 from 25 to 45, so the whole Lower
+// North Shore, Chatswood and the CBD paid the same as Bondi.
 export const FEE_BANDS = [
-  { maxMinutes: 25, fee: 35 },
-  // $55 until 3-nov-2026 (Diego: "a unos 45 min que cueste 60").
+  { maxMinutes: 20, fee: 35 },
+  { maxMinutes: 35, fee: 45 },
   { maxMinutes: PERIMETER_MAX_MINUTES, fee: 60 },
 ];
 
@@ -170,32 +175,11 @@ export const VALID_FEES = [...new Set([...FEE_BANDS.map((b) => b.fee), PENINSULA
   (a, b) => a - b
 );
 
-// ── The near half of the north corridor ───────────────────────────────────
-//
-// Terrey Hills measures 26 real minutes - one minute past the first band - and
-// without this it would cost the same as the Sydney CBD. It is the same road
-// the van already drives to Frenchs Forest, in the same council area, with no
-// bridge and no toll. The clock alone gets it wrong for exactly the reason the
-// peninsula gets it wrong: what a trip costs is not only how long it takes.
-//
-// Postcode 2084 is Terrey Hills, Duffys Forest and Cottage Point. Cottage
-// Point is further out than the others and the first-band fee is generous there - it is four
-// streets at the end of a dead end and it will almost never come up. Being
-// generous in his own council is the right side to err on.
-export const NORTH_NEAR_FEE = 35;
-export const NORTH_NEAR_POSTCODES = new Set(['2084']);
-export const NORTH_NEAR_SUBURBS = new Set([
-  'terrey hills',
-  'duffys forest',
-  'cottage point',
-  'ingleside',
-]);
-
-export function matchNearNorth(address) {
-  return matchZoneList(address, NORTH_NEAR_POSTCODES, NORTH_NEAR_SUBURBS)
-    ? { fee: NORTH_NEAR_FEE, basis: 'north-corridor' }
-    : null;
-}
+// There used to be a second hand-drawn zone here: Terrey Hills, Duffys Forest,
+// Cottage Point and Ingleside at the first band's fee, because at 26 minutes
+// the two-band ladder priced them like the CBD. With the middle band back
+// (5-nov-2026) Diego chose "según minutos": they pay what the clock says,
+// like everyone else, so the zone is gone.
 
 export function feeForMinutes(minutes) {
   const band = FEE_BANDS.find((b) => minutes <= b.maxMinutes);
@@ -236,25 +220,12 @@ export function resolveCoverage({ minutes = null, zone = null, km = null, addres
   const mins = real === null ? null : Math.round(real);
   const distanceKm = Number.isFinite(km) ? Math.round(km) : null;
 
-  // Layer 0: the two hand-drawn zones, decided by postcode or suburb name
-  // alone. They run FIRST and they are the only layers that can overrule the
-  // clock, because the clock cannot see that a road has no bridge and no toll.
-  // Palm Beach is 46 real minutes and would otherwise be refused for being one
-  // minute too far up a road the van drives anyway; Terrey Hills is 26 and
-  // would cost the same as the CBD. Nothing here depends on a network call,
-  // which is the whole point - see matchZoneList.
-  const north = matchNearNorth(address);
-  if (north) {
-    return {
-      covered: 'in',
-      calloutFee: north.fee,
-      minutes: mins,
-      km: distanceKm,
-      zoneName: zone?.zoneName ?? 'Northern Beaches',
-      basis: north.basis,
-    };
-  }
-
+  // Layer 0: the hand-drawn far peninsula, decided by postcode or suburb name
+  // alone. It runs FIRST and it is the only layer that can overrule the clock,
+  // because the clock cannot see that a road has no bridge and no toll. Palm
+  // Beach is 46 real minutes and would otherwise be refused for being one
+  // minute too far up a road the mechanic drives anyway. Nothing here depends
+  // on a network call, which is the whole point - see matchZoneList.
   const peninsula = matchFarPeninsula(address);
   if (peninsula) {
     return {

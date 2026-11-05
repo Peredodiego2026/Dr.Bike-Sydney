@@ -21,7 +21,6 @@ import {
   TRAFFIC_FACTOR,
   toRealMinutes,
   FEE_BANDS,
-  matchNearNorth,
   matchFarPeninsula,
   PENINSULA_FAR_FEE,
   VALID_FEES,
@@ -35,19 +34,27 @@ describe('feeForMinutes - the ladder that reproduces the existing prices', () =>
     expect(feeForMinutes(20)).toBe(35); // edge of the band
   });
 
-  // feeForMinutes takes REAL minutes now. The middle band is gone: it was
-  // $35 up to 32 ROUTER minutes, and the CBD measures 25 router minutes, so
-  // the whole middle ring - CBD, North Sydney, Chatswood, Bondi Junction -
-  // was quietly being charged $35 where callout_zones said $45.
-  it('everything past 25 real minutes is $60, including the city', () => {
-    expect(feeForMinutes(26)).toBe(60);
-    expect(feeForMinutes(32)).toBe(60); // Sydney CBD
+  // Three bands from 5-nov-2026, set by Diego: $35 up to 20 real minutes,
+  // $45 to 35, $60 to 45. Until then it was $35 to 25 and $60 to 45, so
+  // North Sydney, Chatswood and the CBD paid the same as Bondi.
+  it('20 to 35 real minutes is $45 - the Lower North Shore, Chatswood, the CBD', () => {
+    expect(feeForMinutes(21)).toBe(45);
+    expect(feeForMinutes(32)).toBe(45); // Sydney CBD
+    expect(feeForMinutes(35)).toBe(45); // edge of the band
+  });
+
+  it('35 to 45 real minutes is $60 - Surry Hills, the Inner West, Bondi', () => {
+    expect(feeForMinutes(36)).toBe(60);
+    expect(feeForMinutes(44)).toBe(60); // Bondi Beach
     expect(feeForMinutes(45)).toBe(60); // Coogee, right on the line
   });
 
-  it('$45 is not a time band any more - only the peninsula charges it', () => {
-    expect(FEE_BANDS.map((b) => b.fee)).toEqual([35, 60]);
-    expect(feeForMinutes(30)).not.toBe(45);
+  it('the ladder is exactly the three bands Diego set', () => {
+    expect(FEE_BANDS).toEqual([
+      { maxMinutes: 20, fee: 35 },
+      { maxMinutes: 35, fee: 45 },
+      { maxMinutes: 45, fee: 60 },
+    ]);
   });
 
   it('past the perimeter there is no fee to quote', () => {
@@ -316,9 +323,12 @@ describe('the far peninsula is $45 to the tip, not a rejection', () => {
     expect(r.covered).toBe('in');
   });
 
-  it('the near half of the north is still $35 - Mona Vale is inside 20 min', () => {
+  // Mona Vale (2103) is not the far peninsula: it pays by the clock, and at
+  // 22 real minutes that is the middle band since 5-nov-2026.
+  it('Mona Vale is not the peninsula - it pays by the clock', () => {
     const r = resolveCoverage({ address: '5 Bungan St, Mona Vale NSW 2103', minutes: 17, km: 11 });
-    expect(r.calloutFee).toBe(35);
+    expect(r.calloutFee).toBe(45);
+    expect(r.basis).toBe('driving-time');
   });
 
   // A street named after a suburb must not reprice the address. "12 Newport
@@ -345,9 +355,8 @@ describe('the far peninsula is $45 to the tip, not a rejection', () => {
     expect(matchFarPeninsula('Dee Why NSW 2099')).toBeNull();
     expect(matchFarPeninsula('')).toBeNull();
     expect(matchFarPeninsula(null)).toBeNull();
-    expect(matchNearNorth('Sydney NSW 2000')).toBeNull();
     expect(resolveCoverage({ address: 'Sydney NSW 2000', minutes: 25, km: 18 }).calloutFee).toBe(
-      60
+      45
     );
   });
 
@@ -371,21 +380,26 @@ describe('the far peninsula is $45 to the tip, not a rejection', () => {
 describe('real minutes, not free-flow minutes', () => {
   const router = (real) => real / TRAFFIC_FACTOR;
 
-  it('the CBD is in the top band again - it was quietly dropped to the middle one', () => {
+  it('the CBD is 32 real minutes, the middle band', () => {
     // 25 router minutes, which is what OSRM actually returns for the CBD
     const r = resolveCoverage({ address: 'Sydney NSW 2000', minutes: 25, km: 18 });
-    expect(r.calloutFee).toBe(60);
+    expect(r.calloutFee).toBe(45);
     expect(r.minutes).toBe(32);
   });
 
   it.each([
+    ['Mona Vale', 18],
+    ['Neutral Bay', 19],
     ['North Sydney', 21],
     ['Chatswood', 22],
     ['Lane Cove', 25],
     ['St Ives', 25],
-    ['Bondi Junction', 32],
-  ])('%s goes back to $60', (_name, routerMins) => {
-    expect(resolveCoverage({ minutes: routerMins, km: 20 }).calloutFee).toBe(60);
+  ])('%s is $45', (_name, routerMins) => {
+    expect(resolveCoverage({ minutes: routerMins, km: 20 }).calloutFee).toBe(45);
+  });
+
+  it('Bondi Junction is $60', () => {
+    expect(resolveCoverage({ minutes: 32, km: 24 }).calloutFee).toBe(60);
   });
 
   it.each([
@@ -393,8 +407,6 @@ describe('real minutes, not free-flow minutes', () => {
     ['Manly', 8],
     ['Frenchs Forest', 11],
     ['Mosman', 16],
-    ['Mona Vale', 18],
-    ['Neutral Bay', 19],
   ])('%s stays $35', (_name, routerMins) => {
     expect(resolveCoverage({ minutes: routerMins, km: 10 }).calloutFee).toBe(35);
   });
@@ -421,31 +433,25 @@ describe('real minutes, not free-flow minutes', () => {
   });
 });
 
-// The other hand-drawn zone. Terrey Hills is 26 real minutes - one minute
-// past the $35 band - and without this it would cost the same as the CBD,
-// despite being the same council, the same road, no bridge and no toll.
-describe('the near half of the north corridor is $35', () => {
-  it.each([
-    ['12 Myoora Rd, Terrey Hills NSW 2084', 20],
-    ['Terrey Hills', null],
-    ['Duffys Forest NSW 2084', 24],
-    ['Ingleside, NSW', null],
-  ])('%s is $35', (address, minutes) => {
-    const r = resolveCoverage({ address, minutes, km: 17 });
-    expect(r.covered).toBe('in');
-    expect(r.calloutFee).toBe(35);
+// Terrey Hills, Duffys Forest, Cottage Point and Ingleside had their own flat
+// $35 zone until 5-nov-2026. Diego: "según minutos" - at 26 real minutes
+// Terrey Hills is the middle band like anywhere else.
+describe('Terrey Hills pays by the clock now', () => {
+  it('is $45 at its real 26 minutes', () => {
+    const r = resolveCoverage({
+      address: '12 Myoora Rd, Terrey Hills NSW 2084',
+      minutes: 20,
+      km: 17,
+    });
+    expect(r.minutes).toBe(26);
+    expect(r.calloutFee).toBe(45);
+    expect(r.basis).toBe('driving-time');
   });
 
-  it('does not reach past the corridor', () => {
-    expect(matchNearNorth('Sydney NSW 2000')).toBeNull();
-    expect(matchNearNorth('Hornsby NSW 2077')).toBeNull();
-    expect(matchNearNorth('Palm Beach NSW 2108')).toBeNull();
-    expect(matchNearNorth(null)).toBeNull();
-  });
-
-  // "5 Terrey St, Bondi" must not become a $35 trip to Terrey Hills.
-  it('a street name does not move the fee', () => {
-    expect(matchNearNorth('5 Terrey Hills Rd, Bondi NSW 2026')).toBeNull();
+  it('with no routing and no zone row it is a quote, not a guessed $35', () => {
+    const r = resolveCoverage({ address: 'Terrey Hills NSW 2084', minutes: null, km: null });
+    expect(r.covered).toBe('unknown');
+    expect(r.calloutFee).toBeNull();
   });
 });
 

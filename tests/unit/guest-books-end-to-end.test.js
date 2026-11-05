@@ -60,7 +60,11 @@ function table(name) {
     is: (c, v) => (filters.push({ op: 'is', col: c, val: v }), q),
     in: (c, v) => (filters.push({ op: 'in', col: c, val: v }), q),
     insert: (r) => {
-      const row = { id: 'bk-' + ++seq, tracking_token: 'tok-' + seq, ...(Array.isArray(r) ? r[0] : r) };
+      const row = {
+        id: 'bk-' + ++seq,
+        tracking_token: 'tok-' + seq,
+        ...(Array.isArray(r) ? r[0] : r),
+      };
       db[name].push(row);
       inserted = [row];
       return q;
@@ -79,11 +83,11 @@ function table(name) {
 vi.mock('stripe', () => ({
   default: class {
     constructor() {
-      // $35 is Terrey Hills' band fee (NORTH_NEAR_FEE, $25 before the +$10 of
-      // 24-oct-2026), which is what the address below
+      // $45 is the far peninsula's flat fee (PENINSULA_FAR_FEE), which is what
+      // the address below
       // resolves to with no network at all (api/_coverage.js). A different
       // number here would be refunded as an amount mismatch, correctly.
-      this.paymentIntents = { retrieve: async (id) => ({ id, status: 'succeeded', amount: 3500 }) };
+      this.paymentIntents = { retrieve: async (id) => ({ id, status: 'succeeded', amount: 4500 }) };
       this.checkout = { sessions: { retrieve: async () => ({}) } };
       this.refunds = { create: async () => ({ id: 're_1' }) };
     }
@@ -98,11 +102,16 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }));
 
-// Terrey Hills is one of the two hand-drawn zones, matched on the postcode
+// Avalon Beach is the hand-drawn far peninsula, matched on the postcode
 // alone precisely so an outage cannot turn a booking away - but
 // resolveAddressCoverage still ASKS the router in parallel. Stubbed so the
 // suite never reaches OSRM or Nominatim.
-globalThis.fetch = async () => ({ ok: false, status: 503, json: async () => ({}), text: async () => '' });
+globalThis.fetch = async () => ({
+  ok: false,
+  status: 503,
+  json: async () => ({}),
+  text: async () => '',
+});
 
 const { handleCreateBooking } = await import('../../api/auth.js');
 
@@ -123,7 +132,10 @@ const GUEST = {
   service_name: SERVICE.name,
   scheduled_date: '2026-10-15', // a Thursday - no Sunday surcharge
   scheduled_time: '09:00',
-  address: '12 Myoora Rd, Terrey Hills NSW 2084',
+  // Terrey Hills until 5-nov-2026, when its own flat-fee zone was removed:
+  // with the network stubbed it no longer resolves, and the test kept passing
+  // down a different path. The peninsula still resolves offline.
+  address: '12 Barrenjoey Rd, Avalon Beach NSW 2107',
 };
 
 const call = (over) => {
@@ -147,7 +159,9 @@ describe('a guest gets all the way through', () => {
       hold_booking_id: hold.body.id,
       payment_intent_id: 'pi_test_123',
     });
-    expect(booking.statusCode, `the booking was refused: ${JSON.stringify(booking.body)}`).toBe(200);
+    expect(booking.statusCode, `the booking was refused: ${JSON.stringify(booking.body)}`).toBe(
+      200
+    );
 
     // One row, not two: the second call UPDATES the hold. A booking beside it
     // would mean the held hour was never released and the calendar shows the

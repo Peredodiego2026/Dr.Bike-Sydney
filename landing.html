@@ -956,8 +956,8 @@
 <!-- ── COVERAGE ────────────────────────────────────────────────────────────────
      Where we go and what the trip costs, visible without opening anything
      (conversion study, 2026-11-03, phase 2). The four rows are api/_coverage.js
-     read aloud - FEE_BANDS, PENINSULA_FAR_FEE, NORTH_NEAR_SUBURBS and the
-     45-minute perimeter - and tests/unit/landing-coverage.test.js fails if they
+     read aloud - the three FEE_BANDS, PENINSULA_FAR_FEE and the 45-minute
+     perimeter (three bands from 5-nov-2026) - and tests/unit/landing-coverage.test.js fails if they
      stop agreeing. The base suburb is left out on purpose: it is where Diego
      starts his day. The button is the hero's fee check, which asks the server. -->
 <section id="coverage" style="padding:clamp(36px,6vh,72px) 0;background:var(--white)">
@@ -970,16 +970,20 @@
     </div>
     <ul class="coverage-list">
       <li>
-        <div><strong>Northern Beaches</strong><span>Manly to Mona Vale, Frenchs Forest and Terrey Hills</span></div>
+        <div><strong>Up to 20 minutes</strong><span>Manly, Balgowlah, Dee Why, Narrabeen and Frenchs Forest</span></div>
         <b data-fee="near">$35</b>
+      </li>
+      <li>
+        <div><strong>20 to 35 minutes</strong><span>Mona Vale, Terrey Hills, Neutral Bay, North Sydney, Chatswood and the CBD</span></div>
+        <b data-fee="mid">$45</b>
       </li>
       <li>
         <div><strong>The far peninsula</strong><span>Newport, Bayview, Church Point, Avalon and Palm Beach</span></div>
         <b data-fee="peninsula">$45</b>
       </li>
       <li>
-        <div><strong>Within about 45 minutes</strong><span>North Shore, the CBD, Inner West and Eastern Suburbs</span></div>
-        <b data-fee="perimeter">Up to $60</b>
+        <div><strong>35 to 45 minutes</strong><span>Surry Hills, Glebe, Newtown, Balmain and Bondi Junction</span></div>
+        <b data-fee="perimeter">$60</b>
       </li>
       <li>
         <div><strong>Further out</strong><span>Hornsby, Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.</span></div>

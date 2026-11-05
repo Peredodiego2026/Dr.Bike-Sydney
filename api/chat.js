@@ -1,11 +1,5 @@
 ﻿import { guard, sanitize, sanitizeObj, rateLimit } from './_security.js';
-import {
-  FEE_BANDS,
-  PENINSULA_FAR_FEE,
-  NORTH_NEAR_FEE,
-  PERIMETER_MAX_MINUTES,
-  feeForMinutes,
-} from './_coverage.js';
+import { FEE_BANDS, PENINSULA_FAR_FEE, PERIMETER_MAX_MINUTES, feeForMinutes } from './_coverage.js';
 import { reviewStats, googleStats } from './_review-stats.js';
 
 // ── The visit fee, in the assistant's words ───────────────────────────────
@@ -26,8 +20,7 @@ export function formatFeeBands(bands = FEE_BANDS, peninsulaFee = PENINSULA_FAR_F
     return `- ${from} ${b.maxMinutes} minutes away: $${b.fee}`;
   });
   lines.push(
-    `- The northern end of the Northern Beaches (Newport, Bilgola, Avalon, Clareville, Whale Beach, Palm Beach, Bayview, Church Point): $${peninsulaFee} flat, however far up it is. One road, no bridge, no tolls - it is the corridor the mechanic already works in, so it is not priced like a trip across the city.`,
-    `- Terrey Hills, Duffys Forest, Cottage Point and Ingleside: $${NORTH_NEAR_FEE} flat - same road as Frenchs Forest, same council.`
+    `- The northern end of the Northern Beaches (Newport, Bilgola, Avalon, Clareville, Whale Beach, Palm Beach, Bayview, Church Point): $${peninsulaFee} flat, however far up it is. One road, no bridge, no tolls - it is the corridor the mechanic already works in, so it is not priced like a trip across the city.`
   );
   return lines.join('\n');
 }
@@ -38,43 +31,139 @@ export function formatFeeBands(bands = FEE_BANDS, peninsulaFee = PENINSULA_FAR_F
 // "Eastern Suburbs". Bondi Beach is 44 minutes: $60. The prompt also listed
 // Randwick as covered; it is 46 minutes, outside the same-day area.
 //
-// These are the minutes production's own check-coverage returned for
-// "<suburb> NSW" on 5-nov-2026 - the same number a booking is charged by.
+// These are real minutes for "<suburb> NSW", measured on 5-nov-2026 with
+// the geocoder, router and traffic factor check-coverage uses - the number a
+// booking is charged by (34 of them asked of production itself, which agreed
+// to the minute). The far peninsula is left out: it has its own flat fee in
+// formatFeeBands(). So is the base suburb, which is where Diego lives.
 // Only the minutes are stored: the fee comes from feeForMinutes(), so moving
 // a band in _coverage.js moves this text with it.
 export const MEASURED_MINUTES = [
+  ['Freshwater', 3],
   ['Brookvale', 6],
+  ['Queenscliff', 6],
   ['Dee Why', 8],
+  ['Narraweena', 8],
+  ['Beacon Hill', 9],
+  ['Fairlight', 10],
   ['Manly', 10],
+  ['Balgowlah', 12],
+  ['Collaroy', 12],
+  ['Cromer', 12],
+  ['Allambie Heights', 14],
   ['Frenchs Forest', 14],
+  ['Clontarf', 15],
+  ['Seaforth', 15],
+  ['Forestville', 17],
   ['Narrabeen', 17],
+  ['Belrose', 18],
+  ['Killarney Heights', 19],
   ['Mosman', 20],
+  ['Davidson', 22],
+  ['Elanora Heights', 22],
   ['Mona Vale', 23],
-  ['Neutral Bay', 24],
+  ['Warriewood', 23],
   ['Cremorne', 24],
-  ['North Sydney', 27],
+  ['Neutral Bay', 24],
+  ['Roseville', 24],
+  ['Ingleside', 26],
+  ['Terrey Hills', 26],
+  ['Cammeray', 27],
+  ['Castlecrag', 27],
   ['Crows Nest', 27],
+  ['Lindfield', 27],
+  ['Naremburn', 27],
+  ['North Sydney', 27],
+  ['Willoughby', 27],
   ['Chatswood', 28],
-  ['St Leonards', 29],
+  ['Waverton', 28],
+  ['Wollstonecraft', 28],
+  ['Artarmon', 29],
   ['Kirribilli', 29],
-  ['Sydney CBD', 32],
+  ['Milsons Point', 29],
+  ['Northbridge', 29],
+  ['St Leonards', 29],
+  ['Greenwich', 31],
+  ['Killara', 31],
+  ['Woolloomooloo', 31],
+  ['Gordon', 32],
   ['Lane Cove', 32],
+  ['St Ives', 32],
+  ['Sydney CBD', 32],
+  ['Darlinghurst', 33],
+  ['Potts Point', 33],
+  ['The Rocks', 33],
+  ['Edgecliff', 35],
+  ['Ultimo', 35],
+  ['Haymarket', 36],
   ['Paddington', 36],
+  ['Pymble', 36],
   ['Pyrmont', 36],
-  ['Glebe', 37],
+  ['Waterloo', 36],
   ['Double Bay', 37],
+  ['Glebe', 37],
+  ['Kensington', 37],
+  ['Rozelle', 37],
+  ['Zetland', 37],
+  ['Annandale', 38],
+  ['Chippendale', 38],
+  ['Macquarie Park', 38],
   ['Surry Hills', 38],
+  ['Turramurra', 38],
   ['Balmain', 40],
+  ['Bellevue Hill', 40],
+  ['Hunters Hill', 40],
+  ['Kingsford', 40],
+  ['Lilyfield', 40],
   ['Redfern', 40],
-  ['Leichhardt', 41],
+  ['Wahroonga', 40],
+  ['Alexandria', 41],
   ['Bondi Junction', 41],
+  ['Camperdown', 41],
+  ['Leichhardt', 41],
   ['Rose Bay', 41],
+  ['Top Ryde', 41],
+  ['Birchgrove', 42],
+  ['Drummoyne', 42],
+  ['Erskineville', 42],
+  ['Gladesville', 42],
   ['Newtown', 42],
   ['Ryde', 42],
   ['Bondi Beach', 44],
+  ['Bronte', 44],
+  ['Eastwood', 44],
+  ['Epping', 44],
+  ['Haberfield', 44],
+  ['Mascot', 44],
+  ['North Bondi', 44],
+  ['Petersham', 44],
+  ['St Peters', 44],
+  ['Stanmore', 44],
+  ['Tamarama', 44],
+  ['Waverley', 44],
+  ['Clovelly', 45],
   ['Coogee', 45],
+  ['Enmore', 45],
+  ['Five Dock', 45],
+  ['Waitara', 45],
+  ['West Ryde', 45],
+  ['Woollahra', 45],
+  ['Meadowbank', 46],
   ['Randwick', 46],
+  ['Sydenham', 46],
+  ['Ashfield', 47],
+  ['Asquith', 47],
+  ['Maroubra', 47],
+  ['Tempe', 47],
+  ['Dulwich Hill', 49],
   ['Marrickville', 49],
+  ['Vaucluse', 49],
+  ['Burwood', 50],
+  ['Mount Colah', 50],
+  ['Hurlstone Park', 51],
+  ['Strathfield', 52],
+  ['Watsons Bay', 52],
+  ['Berowra', 55],
   ['Parramatta', 59],
   ['Hornsby', 96],
 ];
@@ -419,7 +508,7 @@ ${servicesBlock || 'Prices are temporarily unavailable — tell the user to chec
 
 MOBILE VISIT & DIAGNOSIS: charged on top of the service price above. It is worked out from real DRIVING TIME from our Northern Beaches base to the customer's address - not from distance in kilometres, and not a flat rate.
 ${formatFeeBands()}
-These are real driving minutes, with traffic. You do not know how far a suburb is unless it is in SUBURB FEES below, so never guess a fee from the region a suburb belongs to (that is how Bondi got quoted the cheapest fee - look it up below). If the customer names a listed suburb, quote its fee. If it is not listed, say which listed suburb it is near and that it is probably the same, and that the exact fee shows as soon as they enter their address in the booking. If they don't name one, say "it depends on how far you are - from $${FEE_BANDS[0].fee}" and never quote a single number as if it applied everywhere. There is no band between them: a suburb is either inside the first one or it is not. The exact fee is confirmed when they enter their address at booking.
+These are real driving minutes, with traffic. You do not know how far a suburb is unless it is in SUBURB FEES below, so never guess a fee from the region a suburb belongs to (that is how Bondi got quoted the cheapest fee - look it up below). If the customer names a listed suburb, quote its fee. If it is not listed, say which listed suburb it is near and that it is probably the same, and that the exact fee shows as soon as they enter their address in the booking. If they don't name one, say "it depends on how far you are - from $${FEE_BANDS[0].fee}" and never quote a single number as if it applied everywhere. The exact fee is confirmed when they enter their address at booking.
 
 SUBURB FEES (real driving time from the base, as the booking measures it):
 ${formatSuburbFees()}
