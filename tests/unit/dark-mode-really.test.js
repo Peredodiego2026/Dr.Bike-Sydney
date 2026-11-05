@@ -192,7 +192,9 @@ describe('the team section is not empty on day one', () => {
   // the instant he cancelled his test booking.
   it('it starts from the mechanics, not from completed jobs', () => {
     const fn = auth.slice(auth.indexOf('async function handlePublicMechanics'));
-    const contactsAt = fn.indexOf('escalation_contacts');
+    // fetchContactsWithBio is the escalation_contacts read (5-nov: it retries
+    // without bio_es / bio_zh while that migration has not been run).
+    const contactsAt = fn.indexOf('fetchContactsWithBio(');
     const bookingsAt = fn.indexOf('status=eq.completed');
     expect(contactsAt).toBeGreaterThan(-1);
     expect(contactsAt).toBeLessThan(bookingsAt);

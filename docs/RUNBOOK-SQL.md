@@ -539,6 +539,11 @@ with
   union all select 60, 'add-booking-reschedules.sql', 'tabla booking_reschedules (fecha anterior, nueva, quien la cambio)',
     (exists (select 1 from tbl where t = 'booking_reschedules')
      and coalesce((select relrowsecurity from pg_class where oid = to_regclass('public.booking_reschedules')), false))
+  -- 61 entro el 2026-11-05: la bio del mecanico en espanol y chino. Si falta,
+  -- el admin guarda la bio igual y la web la muestra en ingles en los tres
+  -- idiomas; solo no hay traduccion.
+  union all select 61, 'add-mechanic-bio-translations.sql', 'escalation_contacts.bio_es + bio_zh (la bio del mecanico traducida)',
+    (select count(*) = 2 from col where t='escalation_contacts' and c in ('bio_es','bio_zh'))
 )
 select n as "#", script, que_agrega as "que agrega",
        case when ok then 'OK' else '>>> FALTA <<<' end as estado

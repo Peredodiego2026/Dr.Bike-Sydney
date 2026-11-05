@@ -146,8 +146,12 @@ async function init(){
   const mechAvatarHTML = mech.photo_url
     ? `<img decoding="async" loading="lazy" src="${escHtml(mech.photo_url)}" alt="${mechName}" style="width:68px;height:68px;border-radius:50%;object-fit:cover;border:3px solid var(--white);display:block">`
     : `<div style="width:68px;height:68px;border-radius:50%;background:var(--blue);border:3px solid var(--white);display:flex;align-items:center;justify-content:center;color:var(--white);font-size:24px;font-weight:700">${mechName.charAt(0)}</div>`;
-  const mechBioHTML = mech.bio
-    ? `<div style="font-size:12px;color:var(--mgray);margin-top:6px;line-height:1.4;padding:0 8px">${escHtml(mech.bio)}</div>`
+  // The bio in the client's language (Admin translates it on save), English
+  // until it has been. <html lang> is set by js/i18n.js as soon as it loads.
+  const bioLang = (document.documentElement.lang || 'en').slice(0, 2);
+  const mechBio = (bioLang === 'es' && mech.bio_es) || (bioLang === 'zh' && mech.bio_zh) || mech.bio || '';
+  const mechBioHTML = mechBio
+    ? `<div style="font-size:12px;color:var(--mgray);margin-top:6px;line-height:1.4;padding:0 8px">${escHtml(mechBio)}</div>`
     : '';
   const mechStatDivider = '<div style="width:1px;height:32px;background:var(--border)"></div>';
   // A "—" rating and "0 jobs done" are not stats - the landing card, its popup

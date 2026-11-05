@@ -11249,6 +11249,7 @@ async function loadMechanicProfiles() {
         <div style="font-size:15px;font-weight:700;color:var(--navy)">${esc(name)}</div>
         <div style="font-size:13px;color:var(--mgray);margin-top:2px">Dr. Bike Mobile Mechanic</div>
         <div style="font-size:13px;color:var(--gray);margin-top:8px;min-height:20px">${esc(c.bio) || '<span style="color:var(--mgray);font-style:italic">No bio yet — add one so clients feel confident.</span>'}</div>
+        ${mechBioTranslationsHTML(c)}
       </div>
       <div style="display:flex;justify-content:center;gap:24px;padding:14px 20px;margin-top:8px;border-top:1px solid var(--border)">
         <div style="text-align:center"><div style="font-weight:800;font-size:15px;color:var(--navy)">${jobs.length}</div><div style="font-size:11px;color:var(--mgray)">Jobs done</div></div>
@@ -11263,7 +11264,26 @@ async function loadMechanicProfiles() {
     .join('');
 }
 
+// What the clients reading in Spanish and Chinese see. Nothing at all until
+// scripts/add-mechanic-bio-translations.sql has been run (no bio_es column):
+// a "not translated" warning there would ask Diego for something this screen
+// cannot do.
+function mechBioTranslationsHTML(c) {
+  if (!c.bio || !('bio_es' in c)) return '';
+  if (!c.bio_es || !c.bio_zh) {
+    return '<div style="font-size:12px;color:var(--amber-ink);margin-top:6px">Not translated yet - open Edit profile and save to translate it</div>';
+  }
+  const row = (label, text) =>
+    `<div style="font-size:12px;color:var(--mgray);margin-top:6px;line-height:1.4"><span style="font-weight:700">${label}</span> ${esc(text)}</div>`;
+  return row('ES', c.bio_es) + row('中文', c.bio_zh);
+}
+
+// The row as the modal loaded it: saveMechProfile compares against it to know
+// whether the English bio changed, and whether the translation columns exist.
+let _mechProfileLoaded = null;
+
 function openMechProfileModal(id) {
+  _mechProfileLoaded = null;
   sb.from('escalation_contacts')
     .select('*')
     .eq('id', id)
@@ -11274,6 +11294,7 @@ function openMechProfileModal(id) {
         return;
       }
       _pendingCroppedPhotoBlob = null;
+      _mechProfileLoaded = c;
       document.getElementById('mech-profile-modal-id').value = c.id;
       document.getElementById('mech-profile-modal-name').value = [c.first_name, c.last_name]
         .filter(Boolean)
@@ -11330,10 +11351,18 @@ async function saveMechProfile() {
     }
   }
 
-  const { error } = await sb
-    .from('escalation_contacts')
-    .update({ first_name, last_name, photo_url, bio: bio || null, van_number })
-    .eq('id', id);
+  const loaded = _mechProfileLoaded && _mechProfileLoaded.id === id ? _mechProfileLoaded : null;
+  const canTranslate = !!loaded && 'bio_es' in loaded;
+  const bioChanged = !loaded || (loaded.bio || '') !== bio;
+  const update = { first_name, last_name, photo_url, bio: bio || null, van_number };
+  // A new English bio clears the old translations in the same write, so no
+  // page ever shows the Spanish of a bio that no longer exists - while the new
+  // translation is on its way, Spanish and Chinese readers get the English.
+  if (canTranslate && bioChanged) {
+    update.bio_es = null;
+    update.bio_zh = null;
+  }
+  const { error } = await sb.from('escalation_contacts').update(update).eq('id', id);
 
   if (error) {
     showToast('Save failed: ' + error.message);
@@ -11341,7 +11370,38 @@ async function saveMechProfile() {
   }
   _pendingCroppedPhotoBlob = null;
   closeMechProfileModal();
+  // Also when the bio did not change but was never translated: that is how a
+  // bio written before the translation existed gets its Spanish and Chinese.
+  if (canTranslate && bio && (bioChanged || !loaded.bio_es || !loaded.bio_zh)) {
+    showToast('Mechanic profile updated ✓ - translating the bio…');
+    loadMechanicProfiles();
+    translateMechBio(id);
+    return;
+  }
   showToast('Mechanic profile updated ✓');
+  loadMechanicProfiles();
+}
+
+// The server translates the bio that is saved in the database (not this
+// form's text) and stores it in bio_es / bio_zh - see handleAdminTranslateBio.
+async function translateMechBio(id) {
+  try {
+    const {
+      data: { session },
+    } = await sb.auth.getSession();
+    if (!session) throw new Error('admin session expired - sign in again');
+    const resp = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role: 'admin-translate-bio', access_token: session.access_token, contact_id: id }),
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(data.message || data.error || 'HTTP ' + resp.status);
+    showToast('Bio translated to Spanish and Chinese ✓');
+  } catch (e) {
+    console.error('[translate-bio]', e);
+    showToast('Profile saved, but the bio translation failed: ' + e.message);
+  }
   loadMechanicProfiles();
 }
 
