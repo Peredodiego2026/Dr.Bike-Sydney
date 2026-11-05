@@ -195,7 +195,14 @@ export function translateValue(original) {
   const trimmed = original.trim();
   if (!trimmed) return original;
   if (currentLang === 'en') return original;
-  const translated = dict[currentLang]?.[trimmed];
+  // index.html is prettier-formatted, so a long sentence reaches this point
+  // split over two lines with the indentation inside it. The dictionary keys
+  // have single spaces, and scripts/i18n-check.mjs collapses whitespace before
+  // it looks them up - so the check said "translated" while the page showed 8
+  // sentences in English in es and zh (found 2026-11-05). Same collapse here,
+  // only when the exact text has no entry.
+  const translated =
+    dict[currentLang]?.[trimmed] || dict[currentLang]?.[trimmed.replace(/\s+/g, ' ')];
   return translated ? original.replace(trimmed, translated) : original;
 }
 

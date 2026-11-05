@@ -297,7 +297,9 @@
 // v171: fuera "van" de lo que ve el cliente (el vehiculo es una Musso):
 // "Fully Equipped Workshop", FAQ de repuestos, pista de la foto y
 // "Mechanic" en el seguimiento, en los dos diccionarios.
-const CACHE_STATIC = 'drbike-static-v171';
+// v172: js/i18n.js junta los espacios antes de buscar en el diccionario: 8
+// frases de index.html partidas en dos lineas salian en ingles en es y zh.
+const CACHE_STATIC = 'drbike-static-v172';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
