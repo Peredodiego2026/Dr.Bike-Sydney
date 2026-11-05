@@ -104,7 +104,7 @@ function neighbourLink(slug, from, prefix) {
 // Existing blog posts. Used to be English-only (linked from English suburb
 // pages only, on the theory that sending a Spanish reader to an English
 // article is worse than not linking it) - the posts themselves got es/zh
-// translations in 4.2 (scripts/translate-blog-posts.mjs), so now every
+// translations in 4.2 (now built by scripts/build-blog.mjs), so now every
 // language links its own version.
 const BLOG_POSTS = {
   en: [
@@ -781,6 +781,16 @@ const lastmod = new Map(
 );
 const lastmodOf = (url) => lastmod.get(url) || TODAY;
 
+// The blog says when it last changed, in each page's JSON-LD dateModified
+// (scripts/build-blog.mjs, MODIFIED). The sitemap repeats that date instead of
+// keeping its own, so a content fix to a post reaches Google's lastmod without
+// anyone remembering to touch this file.
+const blogLastmod = (file, url) => {
+  const p = path.join(ROOT, file);
+  const m = fs.existsSync(p) && /"dateModified":"(\d{4}-\d{2}-\d{2})"/.exec(fs.readFileSync(p, 'utf8'));
+  return m ? m[1] : lastmodOf(url);
+};
+
 function sitemap() {
   const entries = [];
 
@@ -790,6 +800,21 @@ function sitemap() {
     <lastmod>${lastmodOf(`${SITE}${p.path}`)}</lastmod>
     <changefreq>${p.changefreq}</changefreq>
     <priority>${p.priority}</priority>
+  </url>`);
+  }
+
+  // The blog index (/blog, /es/blog, /zh/blog), since 2026-11-05.
+  for (const [code, l] of Object.entries(LANGS)) {
+    const alts = Object.entries(LANGS)
+      .map(([, a]) => `    <xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${SITE}${a.prefix}/blog"/>`)
+      .concat([`    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE}/blog"/>`])
+      .join('\n');
+    entries.push(`  <url>
+    <loc>${SITE}${l.prefix}/blog</loc>
+${alts}
+    <lastmod>${blogLastmod(path.join(l.prefix.slice(1), 'blog', 'index.html'), `${SITE}${l.prefix}/blog`)}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>${code === 'en' ? '0.6' : '0.4'}</priority>
   </url>`);
   }
 
@@ -807,7 +832,7 @@ function sitemap() {
       entries.push(`  <url>
     <loc>${SITE}${l.prefix}/blog/${slug}</loc>
 ${alts}
-    <lastmod>${lastmodOf(`${SITE}${l.prefix}/blog/${slug}`)}</lastmod>
+    <lastmod>${blogLastmod(path.join(l.prefix.slice(1), 'blog', `${slug}.html`), `${SITE}${l.prefix}/blog/${slug}`)}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>${code === 'en' ? '0.7' : '0.5'}</priority>
   </url>`);
@@ -923,7 +948,7 @@ console.log(`content changed: ${changed} of ${written} pages`);
 
 if (onDisk(SITEMAP_PATH) !== sitemap()) fs.writeFileSync(SITEMAP_PATH, sitemap());
 console.log(
-  `sitemap.xml: ${STATIC_PAGES.length + (SUBURBS.length + BLOG_SLUGS.length + TRANSLATED_STATIC_PAGES.length) * 3} urls ` +
-    `(${SUBURBS.length} suburbs + ${BLOG_SLUGS.length} blog posts + ${TRANSLATED_STATIC_PAGES.length} translated pages, x 3 languages)`
+  `sitemap.xml: ${STATIC_PAGES.length + (SUBURBS.length + 1 + BLOG_SLUGS.length + TRANSLATED_STATIC_PAGES.length) * 3} urls ` +
+    `(${SUBURBS.length} suburbs + the blog index + ${BLOG_SLUGS.length} blog posts + ${TRANSLATED_STATIC_PAGES.length} translated pages, x 3 languages)`
 );
 console.log(`done: ${changed} of ${written} pages rewritten`);

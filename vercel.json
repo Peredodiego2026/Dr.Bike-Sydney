@@ -115,6 +115,14 @@
       "destination": "/$1/$2.html"
     },
     {
+      "source": "/blog",
+      "destination": "/blog/index.html"
+    },
+    {
+      "source": "/(es|zh)/blog",
+      "destination": "/$1/blog/index.html"
+    },
+    {
       "source": "/blog/(best-bikes-for-sydney-commuting-2026|cycling-safety-tips-sydney-roads|electric-bike-laws-nsw-2026|how-to-choose-a-bike-mechanic-sydney|how-to-clean-your-bike-chain-sydney)",
       "destination": "/blog/$1.html"
     },

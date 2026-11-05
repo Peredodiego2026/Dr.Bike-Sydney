@@ -22,3 +22,8 @@ test-results/
 # Database migrations are run by hand in the Supabase SQL editor. Publishing
 # them tells a reader the exact shape of every table.
 scripts/*.sql
+
+# The English article bodies scripts/build-blog.mjs builds blog/ from. They are
+# bare HTML fragments: served, they would be a second, unstyled copy of every
+# post for a crawler to find.
+scripts/blog-posts/
