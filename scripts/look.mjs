@@ -46,6 +46,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { ANALYTICS_HOSTS, answerAnalyticsEmpty } from './analytics-block.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, '.look');
@@ -319,6 +320,10 @@ await context.addInitScript(() => {
     navigator.serviceWorker.getRegistrations?.().then((rs) => rs.forEach((r) => r.unregister()));
   }
 });
+
+// Con --prod esto es un robot abriendo el sitio real: Google Analytics y
+// PostHog no lo tienen que contar (scripts/analytics-block.mjs dice por que).
+await context.route(ANALYTICS_HOSTS, answerAnalyticsEmpty);
 
 const page = await context.newPage();
 

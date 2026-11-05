@@ -9,9 +9,14 @@
 // This counts it. Every test appends one line - requests and bytes to
 // *.supabase.co - to test-results/supabase-traffic.jsonl, and
 // scripts/e2e-supabase-traffic.mjs adds them up after the run.
+//
+// And it keeps the suite out of Google Analytics and PostHog: see
+// scripts/analytics-block.mjs for why, and robots-stay-out-of-analytics.test.js
+// for the proof that it holds.
 import { test as base, expect } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
+import { ANALYTICS_HOSTS, answerAnalyticsEmpty } from '../../scripts/analytics-block.mjs';
 
 export const TRAFFIC_FILE = path.join('test-results', 'supabase-traffic.jsonl');
 const SUPABASE = /^https:\/\/[a-z0-9]+\.supabase\.co\//;
@@ -24,6 +29,19 @@ const SUPABASE = /^https:\/\/[a-z0-9]+\.supabase\.co\//;
 export const SUPABASE_MAX_BYTES = 300 * 1024;
 
 export const test = base.extend({
+  // Every analytics request any page of the test asks for, answered empty.
+  // The list is the fixture's value, so a test can prove the page DID ask.
+  analyticsBlocked: [
+    async ({ context }, use) => {
+      const asked = [];
+      await context.route(ANALYTICS_HOSTS, (route) => {
+        asked.push(route.request().url());
+        return answerAnalyticsEmpty(route);
+      });
+      await use(asked);
+    },
+    { auto: true },
+  ],
   supabaseMeter: [
     async ({ page }, use, testInfo) => {
       const sizes = [];
