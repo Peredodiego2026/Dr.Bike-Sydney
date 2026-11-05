@@ -20,7 +20,7 @@ import {
   suburbFactsFor,
   MEASURED_MINUTES,
 } from '../../api/chat.js';
-import { FEE_BANDS, NORTH_NEAR_FEE, feeForMinutes } from '../../api/_coverage.js';
+import { FEE_BANDS, feeForMinutes } from '../../api/_coverage.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const chat = readFileSync(join(root, 'api/chat.js'), 'utf8');
@@ -55,10 +55,17 @@ describe('the chatbot quotes suburbs from measured driving time', () => {
     }
   });
 
-  it('the north corridor flat fee is in the bands block', () => {
-    expect(formatFeeBands()).toContain(
-      `Terrey Hills, Duffys Forest, Cottage Point and Ingleside: $${NORTH_NEAR_FEE} flat`
-    );
+  // The Terrey Hills flat fee went on 5-nov-2026; it pays by the clock now.
+  it('no flat fee for Terrey Hills any more', () => {
+    expect(formatFeeBands()).not.toContain('Terrey Hills');
+    expect(lineFor(block, 'Terrey Hills')).toMatch(/fee \$45$/);
+  });
+
+  // The peninsula has its own flat fee; listing it by minutes would contradict it.
+  it('neither the far peninsula nor the base suburb is in the list', () => {
+    for (const name of ['Newport', 'Avalon Beach', 'Palm Beach', 'Bayview', 'Curl Curl']) {
+      expect(lineFor(block, name), name).toBeUndefined();
+    }
   });
 
   it('the prompt carries the list and no longer names Randwick as covered', () => {

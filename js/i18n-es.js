@@ -722,15 +722,18 @@ export default {
   'Every visit starts from our Northern Beaches base. The visit & diagnosis fee comes from the real driving time to your address, not from the suburb name.':
     'Cada visita sale de nuestra base en Northern Beaches. La visita y diagnóstico se calcula con el tiempo real de manejo hasta tu dirección, no con el nombre del suburbio.',
   'Northern Beaches': 'Northern Beaches',
-  'Manly to Mona Vale, Frenchs Forest and Terrey Hills':
-    'De Manly a Mona Vale, Frenchs Forest y Terrey Hills',
+  'Up to 20 minutes': 'Hasta 20 minutos',
+  'Manly, Balgowlah, Dee Why, Narrabeen and Frenchs Forest':
+    'Manly, Balgowlah, Dee Why, Narrabeen y Frenchs Forest',
+  '20 to 35 minutes': 'De 20 a 35 minutos',
+  'Mona Vale, Terrey Hills, Neutral Bay, North Sydney, Chatswood and the CBD':
+    'Mona Vale, Terrey Hills, Neutral Bay, North Sydney, Chatswood y el CBD',
   'The far peninsula': 'La punta de la península',
   'Newport, Bayview, Church Point, Avalon and Palm Beach':
     'Newport, Bayview, Church Point, Avalon y Palm Beach',
-  'Within about 45 minutes': 'A unos 45 minutos',
-  'North Shore, the CBD, Inner West and Eastern Suburbs':
-    'North Shore, el CBD, Inner West y Eastern Suburbs',
-  'Up to $60': 'Hasta $60',
+  '35 to 45 minutes': 'De 35 a 45 minutos',
+  'Surry Hills, Glebe, Newtown, Balmain and Bondi Junction':
+    'Surry Hills, Glebe, Newtown, Balmain y Bondi Junction',
   'Further out': 'Más lejos',
   'Hornsby, Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.':
     'Hornsby, Western Sydney, Sutherland Shire y las Blue Mountains. No se cobra nada online: mandanos tu dirección y te cotizamos el viaje.',

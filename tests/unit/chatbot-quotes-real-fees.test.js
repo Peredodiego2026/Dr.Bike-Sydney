@@ -55,15 +55,17 @@ describe('the chatbot quotes fees the booking can actually charge', () => {
     }
   });
 
-  // The specific ghost. The peninsula cap ($35 until the +$10 of 24-oct-2026,
-  // $45 now) as a TIME band is what sent Chatswood the wrong number; as the
-  // peninsula cap it is correct and must stay.
-  it('does not resurrect the peninsula fee as a middle time band', () => {
-    const timeBands = FEE_BANDS.map((b) => b.fee);
-    expect(timeBands).not.toContain(PENINSULA_FAR_FEE);
-    expect(formatFeeBands()).not.toMatch(
-      new RegExp(`\\$${PENINSULA_FAR_FEE}\\b(?![^\\n]*(?:Palm Beach|flat))`)
-    );
+  // This used to guard against a ghost: a middle band the code no longer
+  // charged, which sent Chatswood the wrong number. On 5-nov-2026 Diego put a
+  // real one back ($45 from 20 to 35 minutes), so $45 now appears twice on
+  // purpose - once as a band, once as the far peninsula's flat fee.
+  it('states every band and the peninsula cap, each as what it is', () => {
+    const block = formatFeeBands();
+    FEE_BANDS.forEach((band, i) => {
+      const from = i === 0 ? 'Up to' : `${FEE_BANDS[i - 1].maxMinutes} to`;
+      expect(block).toContain(`- ${from} ${band.maxMinutes} minutes away: $${band.fee}`);
+    });
+    expect(block).toMatch(new RegExp(`Palm Beach[^\\n]*\\$${PENINSULA_FAR_FEE} flat`));
   });
 
   // Derived, not retyped: no fee or perimeter written by hand in the prompt.

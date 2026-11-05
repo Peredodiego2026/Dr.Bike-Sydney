@@ -664,15 +664,18 @@ export default {
   'Every visit starts from our Northern Beaches base. The visit & diagnosis fee comes from the real driving time to your address, not from the suburb name.':
     '每次上门都从我们位于 Northern Beaches 的基地出发。上门检查费按到您地址的实际车程计算，而不是按区域名称。',
   'Northern Beaches': 'Northern Beaches',
-  'Manly to Mona Vale, Frenchs Forest and Terrey Hills':
-    'Manly 至 Mona Vale、Frenchs Forest 和 Terrey Hills',
+  'Up to 20 minutes': '20 分钟车程内',
+  'Manly, Balgowlah, Dee Why, Narrabeen and Frenchs Forest':
+    'Manly、Balgowlah、Dee Why、Narrabeen 和 Frenchs Forest',
+  '20 to 35 minutes': '20 至 35 分钟车程',
+  'Mona Vale, Terrey Hills, Neutral Bay, North Sydney, Chatswood and the CBD':
+    'Mona Vale、Terrey Hills、Neutral Bay、North Sydney、Chatswood 和 CBD',
   'The far peninsula': '半岛北端',
   'Newport, Bayview, Church Point, Avalon and Palm Beach':
     'Newport、Bayview、Church Point、Avalon 和 Palm Beach',
-  'Within about 45 minutes': '约 45 分钟车程内',
-  'North Shore, the CBD, Inner West and Eastern Suburbs':
-    'North Shore、CBD、Inner West 和 Eastern Suburbs',
-  'Up to $60': '最高 $60',
+  '35 to 45 minutes': '35 至 45 分钟车程',
+  'Surry Hills, Glebe, Newtown, Balmain and Bondi Junction':
+    'Surry Hills、Glebe、Newtown、Balmain 和 Bondi Junction',
   'Further out': '更远的地区',
   'Hornsby, Western Sydney, the Sutherland Shire and the Blue Mountains. Nothing is charged online: send your address and we quote the trip.':
     'Hornsby、Western Sydney、Sutherland Shire 和 Blue Mountains。线上不收取任何费用：发送您的地址，我们为您报价。',

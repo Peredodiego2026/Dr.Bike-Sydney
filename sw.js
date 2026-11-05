@@ -297,7 +297,9 @@
 // v171: fuera "van" de lo que ve el cliente (el vehiculo es una Musso):
 // "Fully Equipped Workshop", FAQ de repuestos, pista de la foto y
 // "Mechanic" en el seguimiento, en los dos diccionarios.
-const CACHE_STATIC = 'drbike-static-v171';
+// v172: la visita pasa a tres tramos ($35 hasta 20 min, $45 de 20 a 35, $60 de
+// 35 a 45): filas nuevas en 'Areas We Cover', en los dos diccionarios.
+const CACHE_STATIC = 'drbike-static-v172';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here
