@@ -16,6 +16,14 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     trace: 'on-first-retry',
+    // The site's sw.js claims the page, and in WebKit a request that goes
+    // through a service worker never reaches context.route - so the analytics
+    // block in tests/e2e/fixtures.js held in Chrome and leaked in Mobile Safari:
+    // gtag.js loaded for real and a page_view reached Google Analytics (seen in
+    // the trace of the first run, 2026-11-05). Playwright's own advice for
+    // request interception is to block service workers. No e2e test exercises
+    // the worker; tests/unit/sw-*.test.js do.
+    serviceWorkers: 'block',
   },
   projects: [
     {
