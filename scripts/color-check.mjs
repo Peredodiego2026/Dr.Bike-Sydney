@@ -122,7 +122,8 @@ const BUDGET = {
 // So they share ONE budget. It exists because they were outside the check
 // entirely until 2026-08-09, and #1848C8 had reached all 60 of them.
 //
-// The 5 blog posts got es/zh translations too (4.2, scripts/translate-blog-posts.mjs)
+// The 5 blog posts got es/zh translations too (4.2; since 2026-11-05 all 18 blog
+// pages, index included, are written by scripts/build-blog.mjs and hold no hex)
 // - three copies each now, same as the suburb pages, so they read the same way:
 // root name, es/blog/<name>, zh/blog/<name>. Before this the loop only ever
 // looked at the root blog/ folder, because es/blog and zh/blog did not exist
@@ -135,7 +136,7 @@ const BUDGET = {
 // it is the hand-authored source those two translations are generated FROM,
 // already tracked in its own BUDGET entry above - counting it here too would
 // budget the same file in two places at once.
-const GENERATED_BUDGET = 1339;
+const GENERATED_BUDGET = 712;
 const INDIVIDUALLY_BUDGETED_ROOT = new Set(['business.html']);
 
 function generatedPages() {

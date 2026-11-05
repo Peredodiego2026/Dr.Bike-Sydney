@@ -481,6 +481,13 @@ fragmento completo, el ingles sigue siendo la fuente), separado de
 entre si (cada post linkea a los otros 4 desde su seccion "More from Dr.
 Bike Sydney").
 
+**Reemplazado 2026-11-05 (`feat/blog-redesign`):** `translate-blog-posts.mjs` y
+`add-blog-area-links.mjs` ya no existen. `scripts/build-blog.mjs` arma las 18
+páginas del blog (5 posts + indice `/blog`, x 3 idiomas) desde
+`scripts/blog-posts/<slug>.htm` (solo el cuerpo en ingles) + POSTS/UI/DICT.
+`blog/`, `es/blog/` y `zh/blog/` son SALIDA: `npm run blog:build` despues de
+cualquier cambio, y `npm run check` falla si alguien las edita a mano.
+
 **Encontrado de pasada, arreglado aparte:** `best-bikes-for-sydney-commuting-2026.html`
 tenia el `<style>` entero con llaves dobles (`*{{box-sizing...}}`, resto de
 un template que nunca se compilo) - el CSS nunca se aplicaba, la pagina
