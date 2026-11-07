@@ -128,7 +128,7 @@ const POSTS = {
     ga: 'blog_ebike',
     cta: {
       title: 'E-bike service in Sydney',
-      text: "Our E-bike Service checks cable connections, bolts, brakes and gears. If something's wrong with the motor, the E-bike Diagnostic scans the system and reads the error codes. We come to you.",
+      text: 'Our E-bike Service is a Standard Service for e-bikes, plus a check of the electrical connections and every bolt. We come to you.',
       label: 'ctaEbike',
     },
     related: ['best-bikes-for-sydney-commuting-2026', 'cycling-safety-tips-sydney-roads', 'how-to-choose-a-bike-mechanic-sydney'],
@@ -741,8 +741,8 @@ const DICT = {
       'E-bikes require different service intervals than conventional bikes, particularly around the motor, battery connections and rear hub. Our lead mechanic spent a year and a half maintaining a rental fleet of Bosch-powered Cannondale e-mountain bikes at Trails HQ on Hamilton Island.':
         'Las e-bikes necesitan intervalos de servicio distintos a las bicis convencionales, sobre todo en el motor, las conexiones de la batería y el buje trasero. Nuestro mecánico principal pasó un año y medio manteniendo una flota de alquiler de e-MTB Cannondale con motor Bosch en Trails HQ, en Hamilton Island.',
       'E-bike service in Sydney': 'Servicio de E-Bikes en Sídney',
-      'Our E-bike Service checks cable connections, bolts, brakes and gears. If something\'s wrong with the motor, the E-bike Diagnostic scans the system and reads the error codes. We come to you.':
-        'Nuestro Servicio de E-Bike revisa las conexiones de cables, los tornillos, los frenos y los cambios. Si algo anda mal con el motor, el Diagnóstico de e-bike escanea el sistema y lee los códigos de error. Vamos hasta vos.',
+      'Our E-bike Service is a Standard Service for e-bikes, plus a check of the electrical connections and every bolt. We come to you.':
+        'Nuestro Servicio de E-Bike es un Servicio Estándar para e-bikes, más una revisión de las conexiones eléctricas y de toda la tornillería. Vamos hasta vos.',
       'Rules and fines as published by the NSW Government (<a href="https://www.nsw.gov.au/driving-boating-and-transport/bikes-e-bikes-e-scooters/bicycles-electric-bikes/e-bike-faqs">nsw.gov.au e-bike FAQs</a>), checked November 2026. Amounts change, so check there before relying on them.':
         'Reglas y multas según lo publicado por el Gobierno de NSW (<a href="https://www.nsw.gov.au/driving-boating-and-transport/bikes-e-bikes-e-scooters/bicycles-electric-bikes/e-bike-faqs">preguntas frecuentes sobre e-bikes en nsw.gov.au</a>), revisado en noviembre de 2026. Los montos cambian, así que confirmalos ahí antes de basarte en ellos.',
     },
@@ -789,8 +789,8 @@ const DICT = {
       'E-bikes require different service intervals than conventional bikes, particularly around the motor, battery connections and rear hub. Our lead mechanic spent a year and a half maintaining a rental fleet of Bosch-powered Cannondale e-mountain bikes at Trails HQ on Hamilton Island.':
         '电动自行车的保养周期与传统自行车不同，尤其是电机、电池连接和后轮毂部分。我们的主理技师曾在汉密尔顿岛的 Trails HQ 用一年半时间维护一支搭载 Bosch 电机的 Cannondale 电动山地车租赁车队。',
       'E-bike service in Sydney': '悉尼电动自行车服务',
-      'Our E-bike Service checks cable connections, bolts, brakes and gears. If something\'s wrong with the motor, the E-bike Diagnostic scans the system and reads the error codes. We come to you.':
-        '我们的电动车服务会检查线缆连接、螺栓、刹车和变速。如果电机出现问题，电动车诊断会扫描整个系统并读取故障代码。我们上门服务。',
+      'Our E-bike Service is a Standard Service for e-bikes, plus a check of the electrical connections and every bolt. We come to you.':
+        '我们的电动车服务是电动车版的标准服务，另检查电气连接和所有螺丝。我们上门服务。',
       'Rules and fines as published by the NSW Government (<a href="https://www.nsw.gov.au/driving-boating-and-transport/bikes-e-bikes-e-scooters/bicycles-electric-bikes/e-bike-faqs">nsw.gov.au e-bike FAQs</a>), checked November 2026. Amounts change, so check there before relying on them.':
         '规则和罚款以新州政府公布的信息为准（<a href="https://www.nsw.gov.au/driving-boating-and-transport/bikes-e-bikes-e-scooters/bicycles-electric-bikes/e-bike-faqs">nsw.gov.au 电动自行车常见问题</a>），核对于2026年11月。金额会有变动，请以该网站为准。',
     },
