@@ -498,7 +498,8 @@ export default {
   'Standard Service': '标准服务',
   'Standard+ Service': '标准+服务',
   Repairs: '维修',
-  'From $27': '起价 $27',
+  'From $12': '起价 $12',
+  'From $55': '起价 $55',
   'From $90': '起价 $90',
   From: '起价',
   'E-Bike Service': '电动车服务',
@@ -1013,13 +1014,13 @@ export default {
   'Visit & diagnosis applies (from $35, depending on your suburb)':
     '需支付上门检查费（从$35起，视郊区而定）',
   'Priority scheduling (72hs)': '优先预约（72小时）',
-  '2 free minor repairs (under $70) + 1 free bike wash + 1 free Tune-Up per month':
-    '每月2次免费小额维修（低于$70）+ 1次免费洗车 + 1次免费基础调校',
+  '1 free minor repair (under $70) + 1 free bike wash + 1 free Tune-Up per month':
+    '每月1次免费小额维修（低于$70）+ 1次免费洗车 + 1次免费基础调校',
   'Visit & diagnosis included': '含上门检查费',
   '1 emergency callout per month (visit & diagnosis fee applies)':
     '每月1次紧急上门（需付上门检查费）',
-  '3 free minor repairs (under $70) + 2 free bike washes + 1 free Tune-Up per month':
-    '每月3次免费小额维修（低于$70）+ 2次免费洗车 + 1次免费基础调校',
+  '2 free minor repairs (under $70) + 2 free bike washes + 1 free Tune-Up per month':
+    '每月2次免费小额维修（低于$70）+ 2次免费洗车 + 1次免费基础调校',
   '15% off extra services, plus 5% more': '额外服务享85折，再多减5%',
   '1 emergency callout per month (visit & diagnosis fee waived in your zone)':
     '每月1次紧急上门（在您所在区域内免上门检查费）',
@@ -1028,8 +1029,8 @@ export default {
   '1 free bike wash per month': '每月1次免费洗车',
   'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $35, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.':
     '数字化服务记录是Standard/VIP会员专享。不含上门检查费 - 您的覆盖服务仍需支付上门检查费（从$35起，视郊区而定）。完整保养服务（基础调校及以上）不计入免费小额维修额度。备件或更换零件（如链条、变速器、刹车卡钳、线缆）安装前会先报价，费用另计。',
-  'A wash plus an average minor repair is worth around $90. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
-    '一次洗车加一次平均小额维修价值约$90。使用Basic（$67/月）在享受其他服务5%折扣之前就已经划算了。',
+  'A wash plus an average minor repair is worth around $80. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
+    '一次洗车加一次平均小额维修价值约$80。使用Basic（$67/月）在享受其他服务5%折扣之前就已经划算了。',
   '2 free minor repairs per month (any repair under $70)':
     '每月2次免费小额维修（任何低于$70的维修）',
   '1 free Tune-Up per month': '每月1次免费基础调校',
@@ -1038,13 +1039,11 @@ export default {
     '每月1次紧急上门（需付上门检查费，从$35起视郊区而定）',
   'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.':
     '备件或更换零件（如链条、变速器、刹车卡钳、线缆）安装前会先报价，费用另计。',
-  'A Tune-Up ($119) + a wash ($50) + 2 minor repairs (~$100) = about $269 in free work every month, for $97.':
-    '1次基础调校（$119）+ 1次洗车（$50）+ 2次小额维修（约$100）= 每月约$269的免费服务，只需$97。',
-  '3 free minor repairs per month (any repair under $70)':
-    '每月3次免费小额维修（任何低于$70的维修）',
+  'A Tune-Up ($119) + a wash ($50) + 1 minor repair (~$30) = about $199 in free work every month, for $97.':
+    '1次基础调校（$119）+ 1次洗车（$50）+ 1次小额维修（约$30）= 每月约$199的免费服务，只需$97。',
   '2 free bike washes per month': '每月2次免费洗车',
-  'A Tune-Up ($119) + 2 washes ($100) + 3 minor repairs (~$150) = about $369 in free work every month, for $197.':
-    '1次基础调校（$119）+ 2次洗车（$100）+ 3次小额维修（约$150）= 每月约$369的免费服务，只需$197。',
+  'A Tune-Up ($119) + 2 washes ($100) + 2 minor repairs (~$60) = about $279 in free work every month, for $197.':
+    '1次基础调校（$119）+ 2次洗车（$100）+ 2次小额维修（约$60）= 每月约$279的免费服务，只需$197。',
 
   // ── Gift card success alert ──────────────────────────────────────────
   '🎁 Gift card purchased! It has been emailed to the recipient with their unique code.':
@@ -1465,6 +1464,131 @@ export default {
   'Tubeless conversion per wheel.': '每轮真空胎改装。',
   'Per spoke, includes wheel re-true': '按辐条计价，含轮组重新校正',
   'New tyre fitted, tyre cost extra': '安装新外胎，外胎另行计价',
+  // 7-nov-2026: the catalog split into variants (brakes, gears, tubes,
+  // tubeless, handlebars). Card heading = table name, so one entry each.
+  'Inner Tube Replacement': '更换内胎',
+  'Inner Tube Replacement - E-bike': '更换内胎 - 电动车',
+  'Tubeless Puncture Repair': '无内胎补胎',
+  'Tubeless Rim Tape': '无内胎轮圈胶带',
+  'Tubeless Rim Tape - with CushCore': '无内胎轮圈胶带 - 含CushCore',
+  'Tubeless Sealant Top-Up': '无内胎补胎液补充',
+  'Tubeless Tyre Replacement': '无内胎轮胎更换',
+  'Tubeless Tyre Replacement - with CushCore': '无内胎轮胎更换 - 含CushCore',
+  'CushCore Install': 'CushCore安装',
+  'Brake Adjustment - V-brake / Mechanical': '刹车调整 - V刹 / 机械碟刹',
+  'Brake Adjustment - Hydraulic': '刹车调整 - 油压碟刹',
+  'Brake Adjustment - Hydraulic + Rotor True': '刹车调整 - 油压 + 碟片校正',
+  'Brake Lever Replacement': '刹车把更换',
+  'Brake Install - External Routing': '刹车安装 - 外走线',
+  'Brake Install - Internal Routing': '刹车安装 - 内走线',
+  'Brake Hose - Hydraulic, External': '油压刹车油管 - 外走线',
+  'Brake Hose - Hydraulic, Internal': '油压刹车油管 - 内走线',
+  'Gear Adjustment - up to 8-speed': '变速调整 - 8速及以下',
+  'Gear Adjustment - 10/11/12-speed': '变速调整 - 10/11/12速',
+  'Gear Adjustment - Electronic': '变速调整 - 电子变速',
+  'Cable & Housing - Mechanical, External': '线管与线壳 - 机械，外走线',
+  'Cable & Housing - Mechanical, Internal': '线管与线壳 - 机械，内走线',
+  'Grip Install': '车把握套安装',
+  'Handlebar Replacement - Flat': '车把更换 - 平把',
+  'Handlebar Replacement - Flat, Cut to Size': '车把更换 - 平把，裁切至合适宽度',
+  'Handlebar Replacement - Road': '车把更换 - 公路弯把',
+  'Headset Service - Internal Routing': '头碗保养 - 内走线',
+  'A Standard Service for e-bikes, plus a check of the electrical connections and every bolt.':
+    '电动车版标准保养，另检查电气连接和所有螺丝。',
+  'Tune-Up plus drivetrain clean, bearings cleaned, minor wheel true and inspection report.':
+    '基础调校加传动系统清洁、轴承清洁、轻度车轮校正和检查报告。',
+  'Everything in Standard plus new cable housing and steel inner cables, wheel truing, headset check and hydraulic brakes bled of air bubbles (no oil change).':
+    '包含标准保养全部内容，另更换新线管和钢制内线、车轮校正、头碗检查，以及油压刹车排除气泡（不换油）。',
+  'New tyre fitted on a wheel with an inner tube. Tyre not included.':
+    '为有内胎的车轮安装新外胎。不含外胎费用。',
+  'Tubeless setup per wheel: new rim tape and sealant, tyre mounted. Valve not included.':
+    '每个车轮的无内胎安装：新轮圈胶带和补胎液，安装外胎。不含气嘴。',
+  'Significant spoke tension correction. Nipples included.': '大幅校正辐条张力。含辐条帽。',
+  'Disc pads (caliper aligned) or V-brake pads, per brake.':
+    '碟刹片（含卡钳对正）或V刹刹车皮，按每个刹车计。',
+  'Full hydraulic bleed with fresh oil, per brake.': '完整油压排气并更换新油，按每个刹车计。',
+  'Fit and size a new chain, gears adjusted. Chain not included.':
+    '安装新链条并截至合适长度，含变速调整。不含链条费用。',
+  'Bottom bracket cleaned and greased, or replaced if needed. Part not included.':
+    '清洁并润滑中轴，如有需要则更换。不含零件费用。',
+  'Clean, adjust and regrease headset. Bearings always cleaned.':
+    '清洁、调整并重新润滑头碗。轴承一律清洁。',
+  'Flat tyre fixed with a new inner tube, per wheel. Tube not included.':
+    '用新内胎修复爆胎，按每个车轮计。不含内胎费用。',
+  'V-brake or mechanical disc brake adjusted, per brake. Levers checked.':
+    '调整V刹或机械碟刹，按每个刹车计。并检查刹车把。',
+  'Brake fitted with external routing, per brake.': '外走线安装刹车，按每个刹车计。',
+  'Derailleur indexing and cable tension, up to 8-speed.': '变速器定位和线缆张力调整，8速及以下。',
+  'Outer housing and steel inner cable replaced, external routing.':
+    '更换外线管和钢制内线，外走线。',
+  'Flat handlebar replaced, controls refitted.': '更换平把，并重新安装操控件。',
+  'New inner tube on an e-bike wheel. Tube not included.': '为电动车车轮更换新内胎。不含内胎费用。',
+  'From $55: a plug, or a full strip to fix the tape or valve with fresh sealant.':
+    '$55起：补胎塞，或完全拆卸修复轮圈胶带或气嘴并加入新补胎液。',
+  'New tubeless rim tape, per wheel.': '更换新的无内胎轮圈胶带，按每个车轮计。',
+  'New tubeless rim tape on a wheel with a CushCore insert, per wheel.':
+    '为装有CushCore内衬的车轮更换新的无内胎轮圈胶带，按每个车轮计。',
+  'Sealant top-up only, per wheel.': '仅补充补胎液，按每个车轮计。',
+  'New tubeless tyre fitted, per wheel. Tyre and sealant not included.':
+    '安装新的无内胎外胎，按每个车轮计。不含外胎和补胎液费用。',
+  'New tubeless tyre fitted over a CushCore insert, per wheel. Tyre and sealant not included.':
+    '在CushCore内衬上安装新的无内胎外胎，按每个车轮计。不含外胎和补胎液费用。',
+  'CushCore insert installed, per wheel. Sealant and parts not included.':
+    '安装CushCore内衬，按每个车轮计。不含补胎液和零件费用。',
+  'Hydraulic disc brake adjusted, per brake. Rotor alignment not included.':
+    '调整油压碟刹，按每个刹车计。不含碟片校正。',
+  'Hydraulic disc brake checked for air bubbles and the rotor aligned, per brake.':
+    '检查油压碟刹是否有气泡并校正碟片，按每个刹车计。',
+  'Brake lever replaced and air bubbles bled out, no oil change.': '更换刹车把并排除气泡，不换油。',
+  'Brake fitted with internal routing, per brake. More if the motor has to come out.':
+    '内走线安装刹车，按每个刹车计。如需拆下电机则费用更高。',
+  'Hydraulic brake hose replaced, external routing.': '更换油压刹车油管，外走线。',
+  'Hydraulic brake hose replaced, internal routing.': '更换油压刹车油管，内走线。',
+  'Derailleur indexing and cable tension, 10, 11 or 12-speed.':
+    '变速器定位和线缆张力调整，10、11或12速。',
+  'Electronic shifting adjusted and indexed.': '调整并校准电子变速。',
+  'Outer housing and steel inner cable replaced, internal routing.':
+    '更换外线管和钢制内线，内走线。',
+  'Flat-bar grips fitted.': '安装平把握套。',
+  'Flat handlebar replaced and cut to width, controls refitted.':
+    '更换平把并裁切至合适宽度，重新安装操控件。',
+  'Drop handlebar replaced. New bar tape required, not included.':
+    '更换公路弯把。需要新车把带，费用另计。',
+  'Headset serviced on a bike with internal cable routing. Bearings always cleaned.':
+    '为内走线自行车保养头碗。轴承一律清洁。',
+  'Standard Service for e-bikes, plus electrical checks': '电动车版标准保养，另加电气检查',
+  'Everything in Standard + new cables & housing': '标准保养全部内容 + 新线缆和线管',
+  'New inner tube fitted, per wheel (tube extra)': '安装新内胎，按每个车轮计（内胎另计）',
+  'New inner tube on an e-bike wheel (tube extra)': '为电动车车轮安装新内胎（内胎另计）',
+  'New tubeless tyre fitted (tyre and sealant extra)': '安装新的无内胎外胎（外胎和补胎液另计）',
+  'Tubeless tyre fitted over CushCore (tyre and sealant extra)':
+    '在CushCore上安装无内胎外胎（外胎和补胎液另计）',
+  'New tape and sealant, tyre mounted (valve extra)': '新胶带和补胎液，安装外胎（气嘴另计）',
+  'Plug, or full strip with fresh sealant': '补胎塞，或完全拆卸并加入新补胎液',
+  'New tubeless rim tape, per wheel': '新的无内胎轮圈胶带，按每个车轮计',
+  'New rim tape on a wheel with CushCore': '为装有CushCore的车轮更换轮圈胶带',
+  'Fresh sealant, per wheel': '新补胎液，按每个车轮计',
+  'CushCore insert fitted (sealant and parts extra)': '安装CushCore内衬（补胎液和零件另计）',
+  'Full spoke tension & rim alignment, nipples included': '完整辐条张力调整和轮圈校正，含辐条帽',
+  'Per brake, levers checked': '按每个刹车计，检查刹车把',
+  'Per brake, rotor alignment not included': '按每个刹车计，不含碟片校正',
+  'Air bubbles checked, rotor aligned': '检查气泡，校正碟片',
+  'Disc (caliper aligned) or V-brake, per brake': '碟刹（含卡钳对正）或V刹，按每个刹车计',
+  'Lever swapped, bubbles bled, no oil change': '更换刹车把，排除气泡，不换油',
+  'Brake fitted, external routing': '安装刹车，外走线',
+  'Brake fitted, internal routing': '安装刹车，内走线',
+  'Hydraulic hose replaced, external routing': '更换油压油管，外走线',
+  'Hydraulic hose replaced, internal routing': '更换油压油管，内走线',
+  'Indexing for 10, 11 or 12-speed': '10、11或12速定位调整',
+  'Electronic shifting adjusted': '调整电子变速',
+  'Chain fitted, gears adjusted (chain extra)': '安装链条，调整变速（链条另计）',
+  'Housing and steel inner cable, external routing': '线管和钢制内线，外走线',
+  'Housing and steel inner cable, internal routing': '线管和钢制内线，内走线',
+  'Flat-bar grips fitted': '安装平把握套',
+  'Flat bar swapped, controls refitted': '更换平把，重新安装操控件',
+  'Flat bar swapped and cut to width': '更换平把并裁切至合适宽度',
+  'Drop bar swapped (new bar tape required, extra)': '更换公路弯把（需要新车把带，另计）',
+  'Headset service on bikes with internal cables': '内走线自行车的头碗保养',
   // La pantalla de error que reemplaza la pagina en blanco (PENDIENTES 81).
   'This screen did not load': '此页面未能加载',
   'Nothing you entered has been lost. Try again, or go back and come in from the home screen.':

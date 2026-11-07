@@ -1875,16 +1875,22 @@ const SERVICE_INCLUSIONS = {
 };
 function getServiceInclusions(name) {
   const n = (name || '').toLowerCase();
+  // Before 'major': "Wheel Truing — Major" is a $47 wheel job, and used to be
+  // shown a full service's list ("Everything in Standard Service").
+  if (n.includes('wheel')) return SERVICE_INCLUSIONS['wheel'];
   if (n.includes('ultimate') || n.includes('overhaul')) return SERVICE_INCLUSIONS['ultimate'];
   if (n.includes('major')) return SERVICE_INCLUSIONS['major'];
   if (n.includes('standard')) return SERVICE_INCLUSIONS['standard'];
   if (n.includes('tune')) return SERVICE_INCLUSIONS['tune'];
   if (n.includes('safety')) return SERVICE_INCLUSIONS['safety'];
-  if (n.includes('flat') || n.includes('tyre')) return SERVICE_INCLUSIONS['flat'];
-  if (n.includes('gear')) return SERVICE_INCLUSIONS['gear'];
-  if (n.includes('brake') || n.includes('bleed')) return SERVICE_INCLUSIONS['brake'];
+  // Since the 7-nov-2026 catalog split, a word in the name is not enough: the
+  // brake list says "Pad replacement", which a brake hose or lever job does
+  // not include, and the gear list's cable tension is not an electronic one.
+  // Each list now answers only the services it describes; any other gets none.
+  if (n.includes('inner tube')) return SERVICE_INCLUSIONS['flat'];
+  if (n.includes('gear') && !n.includes('electronic')) return SERVICE_INCLUSIONS['gear'];
+  if (n.includes('brake pad')) return SERVICE_INCLUSIONS['brake'];
   if (n.includes('chain')) return SERVICE_INCLUSIONS['chain'];
-  if (n.includes('wheel') || n.includes('true')) return SERVICE_INCLUSIONS['wheel'];
   return null;
 }
 

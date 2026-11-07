@@ -53,14 +53,14 @@ describe('MEMBERSHIP_PLANS quotas', () => {
     expect(MEMBERSHIP_PLANS.basic.discountPct).toBe(5);
   });
 
-  it('standard: 2 minor + 1 wash + 1 tune-up, callout waived', () => {
-    expect(MEMBERSHIP_PLANS.standard.quotas).toEqual({ minor: 2, wash: 1, tuneup: 1 });
+  it('standard: 1 minor + 1 wash + 1 tune-up, callout waived', () => {
+    expect(MEMBERSHIP_PLANS.standard.quotas).toEqual({ minor: 1, wash: 1, tuneup: 1 });
     expect(MEMBERSHIP_PLANS.standard.waiveCallout).toBe(true);
     expect(MEMBERSHIP_PLANS.standard.discountPct).toBe(10);
   });
 
-  it('vip: 3 minor + 2 wash + 1 tune-up, 15% + 5% bonus discount', () => {
-    expect(MEMBERSHIP_PLANS.vip.quotas).toEqual({ minor: 3, wash: 2, tuneup: 1 });
+  it('vip: 2 minor + 2 wash + 1 tune-up, 15% + 5% bonus discount', () => {
+    expect(MEMBERSHIP_PLANS.vip.quotas).toEqual({ minor: 2, wash: 2, tuneup: 1 });
     expect(MEMBERSHIP_PLANS.vip.waiveCallout).toBe(true);
     expect(MEMBERSHIP_PLANS.vip.discountPct).toBe(15);
     expect(MEMBERSHIP_PLANS.vip.bonusDiscountPct).toBe(5);

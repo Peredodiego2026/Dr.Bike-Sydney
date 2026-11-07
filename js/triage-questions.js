@@ -343,22 +343,55 @@ export const CATEGORY_SETS = {
 // A name that no longer matches (Admin renamed the service) does not fail: the
 // service falls back to its category's base set. The test that names every key
 // against the catalogue is what catches it.
+//
+// 7-nov-2026: Diego split the catalog into variants. A renamed row keeps the
+// questions it had (Hydro Brake Install -> Brake Install, External Cable
+// Install -> Cable & Housing, Handlebar Install -> Handlebar Replacement), and
+// a variant whose name already answers a base question drops that question,
+// the way Brake Bleed and Tubeless Tyre Install already did. The tyre question
+// moved from the tube change to the tyre changes: a tube change fits no tyre.
+const noBrakeType = (base) => base.filter((q) => q.id !== 'brake_type');
+const noTyreSystem = (base) => base.filter((q) => q.id !== 'tyre_system');
+const brakeInstall = (base) => [...base, ...pick('current_brakes')];
+const tyreChange = (base) => [...base, ...pick('own_tyre')];
+const tubelessTyreChange = (base) => [...noTyreSystem(base), ...pick('own_tyre')];
+const cableKind = (base) => [...base, ...pick('cable_kind')];
+const barSwap = (base) => [...base, ...pick('bar_swap')];
+const headsetFeel = (base) => [...base, ...pick('headset_feel')];
+
 export const SERVICE_OVERRIDES = {
   // Brakes
   'Brake Pad Install': (base) => [...base, ...pick('pad_material')],
   // The brand stays required: it decides mineral oil or DOT. The type goes
   // because a bleed is hydraulic by definition.
-  'Brake Bleed': (base) => base.filter((q) => q.id !== 'brake_type'),
-  'Hydro Brake Install': (base) => [...base, ...pick('current_brakes')],
+  'Brake Bleed': noBrakeType,
+  'Brake Install - External Routing': brakeInstall,
+  'Brake Install - Internal Routing': brakeInstall,
+  // The name already says how the brake works.
+  'Brake Adjustment - V-brake / Mechanical': noBrakeType,
+  'Brake Adjustment - Hydraulic': noBrakeType,
+  'Brake Adjustment - Hydraulic + Rotor True': noBrakeType,
+  'Brake Lever Replacement': noBrakeType,
+  'Brake Hose - Hydraulic, External': noBrakeType,
+  'Brake Hose - Hydraulic, Internal': noBrakeType,
 
   // Wheels & tyres. The two Wheel Truing names carry the real em dash from the
   // services table; written as an escape so this file stays ASCII.
   'Spoke Replacement': () => pick('broken_spokes', 'hub_brand'),
   'Wheel Truing \u2014 Minor': () => pick('has_broken_spokes'),
   'Wheel Truing \u2014 Major': () => pick('has_broken_spokes'),
-  // Tubeless already answers "tube or tubeless".
-  'Tubeless Tyre Install': (base) => base.filter((q) => q.id !== 'tyre_system'),
-  'Tyre / Tube Install': (base) => [...base, ...pick('own_tyre')],
+  // Tubeless already answers "tube or tubeless", and so does "tube".
+  'Tubeless Tyre Install': noTyreSystem,
+  'Tubeless Puncture Repair': noTyreSystem,
+  'Tubeless Rim Tape': noTyreSystem,
+  'Tubeless Rim Tape - with CushCore': noTyreSystem,
+  'Tubeless Sealant Top-Up': noTyreSystem,
+  'CushCore Install': noTyreSystem,
+  'Inner Tube Replacement': noTyreSystem,
+  'Inner Tube Replacement - E-bike': noTyreSystem,
+  'Tyre Replacement': tyreChange,
+  'Tubeless Tyre Replacement': tubelessTyreChange,
+  'Tubeless Tyre Replacement - with CushCore': tubelessTyreChange,
 
   // Drivetrain
   // Asks about the FRAME, not the drivetrain: the hanger is specific to each
@@ -368,12 +401,15 @@ export const SERVICE_OVERRIDES = {
 
   // Gears & cables
   'Derailleur Install': (base) => [...base, ...pick('derailleur_position', 'own_part')],
-  'External Cable Install': (base) => [...base, ...pick('cable_kind')],
+  'Cable & Housing - Mechanical, External': cableKind,
+  'Cable & Housing - Mechanical, Internal': cableKind,
 
   // Electronic & e-bike
   'Firmware Update': (base) => [...base, ...pick('brand_app')],
-  // Maintenance, not a fault: there is no symptom to ask for.
-  'E-bike service': (base) => base.filter((q) => q.id !== 'symptom'),
+  // Maintenance, not a fault: there is no symptom to ask for. Its own set
+  // rather than a filter: since 7-nov-2026 it sits in Scheduled services, whose
+  // base set has no motor question.
+  'E-bike service': () => pick('motor_brand'),
 
   // Suspension
   'Air Can Service': (base) => [...base, ...pick('suspension_part')],
@@ -381,8 +417,11 @@ export const SERVICE_OVERRIDES = {
   // Cockpit & levers. Bar Tape Install is NOT here, on purpose: it inherits the
   // category and asks no colour, because Diego stocks black only (LEBYCLE Wisp
   // 01A Black) and offering a choice promises one he cannot deliver.
-  'Handlebar Install': (base) => [...base, ...pick('bar_swap')],
-  'Headset Service': (base) => [...base, ...pick('headset_feel')],
+  'Handlebar Replacement - Flat': barSwap,
+  'Handlebar Replacement - Flat, Cut to Size': barSwap,
+  'Handlebar Replacement - Road': barSwap,
+  'Headset Service': headsetFeel,
+  'Headset Service - Internal Routing': headsetFeel,
   'Saddle Fitting': (base) => [...base, ...pick('fit_goal')],
 
   // General & assembly

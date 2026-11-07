@@ -39,14 +39,12 @@
     // Matching is case-sensitive, so without this line the card detaches from
     // the table and freezes at its hardcoded price forever.
     'E-Bike Service': 'E-bike service',
-    'Flat Tyre Repair': 'Tyre / Tube Install',
     'Wheel Truing - Minor': 'Wheel Truing — Minor',
     'Wheel Truing - Major': 'Wheel Truing — Major',
     'Brake Pad Replacement': 'Brake Pad Install',
     'Hydraulic Bleed': 'Brake Bleed',
     'Chain Replacement': 'Chain Install',
     'Cassette/Freewheel Swap': 'Cassette Install',
-    'Cable & Housing': 'External Cable Install',
     'Handlebar Tape': 'Bar Tape Install',
     'Bottom Bracket Service': 'Bottom Bracket Install',
   };
@@ -116,6 +114,22 @@
         }
       }
       if (changed) el.textContent = JSON.stringify(data);
+    });
+  }
+
+  // A grid whose every card is hidden goes too, with the heading above it.
+  // Otherwise "Suspension" sits over an empty space while both of its services
+  // are unticked in Admin (Diego, 7-nov-2026), and it comes back on its own
+  // the day one of them is ticked again.
+  function hideEmptySections(cards) {
+    const grids = new Set();
+    cards.forEach((card) => card.parentElement && grids.add(card.parentElement));
+    grids.forEach((grid) => {
+      const all = Array.from(grid.querySelectorAll('.service-card, .svc-card'));
+      if (!all.every((card) => card.style.display === 'none')) return;
+      grid.style.display = 'none';
+      const heading = grid.previousElementSibling;
+      if (heading && heading.tagName === 'H3') heading.style.display = 'none';
     });
   }
 
@@ -203,6 +217,7 @@
         );
       }
     });
+    hideEmptySections(cards);
     loose.forEach((el) => {
       const match = services.find((s) => s.name === el.dataset.livePrice);
       if (match && match.active !== false && typeof match.price === 'number') {
