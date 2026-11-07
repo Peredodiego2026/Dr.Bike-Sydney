@@ -301,7 +301,7 @@
 // frases de index.html partidas en dos lineas salian en ingles en es y zh.
 // v173: la visita pasa a tres tramos ($35 hasta 20 min, $45 de 20 a 35, $60 de
 // 35 a 45): filas nuevas en 'Areas We Cover', en los dos diccionarios.
-const CACHE_STATIC = 'drbike-static-v173';
+const CACHE_STATIC = 'drbike-static-v174';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

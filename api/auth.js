@@ -327,11 +327,15 @@ export function applySurcharge(amount, dateStr) {
 // "is_emergency" flag or "client's home zone" concept in the booking flow
 // today, so those stay a manual call at booking/admin time rather than an
 // automated check.
+//
+// Minor-repair quotas are 1 / 1 / 2 since 7-nov-2026 (were 1 / 2 / 3): that
+// day most single repairs dropped to $12-$65, so nearly all of them landed
+// under the $70 ceiling. Diego kept the ceiling and cut the counts instead.
 export const MEMBERSHIP_PLANS = {
   basic: { quotas: { minor: 1, wash: 1, tuneup: 0 }, waiveCallout: false, discountPct: 5 },
-  standard: { quotas: { minor: 2, wash: 1, tuneup: 1 }, waiveCallout: true, discountPct: 10 },
+  standard: { quotas: { minor: 1, wash: 1, tuneup: 1 }, waiveCallout: true, discountPct: 10 },
   vip: {
-    quotas: { minor: 3, wash: 2, tuneup: 1 },
+    quotas: { minor: 2, wash: 2, tuneup: 1 },
     waiveCallout: true,
     discountPct: 15,
     bonusDiscountPct: 5,

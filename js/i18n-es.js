@@ -542,12 +542,13 @@ export default {
   'Standard Service': 'Servicio Estándar',
   'Standard+ Service': 'Servicio Estándar+',
   Repairs: 'Reparaciones',
-  // The static fallbacks the HTML ships with. live-prices.js overwrites both
+  // The static fallbacks the HTML ships with. live-prices.js overwrites the
   // numbers from the services table on load and translates the word on its
-  // own through the bare 'From' key below, so these two only ever render if
+  // own through the bare 'From' key below, so these only ever render if
   // the table cannot be reached. 'From $60' was retired with audit 12.6: it
   // was a floor that matched no service and that Admin could not change.
-  'From $27': 'Desde $27',
+  'From $12': 'Desde $12',
+  'From $55': 'Desde $55',
   'From $90': 'Desde $90',
   From: 'Desde',
   'E-Bike Service': 'Servicio de E-Bike',
@@ -1099,13 +1100,13 @@ export default {
   'Visit & diagnosis applies (from $35, depending on your suburb)':
     'Se cobra la visita y diagnóstico (desde $35, según tu suburbio)',
   'Priority scheduling (72hs)': 'Turnos prioritarios (72hs)',
-  '2 free minor repairs (under $70) + 1 free bike wash + 1 free Tune-Up per month':
-    '2 reparaciones menores gratis (menos de $70) + 1 lavado gratis + 1 Ajuste gratis por mes',
+  '1 free minor repair (under $70) + 1 free bike wash + 1 free Tune-Up per month':
+    '1 reparación menor gratis (menos de $70) + 1 lavado gratis + 1 Ajuste gratis por mes',
   'Visit & diagnosis included': 'Visita y diagnóstico incluida',
   '1 emergency callout per month (visit & diagnosis fee applies)':
     '1 visita de emergencia por mes (se cobra la visita y diagnóstico)',
-  '3 free minor repairs (under $70) + 2 free bike washes + 1 free Tune-Up per month':
-    '3 reparaciones menores gratis (menos de $70) + 2 lavados gratis + 1 Ajuste gratis por mes',
+  '2 free minor repairs (under $70) + 2 free bike washes + 1 free Tune-Up per month':
+    '2 reparaciones menores gratis (menos de $70) + 2 lavados gratis + 1 Ajuste gratis por mes',
   '15% off extra services, plus 5% more': '15% de descuento en servicios extra, más 5% adicional',
   '1 emergency callout per month (visit & diagnosis fee waived in your zone)':
     '1 visita de emergencia por mes (visita y diagnóstico gratis dentro de tu zona)',
@@ -1114,8 +1115,8 @@ export default {
   '1 free bike wash per month': '1 lavado de bici gratis por mes',
   'Digital service history log is a Standard/VIP perk. Visit & diagnosis is not included - the visit & diagnosis fee (from $35, depending on your suburb) still applies to your covered visits. Full maintenance services (Tune-Up and up) are not part of the free minor-repair quota. Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.':
     'El historial digital de servicios es un beneficio Standard/VIP. La visita y diagnóstico no está incluida - se cobra igual la visita y diagnóstico (desde $35, según tu suburbio) en tus visitas cubiertas. Las mantenciones completas (Ajuste en adelante) no forman parte de la cuota de reparaciones menores gratis. Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - te los cotizamos antes de colocarlos y se cobran aparte.',
-  'A wash plus an average minor repair is worth around $90. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
-    'Un lavado más una reparación menor promedio vale unos $90. Con Basic ($67/mes) ya salís ganando, antes del 5% de descuento en todo lo demás.',
+  'A wash plus an average minor repair is worth around $80. With Basic ($67/month) you come out ahead before the 5% discount on anything else.':
+    'Un lavado más una reparación menor promedio vale unos $80. Con Basic ($67/mes) ya salís ganando, antes del 5% de descuento en todo lo demás.',
   '2 free minor repairs per month (any repair under $70)':
     '2 reparaciones menores gratis por mes (cualquier arreglo de menos de $70)',
   '1 free Tune-Up per month': '1 Ajuste gratis por mes',
@@ -1125,13 +1126,11 @@ export default {
     '1 visita de emergencia por mes (se cobra la visita y diagnóstico, desde $35 según tu suburbio)',
   'Spare parts or replacement components (e.g. chains, derailleurs, brake calipers, cables) - quoted before fitting and charged separately.':
     'Repuestos o componentes de reemplazo (cadenas, desviadores, mordazas de freno, cables) - te los cotizamos antes de colocarlos y se cobran aparte.',
-  'A Tune-Up ($119) + a wash ($50) + 2 minor repairs (~$100) = about $269 in free work every month, for $97.':
-    'Un Ajuste ($119) + un lavado ($50) + 2 reparaciones menores (~$100) = unos $269 en trabajo gratis cada mes, por $97.',
-  '3 free minor repairs per month (any repair under $70)':
-    '3 reparaciones menores gratis por mes (cualquier arreglo de menos de $70)',
+  'A Tune-Up ($119) + a wash ($50) + 1 minor repair (~$30) = about $199 in free work every month, for $97.':
+    'Un Ajuste ($119) + un lavado ($50) + 1 reparación menor (~$30) = unos $199 en trabajo gratis cada mes, por $97.',
   '2 free bike washes per month': '2 lavados de bici gratis por mes',
-  'A Tune-Up ($119) + 2 washes ($100) + 3 minor repairs (~$150) = about $369 in free work every month, for $197.':
-    'Un Ajuste ($119) + 2 lavados ($100) + 3 reparaciones menores (~$150) = unos $369 en trabajo gratis cada mes, por $197.',
+  'A Tune-Up ($119) + 2 washes ($100) + 2 minor repairs (~$60) = about $279 in free work every month, for $197.':
+    'Un Ajuste ($119) + 2 lavados ($100) + 2 reparaciones menores (~$60) = unos $279 en trabajo gratis cada mes, por $197.',
 
   // ── Gift card success alert ──────────────────────────────────────────
   '🎁 Gift card purchased! It has been emailed to the recipient with their unique code.':
@@ -1620,6 +1619,150 @@ export default {
   'Tubeless conversion per wheel.': 'Conversión a tubeless, por rueda.',
   'Per spoke, includes wheel re-true': 'Por rayo, con centrado de la rueda incluido',
   'New tyre fitted, tyre cost extra': 'Colocamos la cubierta nueva; la cubierta se cobra aparte',
+  // 7-nov-2026: the catalog split into variants (brakes, gears, tubes,
+  // tubeless, handlebars). Card heading = table name, so one entry each.
+  'Inner Tube Replacement': 'Cambio de Cámara',
+  'Inner Tube Replacement - E-bike': 'Cambio de Cámara - E-bike',
+  'Tubeless Puncture Repair': 'Reparación de Pinchazo Tubeless',
+  'Tubeless Rim Tape': 'Cinta Tubeless de Llanta',
+  'Tubeless Rim Tape - with CushCore': 'Cinta Tubeless de Llanta - con CushCore',
+  'Tubeless Sealant Top-Up': 'Recarga de Sellante Tubeless',
+  'Tubeless Tyre Replacement': 'Cambio de Cubierta Tubeless',
+  'Tubeless Tyre Replacement - with CushCore': 'Cambio de Cubierta Tubeless - con CushCore',
+  'CushCore Install': 'Instalación de CushCore',
+  'Brake Adjustment - V-brake / Mechanical': 'Ajuste de Frenos - V-brake / Mecánico',
+  'Brake Adjustment - Hydraulic': 'Ajuste de Frenos - Hidráulico',
+  'Brake Adjustment - Hydraulic + Rotor True': 'Ajuste de Frenos - Hidráulico + Centrado de Disco',
+  'Brake Lever Replacement': 'Cambio de Maneta de Freno',
+  'Brake Install - External Routing': 'Instalación de Freno - Cableado Externo',
+  'Brake Install - Internal Routing': 'Instalación de Freno - Cableado Interno',
+  'Brake Hose - Hydraulic, External': 'Manguera de Freno Hidráulico - Externa',
+  'Brake Hose - Hydraulic, Internal': 'Manguera de Freno Hidráulico - Interna',
+  'Gear Adjustment - up to 8-speed': 'Ajuste de Cambios - hasta 8 velocidades',
+  'Gear Adjustment - 10/11/12-speed': 'Ajuste de Cambios - 10/11/12 velocidades',
+  'Gear Adjustment - Electronic': 'Ajuste de Cambios - Electrónico',
+  'Cable & Housing - Mechanical, External': 'Cables y Fundas - Mecánico, Externo',
+  'Cable & Housing - Mechanical, Internal': 'Cables y Fundas - Mecánico, Interno',
+  'Grip Install': 'Instalación de Puños',
+  'Handlebar Replacement - Flat': 'Cambio de Manubrio - Plano',
+  'Handlebar Replacement - Flat, Cut to Size': 'Cambio de Manubrio - Plano, Cortado a Medida',
+  'Handlebar Replacement - Road': 'Cambio de Manubrio - Ruta',
+  'Headset Service - Internal Routing': 'Servicio de Dirección - Cableado Interno',
+  'A Standard Service for e-bikes, plus a check of the electrical connections and every bolt.':
+    'Un Standard Service para e-bikes, más revisión de las conexiones eléctricas y de toda la tornillería.',
+  'Tune-Up plus drivetrain clean, bearings cleaned, minor wheel true and inspection report.':
+    'Todo el Tune-Up más limpieza de transmisión, limpieza de rodamientos, centrado suave de ruedas e informe de revisión.',
+  'Everything in Standard plus new cable housing and steel inner cables, wheel truing, headset check and hydraulic brakes bled of air bubbles (no oil change).':
+    'Todo lo del Standard más fundas y cables de acero nuevos, centrado de ruedas, revisión de la dirección y purga de burbujas de aire en frenos hidráulicos (sin cambio de aceite).',
+  'New tyre fitted on a wheel with an inner tube. Tyre not included.':
+    'Colocamos una cubierta nueva en una rueda con cámara. La cubierta no está incluida.',
+  'Tubeless setup per wheel: new rim tape and sealant, tyre mounted. Valve not included.':
+    'Armado tubeless por rueda: cinta y sellante nuevos, cubierta montada. La válvula no está incluida.',
+  'Significant spoke tension correction. Nipples included.':
+    'Corregimos desvíos grandes ajustando la tensión de los rayos. Niples incluidos.',
+  'Disc pads (caliper aligned) or V-brake pads, per brake.':
+    'Pastillas de disco (con el caliper alineado) o zapatas de V-brake, por freno.',
+  'Full hydraulic bleed with fresh oil, per brake.':
+    'Purga hidráulica completa con aceite nuevo, por freno.',
+  'Fit and size a new chain, gears adjusted. Chain not included.':
+    'Colocamos una cadena nueva a la medida y ajustamos los cambios. La cadena no está incluida.',
+  'Bottom bracket cleaned and greased, or replaced if needed. Part not included.':
+    'Limpiamos y engrasamos la caja pedalera, o la cambiamos si hace falta. La pieza no está incluida.',
+  'Clean, adjust and regrease headset. Bearings always cleaned.':
+    'Limpiamos, engrasamos y ajustamos la dirección. Los rodamientos siempre se limpian.',
+  'Flat tyre fixed with a new inner tube, per wheel. Tube not included.':
+    'Arreglamos el pinchazo con una cámara nueva, por rueda. La cámara no está incluida.',
+  'V-brake or mechanical disc brake adjusted, per brake. Levers checked.':
+    'Ajustamos frenos V-brake o de disco mecánico, por freno. Revisamos las manetas.',
+  'Brake fitted with external routing, per brake.':
+    'Instalamos el freno con cableado externo, por freno.',
+  'Derailleur indexing and cable tension, up to 8-speed.':
+    'Ajustamos el cambio y la tensión del cable, hasta 8 velocidades.',
+  'Outer housing and steel inner cable replaced, external routing.':
+    'Cambiamos la funda y el cable de acero, cableado externo.',
+  'Flat handlebar replaced, controls refitted.':
+    'Cambiamos el manubrio plano y volvemos a montar los comandos.',
+  'New inner tube on an e-bike wheel. Tube not included.':
+    'Cámara nueva en una rueda de e-bike. La cámara no está incluida.',
+  'From $55: a plug, or a full strip to fix the tape or valve with fresh sealant.':
+    'Desde $55: un tapón, o desarme completo para arreglar la cinta o la válvula con sellante nuevo.',
+  'New tubeless rim tape, per wheel.': 'Cinta tubeless nueva en la llanta, por rueda.',
+  'New tubeless rim tape on a wheel with a CushCore insert, per wheel.':
+    'Cinta tubeless nueva en una rueda con inserto CushCore, por rueda.',
+  'Sealant top-up only, per wheel.': 'Solo recarga de sellante, por rueda.',
+  'New tubeless tyre fitted, per wheel. Tyre and sealant not included.':
+    'Colocamos una cubierta tubeless nueva, por rueda. La cubierta y el sellante no están incluidos.',
+  'New tubeless tyre fitted over a CushCore insert, per wheel. Tyre and sealant not included.':
+    'Colocamos una cubierta tubeless nueva sobre un inserto CushCore, por rueda. La cubierta y el sellante no están incluidos.',
+  'CushCore insert installed, per wheel. Sealant and parts not included.':
+    'Instalamos el inserto CushCore, por rueda. El sellante y las piezas no están incluidos.',
+  'Hydraulic disc brake adjusted, per brake. Rotor alignment not included.':
+    'Ajustamos el freno de disco hidráulico, por freno. No incluye centrar el disco.',
+  'Hydraulic disc brake checked for air bubbles and the rotor aligned, per brake.':
+    'Revisamos burbujas de aire en el freno hidráulico y centramos el disco, por freno.',
+  'Brake lever replaced and air bubbles bled out, no oil change.':
+    'Cambiamos la maneta de freno y sacamos las burbujas de aire, sin cambio de aceite.',
+  'Brake fitted with internal routing, per brake. More if the motor has to come out.':
+    'Instalamos el freno con cableado interno, por freno. Cuesta más si hay que sacar el motor.',
+  'Hydraulic brake hose replaced, external routing.':
+    'Cambiamos la manguera del freno hidráulico, cableado externo.',
+  'Hydraulic brake hose replaced, internal routing.':
+    'Cambiamos la manguera del freno hidráulico, cableado interno.',
+  'Derailleur indexing and cable tension, 10, 11 or 12-speed.':
+    'Ajustamos el cambio y la tensión del cable, 10, 11 o 12 velocidades.',
+  'Electronic shifting adjusted and indexed.': 'Ajustamos y calibramos los cambios electrónicos.',
+  'Outer housing and steel inner cable replaced, internal routing.':
+    'Cambiamos la funda y el cable de acero, cableado interno.',
+  'Flat-bar grips fitted.': 'Instalamos puños en manubrio plano.',
+  'Flat handlebar replaced and cut to width, controls refitted.':
+    'Cambiamos el manubrio plano, lo cortamos a medida y volvemos a montar los comandos.',
+  'Drop handlebar replaced. New bar tape required, not included.':
+    'Cambiamos el manubrio de ruta. Requiere cinta nueva, que no está incluida.',
+  'Headset serviced on a bike with internal cable routing. Bearings always cleaned.':
+    'Servicio de dirección en bicis con cableado interno. Los rodamientos siempre se limpian.',
+  'Standard Service for e-bikes, plus electrical checks':
+    'Standard Service para e-bikes, más revisión eléctrica',
+  'Everything in Standard + new cables & housing': 'Todo lo del Standard + cables y fundas nuevos',
+  'New inner tube fitted, per wheel (tube extra)':
+    'Cámara nueva colocada, por rueda (cámara aparte)',
+  'New inner tube on an e-bike wheel (tube extra)':
+    'Cámara nueva en rueda de e-bike (cámara aparte)',
+  'New tubeless tyre fitted (tyre and sealant extra)':
+    'Cubierta tubeless nueva colocada (cubierta y sellante aparte)',
+  'Tubeless tyre fitted over CushCore (tyre and sealant extra)':
+    'Cubierta tubeless sobre CushCore (cubierta y sellante aparte)',
+  'New tape and sealant, tyre mounted (valve extra)':
+    'Cinta y sellante nuevos, cubierta montada (válvula aparte)',
+  'Plug, or full strip with fresh sealant': 'Tapón, o desarme completo con sellante nuevo',
+  'New tubeless rim tape, per wheel': 'Cinta tubeless nueva, por rueda',
+  'New rim tape on a wheel with CushCore': 'Cinta nueva en rueda con CushCore',
+  'Fresh sealant, per wheel': 'Sellante nuevo, por rueda',
+  'CushCore insert fitted (sealant and parts extra)':
+    'Inserto CushCore instalado (sellante y piezas aparte)',
+  'Full spoke tension & rim alignment, nipples included':
+    'Tensión completa de rayos y alineación de llanta, niples incluidos',
+  'Per brake, levers checked': 'Por freno, revisamos las manetas',
+  'Per brake, rotor alignment not included': 'Por freno, sin centrar el disco',
+  'Air bubbles checked, rotor aligned': 'Revisión de burbujas y disco centrado',
+  'Disc (caliper aligned) or V-brake, per brake': 'Disco (caliper alineado) o V-brake, por freno',
+  'Lever swapped, bubbles bled, no oil change':
+    'Maneta nueva, purga de burbujas, sin cambio de aceite',
+  'Brake fitted, external routing': 'Freno instalado, cableado externo',
+  'Brake fitted, internal routing': 'Freno instalado, cableado interno',
+  'Hydraulic hose replaced, external routing': 'Manguera hidráulica nueva, cableado externo',
+  'Hydraulic hose replaced, internal routing': 'Manguera hidráulica nueva, cableado interno',
+  'Indexing for 10, 11 or 12-speed': 'Indexado para 10, 11 o 12 velocidades',
+  'Electronic shifting adjusted': 'Cambios electrónicos ajustados',
+  'Chain fitted, gears adjusted (chain extra)':
+    'Cadena colocada, cambios ajustados (cadena aparte)',
+  'Housing and steel inner cable, external routing': 'Funda y cable de acero, cableado externo',
+  'Housing and steel inner cable, internal routing': 'Funda y cable de acero, cableado interno',
+  'Flat-bar grips fitted': 'Puños colocados en manubrio plano',
+  'Flat bar swapped, controls refitted': 'Manubrio plano nuevo, comandos remontados',
+  'Flat bar swapped and cut to width': 'Manubrio plano nuevo, cortado a medida',
+  'Drop bar swapped (new bar tape required, extra)':
+    'Manubrio de ruta nuevo (requiere cinta nueva, aparte)',
+  'Headset service on bikes with internal cables': 'Dirección en bicis con cableado interno',
   // La pantalla de error que reemplaza la pagina en blanco (PENDIENTES 81).
   'This screen did not load': 'Esta pantalla no cargó',
   'Nothing you entered has been lost. Try again, or go back and come in from the home screen.':

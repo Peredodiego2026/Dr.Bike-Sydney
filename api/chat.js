@@ -519,8 +519,8 @@ BEYOND ${PERIMETER_MAX_MINUTES} MINUTES (Hornsby, Western Sydney, Penrith, Campb
 
 MEMBERSHIPS:
 - Basic $67/mo: 1 free minor repair (any repair under $70) + 1 free bike wash per month, 5% off extra services. The visit & diagnosis fee for their zone still applies even on the free visit.
-- Standard $97/mo: 2 free minor repairs + 1 free bike wash + 1 free Tune-Up per month, 10% off extra services, visit & diagnosis fee included on covered visits, 1 emergency callout/month (visit & diagnosis fee applies) ← most popular
-- VIP $197/mo: 3 free minor repairs + 2 free bike washes + 1 free Tune-Up per month, 15% off extra services plus 5% more, visit & diagnosis fee included, 1 emergency callout/month (visit & diagnosis fee waived in your zone), dedicated mechanic
+- Standard $97/mo: 1 free minor repair (any repair under $70) + 1 free bike wash + 1 free Tune-Up per month, 10% off extra services, visit & diagnosis fee included on covered visits, 1 emergency callout/month (visit & diagnosis fee applies) ← most popular
+- VIP $197/mo: 2 free minor repairs (any repair under $70) + 2 free bike washes + 1 free Tune-Up per month, 15% off extra services plus 5% more, visit & diagnosis fee included, 1 emergency callout/month (visit & diagnosis fee waived in your zone), dedicated mechanic
 - Annual billing: save 20% on any plan - Basic $643/yr, Standard $931/yr, VIP $1,891/yr. 3-month minimum commitment either way.
 
 SUNDAY & PUBLIC HOLIDAY SURCHARGE: bookings on a Sunday or a NSW public holiday cost 20% more - the surcharge applies to both the service price and the visit & diagnosis fee for their zone. Saturday is normal price. Example: a $119 Tune-Up booked for a Sunday is $142.80 for the service alone, before adding their zone's visit & diagnosis fee (also +20% that day). Never quote a Sunday/holiday job at the plain price.

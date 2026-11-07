@@ -26,7 +26,7 @@ const LANDING_LD = JSON.stringify({
     itemListElement: [
       { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Tune-Up' }, price: '119' },
       { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Standard Service' }, price: '159' },
-      { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Flat Tyre Repair' }, price: '37' },
+      { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Chain Replacement' }, price: '30' },
     ],
   },
 });
@@ -72,7 +72,7 @@ const TABLE = (hiddenNames = [], nullNames = []) =>
     ['Standard Service', 159],
     ['Standard+ Service', 209],
     ['Ultimate Overhaul', 379],
-    ['Tyre / Tube Install', 37],
+    ['Chain Install', 30],
   ].map(([name, price]) => ({
     name,
     price,
@@ -88,16 +88,16 @@ describe('a hidden service leaves the structured data too', () => {
       services: TABLE(['Tune-Up']),
     });
     const names = offers(0).hasOfferCatalog.itemListElement.map((o) => o.itemOffered.name);
-    expect(names).toEqual(['Standard Service', 'Flat Tyre Repair']);
+    expect(names).toEqual(['Standard Service', 'Chain Replacement']);
     expect(tune.style.display).toBe('none');
     expect(offers(1)).toEqual(JSON.parse(FAQ_LD));
   });
 
-  it('a marketing name is resolved like the cards are (Flat Tyre Repair -> Tyre / Tube Install)', async () => {
+  it('a marketing name is resolved like the cards are (Chain Replacement -> Chain Install)', async () => {
     const { offers } = await run({
-      cards: [card('Flat Tyre Repair', '$37')],
+      cards: [card('Chain Replacement', '$30')],
       ld: [LANDING_LD],
-      services: TABLE(['Tyre / Tube Install']),
+      services: TABLE(['Chain Install']),
     });
     const names = offers(0).hasOfferCatalog.itemListElement.map((o) => o.itemOffered.name);
     expect(names).toEqual(['Tune-Up', 'Standard Service']);
@@ -140,5 +140,35 @@ describe('a hidden service leaves the structured data too', () => {
     expect(scripts[0].textContent).toBe('{ not json');
     expect(warnings.some((w) => w.includes('unreadable structured data'))).toBe(true);
     expect(offers(1).hasOfferCatalog.itemListElement).toHaveLength(2);
+  });
+});
+
+// Diego, 7-nov-2026: both Suspension services hidden left the landing's
+// "Suspension" heading over an empty grid. The section goes with its last card.
+describe('a section with every card hidden goes too', () => {
+  const section = (...cards) => {
+    const heading = { tagName: 'H3', style: {} };
+    const grid = { style: {}, previousElementSibling: heading, querySelectorAll: () => cards };
+    cards.forEach((c) => (c.parentElement = grid));
+    return { grid, heading };
+  };
+
+  it('hides the grid and its heading when all of its services are hidden', async () => {
+    const tune = card('Basic Tune-Up', '$119');
+    const ultimate = card('Ultimate Overhaul', '$379');
+    const { grid, heading } = section(tune, ultimate);
+    await run({ cards: [tune, ultimate], ld: [], services: TABLE(['Tune-Up', 'Ultimate Overhaul']) });
+    expect(grid.style.display).toBe('none');
+    expect(heading.style.display).toBe('none');
+  });
+
+  it('keeps the section while one of its services is still visible', async () => {
+    const tune = card('Basic Tune-Up', '$119');
+    const ultimate = card('Ultimate Overhaul', '$379');
+    const { grid, heading } = section(tune, ultimate);
+    await run({ cards: [tune, ultimate], ld: [], services: TABLE(['Tune-Up']) });
+    expect(tune.style.display).toBe('none');
+    expect(grid.style.display).toBeUndefined();
+    expect(heading.style.display).toBeUndefined();
   });
 });

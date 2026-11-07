@@ -225,7 +225,51 @@ describe('the reverse lookup still lands on a real service', () => {
   const NAME_MAP = Object.fromEntries(
     [...(mapBlock?.[1] ?? '').matchAll(/'([^']+)':\s*'([^']+)',/g)].map((m) => [m[1], m[2]])
   );
-  const catalogNames = new Set(CATALOG.map(([name]) => name));
+  // Diego split the catalog into variants on 2026-11-07. The first six rows
+  // were renamed that day, so no card renders those names any more (old
+  // bookings still carry them, and their translations stay pinned above); the
+  // second list is what the cards render instead, plus the rows added that day.
+  const RENAMED_2026_11_07 = new Set([
+    'Brake Adjustment',
+    'Hydro Brake Install',
+    'Gear Adjustment',
+    'External Cable Install',
+    'Handlebar Install',
+    'Tyre / Tube Install',
+  ]);
+  const CARDS_2026_11_07 = [
+    'Inner Tube Replacement',
+    'Inner Tube Replacement - E-bike',
+    'Tubeless Puncture Repair',
+    'Tubeless Rim Tape',
+    'Tubeless Rim Tape - with CushCore',
+    'Tubeless Sealant Top-Up',
+    'Tubeless Tyre Replacement',
+    'Tubeless Tyre Replacement - with CushCore',
+    'CushCore Install',
+    'Brake Adjustment - V-brake / Mechanical',
+    'Brake Adjustment - Hydraulic',
+    'Brake Adjustment - Hydraulic + Rotor True',
+    'Brake Lever Replacement',
+    'Brake Install - External Routing',
+    'Brake Install - Internal Routing',
+    'Brake Hose - Hydraulic, External',
+    'Brake Hose - Hydraulic, Internal',
+    'Gear Adjustment - up to 8-speed',
+    'Gear Adjustment - 10/11/12-speed',
+    'Gear Adjustment - Electronic',
+    'Cable & Housing - Mechanical, External',
+    'Cable & Housing - Mechanical, Internal',
+    'Grip Install',
+    'Handlebar Replacement - Flat',
+    'Handlebar Replacement - Flat, Cut to Size',
+    'Handlebar Replacement - Road',
+    'Headset Service - Internal Routing',
+  ];
+  const catalogNames = new Set([
+    ...CATALOG.map(([name]) => name).filter((name) => !RENAMED_2026_11_07.has(name)),
+    ...CARDS_2026_11_07,
+  ]);
 
   it('parsed the marketing alias map (an empty one would prove nothing)', () => {
     expect(Object.keys(NAME_MAP).length).toBeGreaterThan(8);

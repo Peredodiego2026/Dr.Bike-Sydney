@@ -19,29 +19,45 @@ import {
 import es from '../../js/i18n-es.js';
 import zh from '../../js/i18n-zh.js';
 
-// The 33 active rows of the Supabase `services` table, read on 2026-10-22
-// (name, category). The em dash in the two Wheel Truing names is the real one.
+// Every row of the Supabase `services` table, read on 2026-11-07 (name,
+// category): 49 visible and 6 hidden in Admin, which keep their questions for
+// the day they come back. 33 rows until Diego split the catalog into variants
+// that day. The em dash in the two Wheel Truing names is the real one.
 const CATALOG = [
-  ['Brake Adjustment', 'Brakes'],
+  ['Brake Adjustment - Hydraulic', 'Brakes'],
+  ['Brake Adjustment - Hydraulic + Rotor True', 'Brakes'],
+  ['Brake Adjustment - V-brake / Mechanical', 'Brakes'],
   ['Brake Bleed', 'Brakes'],
+  ['Brake Hose - Hydraulic, External', 'Brakes'],
+  ['Brake Hose - Hydraulic, Internal', 'Brakes'],
+  ['Brake Install - External Routing', 'Brakes'],
+  ['Brake Install - Internal Routing', 'Brakes'],
+  ['Brake Lever Replacement', 'Brakes'],
   ['Brake Pad Install', 'Brakes'],
-  ['Hydro Brake Install', 'Brakes'],
   ['Bar Tape Install', 'Cockpit & levers'],
-  ['Handlebar Install', 'Cockpit & levers'],
+  ['Grip Install', 'Cockpit & levers'],
+  ['Handlebar Replacement - Flat', 'Cockpit & levers'],
+  ['Handlebar Replacement - Flat, Cut to Size', 'Cockpit & levers'],
+  ['Handlebar Replacement - Road', 'Cockpit & levers'],
   ['Headset Service', 'Cockpit & levers'],
+  ['Headset Service - Internal Routing', 'Cockpit & levers'],
   ['Saddle Fitting', 'Cockpit & levers'],
   ['Bottom Bracket Install', 'Drivetrain'],
   ['Cassette Install', 'Drivetrain'],
   ['Chain Install', 'Drivetrain'],
   ['True Hanger Derailleur', 'Drivetrain'],
   ['E-bike Diagnostic', 'Electronic & e-bike'],
-  ['E-bike service', 'Electronic & e-bike'],
   ['Firmware Update', 'Electronic & e-bike'],
+  ['Cable & Housing - Mechanical, External', 'Gears & cables'],
+  ['Cable & Housing - Mechanical, Internal', 'Gears & cables'],
   ['Derailleur Install', 'Gears & cables'],
-  ['External Cable Install', 'Gears & cables'],
-  ['Gear Adjustment', 'Gears & cables'],
+  ['Gear Adjustment - 10/11/12-speed', 'Gears & cables'],
+  ['Gear Adjustment - Electronic', 'Gears & cables'],
+  ['Gear Adjustment - up to 8-speed', 'Gears & cables'],
   ['Accessory / Part Install', 'General & assembly'],
   ['Bike Assembly', 'General & assembly'],
+  ['Bike Wash', 'Scheduled services'],
+  ['E-bike service', 'Scheduled services'],
   ['Emergency Service', 'Scheduled services'],
   ['Standard Service', 'Scheduled services'],
   ['Standard+ Service', 'Scheduled services'],
@@ -49,15 +65,23 @@ const CATALOG = [
   ['Ultimate Overhaul', 'Scheduled services'],
   ['Air Can Service', 'Suspension'],
   ['Lower Leg Service', 'Suspension'],
+  ['CushCore Install', 'Wheels & tyres'],
+  ['Inner Tube Replacement', 'Wheels & tyres'],
+  ['Inner Tube Replacement - E-bike', 'Wheels & tyres'],
   ['Spoke Replacement', 'Wheels & tyres'],
+  ['Tubeless Puncture Repair', 'Wheels & tyres'],
+  ['Tubeless Rim Tape', 'Wheels & tyres'],
+  ['Tubeless Rim Tape - with CushCore', 'Wheels & tyres'],
+  ['Tubeless Sealant Top-Up', 'Wheels & tyres'],
   ['Tubeless Tyre Install', 'Wheels & tyres'],
-  ['Tyre / Tube Install', 'Wheels & tyres'],
+  ['Tubeless Tyre Replacement', 'Wheels & tyres'],
+  ['Tubeless Tyre Replacement - with CushCore', 'Wheels & tyres'],
   ['Tyre Replacement', 'Wheels & tyres'],
-  ['Wheel Truing \u2014 Major', 'Wheels & tyres'],
-  ['Wheel Truing \u2014 Minor', 'Wheels & tyres'],
+  ['Wheel Truing — Major', 'Wheels & tyres'],
+  ['Wheel Truing — Minor', 'Wheels & tyres'],
 ];
 
-// Every question any of the 33 services (or an unknown category) can reach.
+// Every question any service in the catalog (or an unknown category) can reach.
 function reachableQuestions() {
   const byId = new Map();
   const services = CATALOG.map(([name, category]) => ({ name, category }));
@@ -202,7 +226,7 @@ describe('sortAnswerIds - el orden en que se leen las respuestas', () => {
 // Lo que los del plan no alcanzan.
 // ---------------------------------------------------------------------------
 
-describe('los 33 servicios del catalogo', () => {
+describe('los servicios del catalogo', () => {
   it('todos tienen preguntas, salvo Emergency Service', () => {
     for (const [name, category] of CATALOG) {
       const qs = questionsFor({ name, category });
@@ -218,8 +242,10 @@ describe('los 33 servicios del catalogo', () => {
     for (const key of Object.keys(SERVICE_OVERRIDES)) expect(names.has(key), key).toBe(true);
   });
 
-  it('son 20 excepciones del spec mas la emergencia', () => {
-    expect(Object.keys(SERVICE_OVERRIDES)).toHaveLength(21);
+  // 20 del spec mas la emergencia hasta el 7-nov-2026; ese dia el catalogo se
+  // partio en variantes y cada variante que hereda o recorta preguntas es una.
+  it('41 excepciones, la emergencia incluida', () => {
+    expect(Object.keys(SERVICE_OVERRIDES)).toHaveLength(41);
     expect(SERVICE_OVERRIDES).toHaveProperty('Emergency Service');
   });
 
@@ -246,16 +272,24 @@ describe('los 33 servicios del catalogo', () => {
 describe('las excepciones, una por una', () => {
   // [servicio, categoria, ids que tiene que tener, ids que no]
   const CASES = [
-    ['Brake Adjustment', 'Brakes', ['brand', 'brake_type'], ['pad_material', 'current_brakes']],
+    [
+      'Brake Adjustment - V-brake / Mechanical',
+      'Brakes',
+      ['brand'],
+      ['brake_type', 'pad_material', 'current_brakes'],
+    ],
+    ['Brake Hose - Hydraulic, Internal', 'Brakes', ['brand', 'brake_model'], ['brake_type']],
     ['Brake Bleed', 'Brakes', ['brand'], ['brake_type']],
     ['Brake Pad Install', 'Brakes', ['brand', 'pad_material'], []],
-    ['Hydro Brake Install', 'Brakes', ['brand', 'current_brakes'], []],
+    ['Brake Install - External Routing', 'Brakes', ['brand', 'current_brakes'], []],
+    ['Brake Install - Internal Routing', 'Brakes', ['brand', 'current_brakes'], []],
     ['Spoke Replacement', 'Wheels & tyres', ['broken_spokes', 'hub_brand'], ['tyre_size']],
     ['Wheel Truing \u2014 Minor', 'Wheels & tyres', ['has_broken_spokes'], ['tyre_size']],
     ['Wheel Truing \u2014 Major', 'Wheels & tyres', ['has_broken_spokes'], ['tyre_size']],
     ['Tubeless Tyre Install', 'Wheels & tyres', ['tyre_size'], ['tyre_system']],
-    ['Tyre / Tube Install', 'Wheels & tyres', ['tyre_size', 'tyre_system', 'own_tyre'], []],
-    ['Tyre Replacement', 'Wheels & tyres', ['tyre_size', 'tyre_system'], ['own_tyre']],
+    ['Inner Tube Replacement', 'Wheels & tyres', ['tyre_size'], ['tyre_system', 'own_tyre']],
+    ['Tubeless Tyre Replacement', 'Wheels & tyres', ['tyre_size', 'own_tyre'], ['tyre_system']],
+    ['Tyre Replacement', 'Wheels & tyres', ['tyre_size', 'tyre_system', 'own_tyre'], []],
     ['Bottom Bracket Install', 'Drivetrain', ['bb_type'], ['speeds']],
     ['Chain Install', 'Drivetrain', ['speeds'], ['frame_brand']],
     [
@@ -264,14 +298,19 @@ describe('las excepciones, una por una', () => {
       ['shifting_type', 'derailleur_position', 'own_part'],
       [],
     ],
-    ['External Cable Install', 'Gears & cables', ['shifting_type', 'cable_kind'], []],
-    ['Gear Adjustment', 'Gears & cables', ['shifting_type'], ['cable_kind']],
+    [
+      'Cable & Housing - Mechanical, External',
+      'Gears & cables',
+      ['shifting_type', 'cable_kind'],
+      [],
+    ],
+    ['Gear Adjustment - up to 8-speed', 'Gears & cables', ['shifting_type'], ['cable_kind']],
     ['Firmware Update', 'Electronic & e-bike', ['motor_brand', 'brand_app'], []],
-    ['E-bike service', 'Electronic & e-bike', ['motor_brand'], ['symptom']],
+    ['E-bike service', 'Scheduled services', ['motor_brand'], ['symptom', 'notes']],
     ['E-bike Diagnostic', 'Electronic & e-bike', ['motor_brand', 'symptom'], ['brand_app']],
     ['Air Can Service', 'Suspension', ['suspension_brand', 'suspension_part'], []],
     ['Lower Leg Service', 'Suspension', ['suspension_brand'], ['suspension_part']],
-    ['Handlebar Install', 'Cockpit & levers', ['bar_swap'], []],
+    ['Handlebar Replacement - Flat', 'Cockpit & levers', ['bar_swap'], []],
     ['Headset Service', 'Cockpit & levers', ['headset_feel'], []],
     ['Saddle Fitting', 'Cockpit & levers', ['fit_goal'], []],
     ['Bar Tape Install', 'Cockpit & levers', ['bike_type'], ['bar_swap', 'tape_colour']],
