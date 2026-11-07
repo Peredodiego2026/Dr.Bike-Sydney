@@ -1,9 +1,8 @@
 // tests/unit/chatbot-suburb-fees.test.js - asked "how much to Bondi?" on
 // 5-nov-2026 the chatbot said $35 ($154 in total): it knew the fee bands but
 // not how far Bondi is, and guessed from "Eastern Suburbs". Bondi Beach is 44
-// minutes, $60. The prompt also listed Randwick as covered; it is 46 minutes,
-// outside the same-day area. The bot now gets measured minutes, and the fee
-// for each comes from the same function the booking charges with.
+// minutes, $60. The bot now gets measured minutes, and the fee for each
+// comes from the same function the booking charges with.
 //
 // With that list in the prompt (#590) it STILL said "Bondi Beach is $35 ...
 // about 44 minutes" three times out of three, so the suburbs a customer names
@@ -39,11 +38,16 @@ describe('the chatbot quotes suburbs from measured driving time', () => {
     expect(lineFor(block, 'Mosman')).toMatch(new RegExp(`fee \\$${FEE_BANDS[0].fee}$`));
   });
 
-  it('Randwick and Marrickville are outside the same-day area, with no price', () => {
-    expect(lineFor(block, 'Randwick')).toMatch(
+  it('Marrickville is outside the same-day area, with no price', () => {
+    expect(lineFor(block, 'Marrickville')).toMatch(
       /outside the same-day area, by arrangement, no fixed price$/
     );
-    expect(lineFor(block, 'Marrickville')).not.toMatch(/\$/);
+  });
+
+  // Measured without a postcode (5-nov), "Randwick NSW" was the council area,
+  // 46 minutes: the bot said outside while a Randwick address booked at $60.
+  it('Randwick is measured as the suburb a customer types, not the council', () => {
+    expect(lineFor(block, 'Randwick')).toBe('- Randwick: 41 min - visit & diagnosis fee $60');
   });
 
   it('every listed suburb gets exactly the fee the booking would charge', () => {
@@ -77,25 +81,27 @@ describe('the chatbot quotes suburbs from measured driving time', () => {
 describe('the suburbs a customer names are looked up, not left to the model', () => {
   it('the exact question that got $35', () => {
     expect(suburbFactsFor('How much is the visit fee to Bondi?')).toBe(
-      '- Bondi Junction: 41 min - visit & diagnosis fee $60\n' +
+      '- Bondi Junction: 40 min - visit & diagnosis fee $60\n' +
         '- Bondi Beach: 44 min - visit & diagnosis fee $60'
     );
   });
 
   it('a specific Bondi means only that one', () => {
     expect(suburbFactsFor("I'm in Bondi Junction")).toBe(
-      '- Bondi Junction: 41 min - visit & diagnosis fee $60'
+      '- Bondi Junction: 40 min - visit & diagnosis fee $60'
     );
   });
 
   it('several suburbs, any case', () => {
     const facts = suburbFactsFor('newtown or MANLY, whichever is cheaper');
     expect(facts).toContain('- Manly: 10 min');
-    expect(facts).toContain('- Newtown: 42 min');
+    expect(facts).toContain('- Newtown: 41 min');
   });
 
   it('an outside suburb gets no price', () => {
-    expect(suburbFactsFor('Do you come to Randwick?')).toMatch(/^- Randwick: 46 min - outside/);
+    expect(suburbFactsFor('Do you come to Marrickville?')).toMatch(
+      /^- Marrickville: 50 min - outside/
+    );
   });
 
   it('CBD and "the city" are the CBD', () => {
