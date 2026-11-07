@@ -4046,6 +4046,10 @@ function wireRateMechanicButtons(root) {
 
 function openMechanicProfile(p, booking, screen) {
   screen.querySelector('#mechanic-profile-panel')?.remove();
+  // In the client's language: Admin translates the bio on save (bio_es /
+  // bio_zh), and until it has, the English one.
+  const lang = getLang();
+  const bio = (lang === 'es' && p.bio_es) || (lang === 'zh' && p.bio_zh) || p.bio || '';
 
   const initials = p.name
     .split(' ')
@@ -4086,7 +4090,7 @@ function openMechanicProfile(p, booking, screen) {
       <div style="text-align:center;padding:10px 20px 0">
         <div style="font-size:18px;font-weight:700;color:var(--navy)">${escapeHtml(p.name)}</div>
         <div style="font-size:13px;color:var(--gray);margin-top:2px">Dr. Bike Mobile Mechanic</div>
-        ${p.bio ? `<div style="font-size:13px;color:var(--gray);margin-top:10px;line-height:1.5">${escapeHtml(p.bio)}</div>` : ''}
+        ${bio ? `<div style="font-size:13px;color:var(--gray);margin-top:10px;line-height:1.5">${escapeHtml(bio)}</div>` : ''}
       </div>
       ${statParts.length ? `<div style="display:flex;justify-content:center;gap:32px;padding:16px 20px">${statParts.join('')}</div>` : ''}
       <div style="display:flex;gap:8px;padding:16px 20px">

@@ -26,6 +26,7 @@ import {
   saveGoogleRefreshToken,
 } from './_google-calendar.js';
 import { readSearchConsole } from './_search-console.js';
+import { translateBio } from './_bio-translate.js';
 import {
   buildCompletionCalls,
   dispatchCompletionCalls,
@@ -5353,9 +5354,10 @@ export async function handlePublicTrack(req, res) {
   // a solo operator's escalation_contacts row may be labelled role='manager' rather than 'mechanic'.
   let mechanic_profile = null;
   if (booking.mechanic_id) {
-    const profResp = await fetch(
-      `${SUPABASE_URL}/rest/v1/escalation_contacts?select=first_name,last_name,photo_url,bio&id=eq.${encodeURIComponent(booking.mechanic_id)}&limit=1`,
-      { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } }
+    const profResp = await fetchContactsWithBio(
+      'first_name,last_name,photo_url,bio',
+      `id=eq.${encodeURIComponent(booking.mechanic_id)}&limit=1`,
+      { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` }
     );
     if (profResp.ok) {
       const profData = await profResp.json();
@@ -5376,6 +5378,8 @@ export async function handlePublicTrack(req, res) {
           name: [p.first_name, p.last_name].filter(Boolean).join(' ') || null,
           photo_url: p.photo_url || null,
           bio: p.bio || null,
+          bio_es: p.bio_es || null,
+          bio_zh: p.bio_zh || null,
           jobs_completed,
           rating,
           reviews,
@@ -5635,6 +5639,19 @@ export async function handlePartsPrices(req, res) {
   );
 }
 
+// The bio in Spanish and Chinese (bio_es / bio_zh) arrives with
+// scripts/add-mechanic-bio-translations.sql, which Diego runs by hand. Until he
+// does, naming those columns makes PostgREST answer 400 to the WHOLE read, and
+// the team section and the mechanic card on the tracking page would go empty.
+// So ask with them, and on a 400 ask again without: the page then shows the
+// English bio, as it did before.
+export async function fetchContactsWithBio(cols, filter, headers) {
+  const url = (select) => `${SUPABASE_URL}/rest/v1/escalation_contacts?select=${select}&${filter}`;
+  const resp = await fetch(url(`${cols},bio_es,bio_zh`), { headers });
+  if (resp.status !== 400) return resp;
+  return fetch(url(cols), { headers });
+}
+
 async function handlePublicMechanics(req, res) {
   const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   const hdrs = { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` };
@@ -5644,9 +5661,10 @@ async function handlePublicMechanics(req, res) {
   // meant the team section was empty until the first job was finished. On a
   // brand-new business that is every visitor, forever, right up to the moment
   // the page stops needing to convince anybody.
-  const contactsResp = await fetch(
-    `${SUPABASE_URL}/rest/v1/escalation_contacts?select=id,first_name,last_name,photo_url,bio&active=eq.true`,
-    { headers: hdrs }
+  const contactsResp = await fetchContactsWithBio(
+    'id,first_name,last_name,photo_url,bio',
+    'active=eq.true',
+    hdrs
   );
   if (!contactsResp.ok) return res.status(500).json({ error: 'Database error' });
   const contacts = await contactsResp.json();
@@ -5670,6 +5688,8 @@ async function handlePublicMechanics(req, res) {
         name: [c.first_name, c.last_name].filter(Boolean).join(' ').trim(),
         photo_url: c.photo_url || null,
         bio: c.bio || null,
+        bio_es: c.bio_es || null,
+        bio_zh: c.bio_zh || null,
         jobs_completed,
         rating,
         reviews,
@@ -6659,6 +6679,61 @@ export async function handleAdminSetMechanicPin(req, res) {
   const { error } = await auth.sb.from('escalation_contacts').update(update).eq('id', contact_id);
   if (error) return res.status(500).json({ error: error.message });
   return res.status(200).json({ ok: true, pin: finalPin, sessions_revoked: revoked });
+}
+
+// The mechanic's bio in Spanish and Chinese. Admin > Mechanic Profiles calls
+// this right after saving the English bio; the translations land in
+// bio_es / bio_zh and the landing, the app and the tracking page show the one
+// for the visitor's language (English while they are empty).
+//
+// It translates what is IN THE DATABASE, not text sent by the browser, so what
+// gets stored is always the translation of the bio that is actually saved. And
+// it writes only while that bio is still the same: if Diego saved again while
+// this one was translating, the older translation does not overwrite the
+// newer save's (which cleared both columns and will translate on its own).
+export async function handleAdminTranslateBio(req, res, deps = {}) {
+  const { access_token, contact_id } = req.body || {};
+  const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  const auth = await verifyAdminSession(access_token, SERVICE_KEY);
+  if (auth.error) return res.status(auth.status).json({ error: auth.error });
+  if (!contact_id) return res.status(400).json({ error: 'contact_id required' });
+
+  // select('*') so a database without the migration answers with a row that
+  // lacks the columns, instead of a 400 that says nothing useful.
+  const { data: c, error: readErr } = await auth.sb
+    .from('escalation_contacts')
+    .select('*')
+    .eq('id', contact_id)
+    .maybeSingle();
+  if (readErr) return res.status(500).json({ error: readErr.message });
+  if (!c) return res.status(404).json({ error: 'Mechanic not found' });
+  if (!('bio_es' in c) || !('bio_zh' in c)) {
+    return res.status(409).json({
+      error: 'needs_migration',
+      message: 'Run scripts/add-mechanic-bio-translations.sql in Supabase to translate the bio.',
+    });
+  }
+
+  const bio = String(c.bio || '').trim();
+  let es = null;
+  let zh = null;
+  if (bio) {
+    try {
+      ({ es, zh } = await (deps.translate || translateBio)(bio));
+    } catch (e) {
+      console.error('[admin-translate-bio]', e.message);
+      return res.status(502).json({ error: `Translation failed: ${e.message}` });
+    }
+  }
+
+  let q = auth.sb.from('escalation_contacts').update({ bio_es: es, bio_zh: zh }).eq('id', contact_id);
+  q = c.bio === null || c.bio === undefined ? q.is('bio', null) : q.eq('bio', c.bio);
+  const { data: written, error } = await q.select('id');
+  if (error) return res.status(500).json({ error: error.message });
+  if (!written || !written.length) {
+    return res.status(409).json({ error: 'bio_changed', message: 'The bio changed while it was being translated.' });
+  }
+  return res.status(200).json({ ok: true, bio_es: es, bio_zh: zh });
 }
 
 // Payments Stripe took that no booking ever claimed, over a date range Diego
@@ -8095,6 +8170,7 @@ async function handler(req, res) {
   if (role === 'admin-inventory-reorder') return handleAdminInventoryReorder(req, res);
   if (role === 'admin-claims-update') return handleAdminClaimsUpdate(req, res);
   if (role === 'admin-set-mechanic-pin') return handleAdminSetMechanicPin(req, res);
+  if (role === 'admin-translate-bio') return handleAdminTranslateBio(req, res);
   if (role === 'admin-analytics') return handleAdminAnalytics(req, res);
   // Admin > Shop Orders. The admin check happens HERE, before the module is
   // reached: api/_shop-admin.js never decides who gets in.

@@ -154,10 +154,19 @@ function lpDateLocale() {
     }
   }
 
+  // The bio in the visitor's language. Admin translates it when it is saved
+  // (bio_es / bio_zh); empty means not translated yet, and then the English.
+  // <html lang> is what js/i18n.js keeps current, before it fires langchange.
+  function mechBio(m) {
+    const lang = (document.documentElement.lang || 'en').slice(0, 2);
+    return (lang === 'es' && m.bio_es) || (lang === 'zh' && m.bio_zh) || m.bio || '';
+  }
+
   function renderMechCards() {
     const track = document.getElementById('mech-carousel-track');
     track.innerHTML = mechanics
-      .map((m, i) => {
+      .map((raw, i) => {
+        const m = { ...raw, bio: mechBio(raw) };
         // 150px, up from 76: the photo is the point of the card (Diego, 4-nov).
         const avatarHTML = m.photo_url
           ? `<img src="${escapeMechHtml(m.photo_url)}" alt="${escapeMechHtml(m.name)}" style="width:150px;height:150px;border-radius:50%;object-fit:cover;border:5px solid var(--white);box-shadow:0 6px 18px rgba(0,0,0,0.22)">`
@@ -248,7 +257,10 @@ function lpDateLocale() {
     updateMechCarousel();
   }
 
-  function openMechDetail(m) {
+  let detailMech = null;
+  function openMechDetail(raw) {
+    detailMech = raw;
+    const m = { ...raw, bio: mechBio(raw) };
     const body = document.getElementById('mech-detail-body');
     const avatarHTML = m.photo_url
       ? `<img src="${escapeMechHtml(m.photo_url)}" alt="${escapeMechHtml(m.name)}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2)">`
@@ -328,6 +340,17 @@ function lpDateLocale() {
       mechDragging = false;
     });
   }
+
+  // The bio is data, not dictionary copy, so the page-wide re-translation
+  // cannot switch it: a language change re-renders the cards (and the open
+  // profile) with the bio for the new language.
+  document.addEventListener('langchange', () => {
+    if (!mechanics.length) return;
+    renderMechCards();
+    updateMechCarousel();
+    const modal = document.getElementById('mech-detail-modal');
+    if (detailMech && modal && modal.style.display === 'flex') openMechDetail(detailMech);
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', loadMechanics);
