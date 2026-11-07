@@ -412,11 +412,16 @@ describe('real minutes, not free-flow minutes', () => {
   });
 
   it('the perimeter is 45 REAL minutes, so it bites earlier than it used to', () => {
-    // Randwick: 36 router minutes. Under the old clock that was inside the
-    // 45-minute perimeter and cost $45. It is 46 real minutes.
-    const randwick = resolveCoverage({ address: 'Randwick NSW 2031', minutes: 36, km: 29 });
-    expect(randwick.covered).toBe('out');
-    expect(needsQuote(randwick)).toBe(true);
+    // 36 router minutes. Under the old clock that was inside the 45-minute
+    // perimeter and cost $45. It is 46 real minutes. (This was labelled
+    // Randwick, from a geocode of the council area; the suburb itself, with
+    // its postcode, is 32 router minutes - 41 real, $60.)
+    const atTheLine = resolveCoverage({ minutes: 36, km: 29 });
+    expect(atTheLine.covered).toBe('out');
+    expect(needsQuote(atTheLine)).toBe(true);
+    expect(resolveCoverage({ address: 'Randwick NSW 2031', minutes: 32, km: 24 }).calloutFee).toBe(
+      60
+    );
     // Coogee is one router minute further out but lands exactly on the line.
     expect(resolveCoverage({ minutes: 35, km: 26 }).calloutFee).toBe(60);
   });
