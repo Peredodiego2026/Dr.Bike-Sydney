@@ -43,7 +43,7 @@ const ASSET_VERSION = '20261025b';
 const SUBURBS = [
   { slug: 'bondi', name: 'Bondi', areas: 'Bondi Beach, Bondi Junction, Bronte, Tamarama, Waverley' },
   { slug: 'cbd', name: 'Sydney CBD', areas: 'Sydney CBD, Pyrmont, Ultimo, Chippendale, Surry Hills' },
-  { slug: 'inner-west', name: 'Inner West', areas: 'Newtown, Marrickville, Leichhardt, Petersham, Glebe' },
+  { slug: 'inner-west', name: 'Inner West', areas: 'Newtown, Leichhardt, Petersham, Glebe' },
   { slug: 'north-shore', name: 'North Shore', areas: 'Chatswood, Lane Cove, Willoughby, Mosman, Cremorne' },
   { slug: 'northern-beaches', name: 'Northern Beaches', areas: 'Narrabeen, Mona Vale, Avalon, Newport, Collaroy' },
 ];
@@ -61,7 +61,9 @@ const SUBURBS = [
 const NEIGHBOURS = {
   bondi: ['eastern-suburbs', 'surry-hills', 'cbd'],
   cbd: ['surry-hills', 'inner-west', 'bondi'],
-  'inner-west': ['newtown', 'marrickville', 'cbd'],
+  // Marrickville left on 9-nov-2026: 50 real minutes from the base, outside the
+  // perimeter. Diego: "50 min es mucho".
+  'inner-west': ['newtown', 'cbd'],
   // Hornsby left on 3-nov-2026: 52 real minutes from the base, outside the
   // perimeter, so "same day rates" under this heading was not true.
   'north-shore': ['chatswood', 'mosman'],
@@ -72,7 +74,6 @@ const RETIRED_NAMES = {
   'eastern-suburbs': 'Eastern Suburbs',
   'surry-hills': 'Surry Hills',
   newtown: 'Newtown',
-  marrickville: 'Marrickville',
   chatswood: 'Chatswood',
   mosman: 'Mosman',
   hornsby: 'Hornsby',
