@@ -42,10 +42,12 @@ describe('ninguna imagen hace saltar la pagina', () => {
   it('y son las dimensiones reales del archivo', () => {
     const REAL = {
       'images/logo-db.png': [600, 423],
-      'images/hero-van.webp': [1672, 941],
-      'images/mechanic-working.webp': [1122, 1402],
       'images/diego-peredo.webp': [168, 168],
     };
+    // Las 13 del carrusel de la portada: todas recortadas a 1000x750.
+    for (const f of fs.readdirSync(new URL('../../images/', import.meta.url))) {
+      if (/^hero-[a-z]+\.webp$/.test(f)) REAL['images/' + f] = [1000, 750];
+    }
     for (const page of PAGES) {
       for (const tag of imgs(read(page))) {
         const real = REAL[srcOf(tag)];
@@ -73,16 +75,40 @@ describe('lazy donde ayuda, eager donde estorbaria', () => {
 
   // `loading="lazy"` en algo que se ve al abrir la pagina lo RETRASA: el
   // navegador lo descubre mas tarde. El logo y el hero son lo primero que se
-  // ve. En index.html el hero lleva la foto de Diego desde el 2026-11-03, no
-  // la camioneta.
+  // ve. En index.html el hero lleva la foto de Diego desde el 2026-11-03, y en
+  // landing.html sus fotos en carrusel desde el 2026-11-10: las dos fotos de
+  // una van eran hechas con IA, y Dr. Bike no tiene van.
   it('el hero y el logo cargan de inmediato', () => {
     for (const page of PAGES) {
       for (const tag of imgs(read(page))) {
         const src = srcOf(tag);
-        if (!/logo-db\.png|hero-van\.webp|diego-peredo\.webp/.test(src)) continue;
+        if (!/logo-db\.png|hero-trail\.webp|diego-peredo\.webp/.test(src)) continue;
         expect(tag, `${page} ${src}`).toMatch(/loading="eager"/);
       }
     }
+  });
+
+  // Del carrusel de la portada solo la primera se ve al abrir: las otras no
+  // pueden competir con ella por la red. Desde la tercera ni siquiera llevan
+  // src - una <img> lazy transparente cuenta como visible y bajaria igual, y
+  // las 13 pesan 1,3 MB. js/hero-carousel.js las carga una antes de mostrarlas.
+  it('del carrusel de la portada, solo la primera es eager y desde la tercera esperan', () => {
+    const slides = imgs(read('landing.html')).filter((t) => /hero-carousel__slide/.test(t));
+    expect(slides.length).toBe(13);
+    expect(srcOf(slides[0])).toBe('images/hero-trail.webp');
+    expect(slides[0]).toMatch(/fetchpriority="high"/);
+    for (const t of slides.slice(1)) expect(t).toMatch(/loading="lazy"/);
+    for (const t of slides.slice(2)) {
+      expect(t).toMatch(/\bdata-src="images\/hero-[a-z]+\.webp"/);
+      expect(t).not.toMatch(/\ssrc="/);
+    }
+    // Cada archivo existe y ninguna foto se repite.
+    const files = slides.map(srcOf);
+    expect(new Set(files).size).toBe(files.length);
+    for (const f of files) expect(fs.existsSync(new URL('../../' + f, import.meta.url)), f).toBe(true);
+    // Un punto por foto.
+    const dots = read('landing.html').match(/hero-carousel__dots[^>]*>([\s\S]*?)<\/div>/)[1];
+    expect((dots.match(/<span/g) || []).length).toBe(13);
   });
 
   // mechanic-working.webp era la de abajo en index.html hasta que se fue con
@@ -94,7 +120,7 @@ describe('lazy donde ayuda, eager donde estorbaria', () => {
   });
 
   it('las imagenes grandes ya estan en formato moderno', () => {
-    // hero-van y mechanic-working son webp. logo-db.png es un PNG a proposito:
+    // Las fotos son webp. logo-db.png es un PNG a proposito:
     // lleva transparencia y lo usan el manifest y los iconos.
     for (const page of PAGES) {
       for (const tag of imgs(read(page))) {

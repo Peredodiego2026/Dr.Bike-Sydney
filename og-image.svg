@@ -22,7 +22,7 @@
   
   <!-- Stats row -->
   <rect x="80" y="430" width="160" height="80" rx="12" fill="rgba(255,255,255,0.08)"/>
-  <text x="160" y="465" font-family="Inter,Arial,sans-serif" font-size="28" fill="white" font-weight="800" text-anchor="middle">$109</text>
+  <text x="160" y="465" font-family="Inter,Arial,sans-serif" font-size="28" fill="white" font-weight="800" text-anchor="middle">$119</text>
   <text x="160" y="490" font-family="Inter,Arial,sans-serif" font-size="13" fill="#94A3B8" text-anchor="middle">Tune-Up</text>
 
   <rect x="260" y="430" width="160" height="80" rx="12" fill="rgba(255,255,255,0.08)"/>
@@ -30,7 +30,7 @@
   <text x="340" y="490" font-family="Inter,Arial,sans-serif" font-size="13" fill="#94A3B8" text-anchor="middle">available</text>
 
   <rect x="440" y="430" width="160" height="80" rx="12" fill="rgba(255,255,255,0.08)"/>
-  <text x="520" y="465" font-family="Inter,Arial,sans-serif" font-size="28" fill="white" font-weight="800" text-anchor="middle">Mon–Sat</text>
+  <text x="520" y="465" font-family="Inter,Arial,sans-serif" font-size="28" fill="white" font-weight="800" text-anchor="middle">Mon–Sun</text>
   <text x="520" y="490" font-family="Inter,Arial,sans-serif" font-size="13" fill="#94A3B8" text-anchor="middle">8am – 5pm</text>
 
   <!-- URL bottom -->

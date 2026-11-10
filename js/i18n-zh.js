@@ -547,6 +547,7 @@ export default {
     '我们的技师在悉尼各地修好的真实单车，均为现场拍摄。',
   'Previous photo': '上一张',
   'Next photo': '下一张',
+  'Photos of our work': '我们的工作照片',
   'A bike repaired by Dr. Bike Sydney': 'Dr. Bike Sydney 修好的单车',
   TESTIMONIALS: '客户评价',
   'What Our Customers Say': '客户怎么说',

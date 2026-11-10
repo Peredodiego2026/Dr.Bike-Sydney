@@ -599,6 +599,7 @@ export default {
     'Bicis reales que nuestros mecánicos arreglaron en Sydney, fotografiadas en el trabajo.',
   'Previous photo': 'Foto anterior',
   'Next photo': 'Foto siguiente',
+  'Photos of our work': 'Fotos de nuestro trabajo',
   'A bike repaired by Dr. Bike Sydney': 'Una bici reparada por Dr. Bike Sydney',
   TESTIMONIALS: 'TESTIMONIOS',
   'What Our Customers Say': 'Lo que Dicen Nuestros Clientes',

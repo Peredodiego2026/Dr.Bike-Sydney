@@ -11241,9 +11241,7 @@ async function loadMechanicProfiles() {
       return `
     <div class="card" style="padding:0;overflow:hidden;width:300px;position:relative">
       ${roleTag}
-      <div style="height:90px;width:100%;overflow:hidden;background:var(--blue-lt)">
-        <img src="images/mechanic-working.webp" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
-      </div>
+      <div style="height:90px;width:100%;background:var(--blue-lt)"></div>
       <div style="display:flex;justify-content:center;margin-top:-40px">${avatarHTML}</div>
       <div style="text-align:center;padding:10px 20px 0">
         <div style="font-size:15px;font-weight:700;color:var(--navy)">${esc(name)}</div>

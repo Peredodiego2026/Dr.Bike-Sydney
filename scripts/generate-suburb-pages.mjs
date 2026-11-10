@@ -487,7 +487,7 @@ function page(sub, lang) {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
     name: 'Dr. Bike Sydney',
-    image: `${SITE}/images/hero-van.png`,
+    image: `${SITE}/og-image.png`,
     description,
     inLanguage: meta.hreflang,
     // The business is in Sydney; the suburb is where it SERVES. Writing the
@@ -587,7 +587,7 @@ ${alternates}
   <meta property="og:url" content="${url}">
   <meta property="og:type" content="website">
   <meta property="og:locale" content="${lang === 'en' ? 'en_AU' : lang === 'es' ? 'es_ES' : 'zh_CN'}">
-  <meta property="og:image" content="${SITE}/images/hero-van.png">
+  <meta property="og:image" content="${SITE}/og-image.png">
   <script type="application/ld+json">${businessSchema}</script>
   <script type="application/ld+json">${faqSchema}</script>
   <script type="application/ld+json">${breadcrumbSchema}</script>

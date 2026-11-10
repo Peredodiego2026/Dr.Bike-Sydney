@@ -179,7 +179,7 @@ function lpDateLocale() {
         return `
       <div class="mech-card" data-index="${i}">
         <div class="mech-card__float">
-          <div class="mech-card__banner"><img src="images/mechanic-working.webp" alt=""></div>
+          <div class="mech-card__banner"></div>
           <div style="display:flex;justify-content:center;margin-top:-75px">${avatarHTML}</div>
           <div style="text-align:center;padding:12px 24px 24px">
             <div style="font-size:22px;font-weight:700;color:var(--navy)">${escapeMechHtml(m.name)}</div>
@@ -266,7 +266,7 @@ function lpDateLocale() {
       ? `<img src="${escapeMechHtml(m.photo_url)}" alt="${escapeMechHtml(m.name)}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2)">`
       : `<div style="width:96px;height:96px;border-radius:50%;background:var(--blue-lt);border:4px solid var(--white);box-shadow:0 4px 12px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:var(--blue-text)">${mechInitials(m.name)}</div>`;
     body.innerHTML = `
-      <div style="height:110px;background:var(--blue-lt);overflow:hidden"><img src="images/mechanic-working.webp" style="width:100%;height:100%;object-fit:cover" alt=""></div>
+      <div style="height:110px;background:var(--blue-lt)"></div>
       <div style="display:flex;justify-content:center;margin-top:-48px">${avatarHTML}</div>
       <div style="text-align:center;padding:12px 28px 4px">
         <div style="font-size:20px;font-weight:700;color:var(--navy)">${escapeMechHtml(m.name)}</div>

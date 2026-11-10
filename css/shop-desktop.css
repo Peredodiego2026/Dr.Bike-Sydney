@@ -444,6 +444,20 @@
   flex-shrink: 0;
 }
 
+/* The van photo that was here was AI-made, and there is no van (2026-11-10).
+   The landing hero's blue panel and DB card until there is a real photo. */
+.sd-workshop__brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--blue);
+}
+
+.sd-workshop__brand img {
+  width: 160px;
+  height: 160px;
+}
+
 /* ── La tarjeta de producto ──────────────────────────────────────────────── */
 
 .sd-card {
