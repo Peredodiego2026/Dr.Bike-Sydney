@@ -225,20 +225,31 @@
       </div>
     </div>
 
-    <!-- Diego's own phone photos, in his order (2026-11-10). They replaced an
-         AI-made van picture: Dr. Bike has no van, and Google rejected the
-         Business Profile appeal as "deceptive content" that week. Never put a
-         generated or AI-edited image here. js/hero-carousel.js fades through
-         them; without it the first one still shows. -->
+    <!-- Diego's own phone photos (2026-11-10), IMG_0918 first because he
+         asked for it there. They replaced an AI-made van picture: Dr. Bike has
+         no van, and Google rejected the Business Profile appeal as "deceptive
+         content" that week. Never put a generated or AI-edited image here.
+         Only the first two carry a src. The rest carry data-src, and
+         js/hero-carousel.js loads each one a slide before it shows: 13 photos
+         are 1.3 MB, and most visitors never see past the third. Without JS
+         the first photo still shows. -->
     <div class="hero-image hero-carousel" id="hero-carousel" role="group" aria-label="Photos of our work">
-      <img class="hero-carousel__slide is-active" src="images/hero-1-trail.webp" alt="An e-mountain bike on a coastal trail" width="1000" height="750" decoding="async" loading="eager" fetchpriority="high">
-      <img class="hero-carousel__slide" src="images/hero-2-diego.webp" alt="Diego, the mechanic, out on a trail ride" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
-      <img class="hero-carousel__slide" src="images/hero-3-brakes.webp" alt="Bleeding a hydraulic brake" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
-      <img class="hero-carousel__slide" src="images/hero-4-motor.webp" alt="An e-bike motor opened for service" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
-      <img class="hero-carousel__slide" src="images/hero-5-bay.webp" alt="An e-bike by a bay" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
+      <img class="hero-carousel__slide is-active" src="images/hero-trail.webp" alt="An e-mountain bike on a coastal trail" width="1000" height="750" decoding="async" loading="eager" fetchpriority="high">
+      <img class="hero-carousel__slide" src="images/hero-workstand.webp" alt="Diego with an e-bike on the workstand" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
+      <img class="hero-carousel__slide" data-src="images/hero-brakes.webp" alt="Bleeding a hydraulic brake" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
+      <img class="hero-carousel__slide" data-src="images/hero-cards.webp" alt="Dr. Bike Sydney cards on a bike" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
+      <img class="hero-carousel__slide" data-src="images/hero-motor.webp" alt="An e-bike motor opened for service" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
+      <img class="hero-carousel__slide" data-src="images/hero-diego.webp" alt="Diego, the mechanic, out on a trail ride" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
+      <img class="hero-carousel__slide" data-src="images/hero-display.webp" alt="An e-bike display showing a warning code" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
+      <img class="hero-carousel__slide" data-src="images/hero-drive.webp" alt="An e-bike drive unit on the workstand" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
+      <img class="hero-carousel__slide" data-src="images/hero-muddy.webp" alt="A muddy e-bike after a trail ride" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
+      <img class="hero-carousel__slide" data-src="images/hero-pads.webp" alt="Disc brake pads on the bench" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
+      <img class="hero-carousel__slide" data-src="images/hero-bay.webp" alt="An e-bike by a bay" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
+      <img class="hero-carousel__slide" data-src="images/hero-forest.webp" alt="An e-bike on a forest trail" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
+      <img class="hero-carousel__slide" data-src="images/hero-creek.webp" alt="An e-bike by a creek" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true">
       <button type="button" class="hero-carousel__btn hero-carousel__btn--prev" id="hero-prev" aria-label="Previous photo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6"/></svg></button>
       <button type="button" class="hero-carousel__btn hero-carousel__btn--next" id="hero-next" aria-label="Next photo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg></button>
-      <div class="hero-carousel__dots" aria-hidden="true"><span class="is-active"></span><span></span><span></span><span></span><span></span></div>
+      <div class="hero-carousel__dots" aria-hidden="true"><span class="is-active"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
     </div>
   </div>
 </section>
@@ -1751,7 +1762,7 @@
 <script src="js/cta-tracking.js?v=20260728a" defer></script>
 <script src="js/utm-capture.js?v=20260728a"></script>
 <script src="js/reviews-carousel.js" defer></script>
-<script src="js/hero-carousel.js?v=a5383cc9bc" defer></script>
+<script src="js/hero-carousel.js?v=1dde9c3910" defer></script>
 
 </body>
 </html>

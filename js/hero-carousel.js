@@ -10,6 +10,11 @@
 // the pointer or keyboard focus is on the photos, while the tab is hidden, and
 // for visitors who ask for reduced motion. The arrows and a swipe move one
 // photo.
+//
+// From the third photo on, the HTML gives data-src instead of src. A lazy
+// <img> that is merely transparent still counts as on screen, so all 13
+// (1.3 MB) would download with the page. show() loads the photo it shows and
+// the one after it.
 
 (function () {
   const root = document.getElementById('hero-carousel');
@@ -31,8 +36,16 @@
   let timer = null;
   let held = false;
 
+  function load(slide) {
+    if (!slide.dataset.src) return;
+    slide.src = slide.dataset.src;
+    delete slide.dataset.src;
+  }
+
   function show(i) {
     active = (i + n) % n;
+    load(slides[active]);
+    load(slides[(active + 1) % n]);
     slides.forEach((slide, k) => {
       const on = k === active;
       slide.classList.toggle('is-active', on);
