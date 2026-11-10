@@ -62,7 +62,7 @@
   {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What areas do you service?","acceptedAnswer":{"@type":"Answer","text":"Same-day visits cover everything within about 45 minutes of our Northern Beaches base — Northern Beaches, North Shore, the CBD, Inner West and Eastern Suburbs. Further out, like Hornsby, Western Sydney, the Sutherland Shire or the Blue Mountains, we still come, but by arrangement rather than same-day. Enter your address when you book and we'll tell you which one you are."}},{"@type":"Question","name":"What if I need to reschedule?","acceptedAnswer":{"@type":"Answer","text":"You can reschedule or cancel from the link in your booking confirmation, or by calling us. It's free with more than 24 hours' notice; with less, a fee of up to the visit & diagnosis fee may apply."}},{"@type":"Question","name":"Do you bring spare parts?","acceptedAnswer":{"@type":"Answer","text":"Yes. We carry inner tubes in the common sizes, and any other part your bike needs we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately."}},{"@type":"Question","name":"How long does a service take?","acceptedAnswer":{"@type":"Answer","text":"A Tune-Up takes about an hour, a Standard Service about 1.5 hours, a Standard+ Service about 2.5 hours and an Ultimate Overhaul about 4 hours. You'll see the estimate when you book."}},{"@type":"Question","name":"What payment methods do you accept?","acceptedAnswer":{"@type":"Answer","text":"We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $35, depending on your suburb) is charged at booking; the remainder is charged on completion."}}]}
   </script>
 
-  <link rel="stylesheet" href="css/landing.css?v=b3c1c70944">
+  <link rel="stylesheet" href="css/landing.css?v=c12515bba0">
   <link rel="stylesheet" href="css/shop.css?v=f28b164290">
   <script src="https://js.stripe.com/v3/"></script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
@@ -1618,12 +1618,14 @@
      mobile SPA. It used to be ~25 lines of markup right here, which is why
      index.html never had one. -->
 
-  <!-- Newsletter Signup (7.1) -->
-  <section style="background:linear-gradient(135deg,var(--navy),var(--blue));padding:64px 24px;text-align:center">
+  <!-- Newsletter Signup (7.1). The background photo is Diego's own (IMG_0918),
+       faded in css/landing.css .nl-section__photo. -->
+  <section class="nl-section" style="background:linear-gradient(135deg,var(--navy),var(--blue));padding:64px 24px;text-align:center">
+    <img class="nl-section__photo" src="images/newsletter-trail.webp" alt="" width="1600" height="640" loading="lazy" decoding="async" aria-hidden="true">
     <div style="max-width:480px;margin:0 auto">
-      <div style="font-size:13px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:10px">STAY IN THE LOOP</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.85);margin-bottom:10px">STAY IN THE LOOP</div>
       <h2 style="font-size:24px;font-weight:900;color:var(--white);margin-bottom:10px">Cycling Tips & Offers</h2>
-      <p style="font-size:15px;color:rgba(255,255,255,.75);line-height:1.7;margin-bottom:24px">
+      <p style="font-size:15px;color:rgba(255,255,255,.92);line-height:1.7;margin-bottom:24px">
         Monthly bike maintenance tips, seasonal safety advice and exclusive offers for Dr. Bike subscribers. Use code <strong>WELCOME10</strong> for 10% off your first booking.
       </p>
       <div style="display:flex;gap:10px;max-width:400px;margin:0 auto" id="newsletter-form">
@@ -1642,7 +1644,7 @@
       <div id="nl-error" style="display:none;color:#FCA5A5;font-weight:600;font-size:13px;padding:10px">
         Could not subscribe. Please try again.
       </div>
-      <p style="font-size:11px;color:rgba(255,255,255,.4);margin-top:12px">No spam. Unsubscribe anytime.</p>
+      <p style="font-size:11px;color:rgba(255,255,255,.8);margin-top:12px">No spam. Unsubscribe anytime.</p>
     </div>
   </section>
   

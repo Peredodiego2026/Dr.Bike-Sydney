@@ -318,6 +318,31 @@ section[id] {
     transition: none;
   }
 }
+/* The newsletter block's background: Diego's trail photo (IMG_0918) faded
+   into the section's own navy-to-blue gradient, which stays inline on the
+   <section>. The photo sits between that gradient and the text.
+   opacity and brightness together set the text's contrast. Measured
+   2026-11-10 at 1280px, at the worst pixel behind each line: the paragraph is
+   5.3:1 and "No spam" 4.7:1. At opacity 0.3 without the brightness the
+   paragraph fell to 3.1:1, over the sand and rocks. Measure again before
+   raising either. */
+.nl-section {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.nl-section__photo {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 60% 50%;
+  opacity: 0.3;
+  filter: brightness(0.65);
+  pointer-events: none;
+}
 .hero-image-text {
   color: var(--white);
   font-weight: 700;
