@@ -43,7 +43,11 @@ describe('ninguna imagen hace saltar la pagina', () => {
     const REAL = {
       'images/logo-db.png': [600, 423],
       'images/diego-peredo.webp': [168, 168],
-      'icon-512.svg': [512, 512],
+      'images/hero-1-trail.webp': [1000, 750],
+      'images/hero-2-diego.webp': [1000, 750],
+      'images/hero-3-brakes.webp': [1000, 750],
+      'images/hero-4-motor.webp': [1000, 750],
+      'images/hero-5-bay.webp': [1000, 750],
     };
     for (const page of PAGES) {
       for (const tag of imgs(read(page))) {
@@ -73,16 +77,31 @@ describe('lazy donde ayuda, eager donde estorbaria', () => {
   // `loading="lazy"` en algo que se ve al abrir la pagina lo RETRASA: el
   // navegador lo descubre mas tarde. El logo y el hero son lo primero que se
   // ve. En index.html el hero lleva la foto de Diego desde el 2026-11-03, y en
-  // landing.html el panel con el DB desde el 2026-11-10: las dos fotos de una
-  // van eran hechas con IA, y Dr. Bike no tiene van.
+  // landing.html sus fotos en carrusel desde el 2026-11-10: las dos fotos de
+  // una van eran hechas con IA, y Dr. Bike no tiene van.
   it('el hero y el logo cargan de inmediato', () => {
     for (const page of PAGES) {
       for (const tag of imgs(read(page))) {
         const src = srcOf(tag);
-        if (!/logo-db\.png|icon-512\.svg|diego-peredo\.webp/.test(src)) continue;
+        if (!/logo-db\.png|hero-1-trail\.webp|diego-peredo\.webp/.test(src)) continue;
         expect(tag, `${page} ${src}`).toMatch(/loading="eager"/);
       }
     }
+  });
+
+  // Del carrusel de la portada solo la primera se ve al abrir: las otras
+  // cuatro no pueden competir con ella por la red.
+  it('del carrusel de la portada, solo la primera es eager', () => {
+    const slides = imgs(read('landing.html')).filter((t) => /hero-carousel__slide/.test(t));
+    expect(slides.map(srcOf)).toEqual([
+      'images/hero-1-trail.webp',
+      'images/hero-2-diego.webp',
+      'images/hero-3-brakes.webp',
+      'images/hero-4-motor.webp',
+      'images/hero-5-bay.webp',
+    ]);
+    expect(slides[0]).toMatch(/fetchpriority="high"/);
+    for (const t of slides.slice(1)) expect(t).toMatch(/loading="lazy"/);
   });
 
   // mechanic-working.webp era la de abajo en index.html hasta que se fue con

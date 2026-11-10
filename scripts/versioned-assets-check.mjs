@@ -104,6 +104,9 @@ const PAGES = [
       { path: 'js/landing-inline.js', re: /src="js\/landing-inline\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'js/landing-modules.js', re: /src="js\/landing-modules\.js\?v=([a-zA-Z0-9]+)"/ },
       { path: 'css/shop.css', re: /href="css\/shop\.css\?v=([a-zA-Z0-9]+)"/ },
+      // El carrusel de fotos de la portada (2026-11-10), en la lista desde
+      // que nace.
+      { path: 'js/hero-carousel.js', re: /src="js\/hero-carousel\.js\?v=([a-zA-Z0-9]+)"/ },
     ],
   },
   // La tienda de escritorio (2026-10-03). Nace en esta lista para que su
