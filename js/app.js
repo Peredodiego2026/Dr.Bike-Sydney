@@ -4089,9 +4089,7 @@ function openMechanicProfile(p, booking, screen) {
       <span style="font-size:15px;font-weight:700;color:var(--navy)">Mechanic profile</span>
     </div>
     <div style="flex:1;overflow-y:auto">
-      <div style="height:84px;width:100%;overflow:hidden;background:var(--blue-lt)">
-        <img src="images/mechanic-working.webp" alt="" style="width:100%;height:100%;object-fit:cover;display:block">
-      </div>
+      <div style="height:84px;width:100%;background:var(--blue-lt)"></div>
       <div style="display:flex;justify-content:center;margin-top:-44px">${avatarHTML}</div>
       <div style="text-align:center;padding:10px 20px 0">
         <div style="font-size:18px;font-weight:700;color:var(--navy)">${escapeHtml(p.name)}</div>

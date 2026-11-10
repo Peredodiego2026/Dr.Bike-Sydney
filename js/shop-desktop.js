@@ -172,7 +172,7 @@ function viewHome() {
         <p>The parts in this shop are the ones our mechanics reach for. Not sure which one fits your bike? Send us a photo on WhatsApp and we tell you.</p>
         <div class="sd-workshop__hours">Mon - Sun: 8:00AM - 5:00PM</div>
       </div>
-      <img class="sd-workshop__img" src="images/hero-van.webp" alt="The Dr. Bike Sydney van" loading="lazy">
+      <div class="sd-workshop__img sd-workshop__brand"><img src="icon-512.svg" alt="" width="512" height="512" loading="lazy"></div>
     </section>
   </div>`;
 }

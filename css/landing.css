@@ -245,6 +245,15 @@ section[id] {
   overflow: hidden;
   min-height: 300px;
 }
+.hero-image--brand {
+  align-items: center;
+  justify-content: center;
+}
+.hero-image--brand img {
+  width: 40%;
+  max-width: 240px;
+  height: auto;
+}
 .hero-image-text {
   color: var(--white);
   font-weight: 700;
@@ -327,9 +336,8 @@ section[id] {
        no longer fits 552px. */
     gap: 20px;
   }
-  /* 4:3 instead of 16:9: the photo is as wide as before and a third taller.
-     The crop keeps the van's lettering and the mechanic (img's inline
-     object-position). */
+  /* 4:3 instead of 16:9: the panel is as wide as before and a third taller,
+     so the first screen is filled (Diego, 4-nov). */
   body[data-surface='landing'] .hero-image {
     aspect-ratio: 4/3;
   }

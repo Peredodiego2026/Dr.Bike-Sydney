@@ -62,7 +62,7 @@
   {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"What areas do you service?","acceptedAnswer":{"@type":"Answer","text":"Same-day visits cover everything within about 45 minutes of our Northern Beaches base — Northern Beaches, North Shore, the CBD, Inner West and Eastern Suburbs. Further out, like Hornsby, Western Sydney, the Sutherland Shire or the Blue Mountains, we still come, but by arrangement rather than same-day. Enter your address when you book and we'll tell you which one you are."}},{"@type":"Question","name":"What if I need to reschedule?","acceptedAnswer":{"@type":"Answer","text":"You can reschedule or cancel from the link in your booking confirmation, or by calling us. It's free with more than 24 hours' notice; with less, a fee of up to the visit & diagnosis fee may apply."}},{"@type":"Question","name":"Do you bring spare parts?","acceptedAnswer":{"@type":"Answer","text":"Yes. We carry inner tubes in the common sizes, and any other part your bike needs we source and come back to fit. Parts are not included in the service price - the mechanic quotes them before fitting anything, and they're charged separately."}},{"@type":"Question","name":"How long does a service take?","acceptedAnswer":{"@type":"Answer","text":"A Tune-Up takes about an hour, a Standard Service about 1.5 hours, a Standard+ Service about 2.5 hours and an Ultimate Overhaul about 4 hours. You'll see the estimate when you book."}},{"@type":"Question","name":"What payment methods do you accept?","acceptedAnswer":{"@type":"Answer","text":"We accept all major credit and debit cards, Apple Pay, and Google Pay. A call-out deposit (from $35, depending on your suburb) is charged at booking; the remainder is charged on completion."}}]}
   </script>
 
-  <link rel="stylesheet" href="css/landing.css?v=4a4c3fd105">
+  <link rel="stylesheet" href="css/landing.css?v=aaa53fe8f4">
   <link rel="stylesheet" href="css/shop.css?v=f28b164290">
   <script src="https://js.stripe.com/v3/"></script>
   <!-- ── Sentry (error monitoring + session replay) ─────────────────────── -->
@@ -225,8 +225,13 @@
       </div>
     </div>
 
-    <div class="hero-image" style="padding:0;overflow:hidden">
-      <img decoding="async" loading="eager" src="images/hero-van.webp" alt="Dr. Bike Sydney mobile van" width="1672" height="941" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:40% 50%;border-radius:16px">
+    <!-- No photo here until there is a real one of the work (2026-11-10). The
+         van picture that sat here was AI-made, and Dr. Bike has no van: the
+         vehicle is a ute. Google rejected the Business Profile appeal as
+         "deceptive content" that week. The DB card on the panel's own navy
+         (home.css), until there is a real photo. -->
+    <div class="hero-image hero-image--brand">
+      <img decoding="async" loading="eager" src="icon-512.svg" alt="" width="512" height="512">
     </div>
   </div>
 </section>
@@ -522,7 +527,6 @@
   .mech-card.is-active .mech-card__float { animation: none; }
 }
 .mech-card__banner { height: 120px; background: var(--blue-lt); overflow: hidden; }
-.mech-card__banner img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .mech-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); cursor: pointer; transition: background 0.2s, transform 0.2s; }
 .mech-dot.active { background: var(--white); transform: scale(1.3); }
 #mech-carousel-viewport { touch-action: pan-y; }
@@ -1729,13 +1733,13 @@
      their original document order (that order is load-bearing - they share
      this file's top-level scope the same way they shared the page's global
      scope before). docs/PENDIENTES.md 3.2. -->
-<script src="js/landing-inline.js?v=c19cdf18ae"></script>
+<script src="js/landing-inline.js?v=477cc98182"></script>
 <!-- Same for this page's inline <script type="module"> blocks. -->
 <script type="module" src="js/landing-modules.js?v=72dbfef149"></script>
 <!-- js/app.js is the only entry point - see the note in index.html. Listing
      router.js, supabase.js, components.js or stripe.js here loads each of them
      a second time, under a URL the imports inside app.js never resolve to. -->
-<script src="js/app.js?v=414dc551dc" type="module"></script>
+<script src="js/app.js?v=a8329ff5dd" type="module"></script>
 <script src="js/live-prices.js?v=20261107a" defer></script>
 <script src="js/cta-tracking.js?v=20260728a" defer></script>
 <script src="js/utm-capture.js?v=20260728a"></script>

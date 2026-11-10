@@ -42,9 +42,8 @@ describe('ninguna imagen hace saltar la pagina', () => {
   it('y son las dimensiones reales del archivo', () => {
     const REAL = {
       'images/logo-db.png': [600, 423],
-      'images/hero-van.webp': [1672, 941],
-      'images/mechanic-working.webp': [1122, 1402],
       'images/diego-peredo.webp': [168, 168],
+      'icon-512.svg': [512, 512],
     };
     for (const page of PAGES) {
       for (const tag of imgs(read(page))) {
@@ -73,13 +72,14 @@ describe('lazy donde ayuda, eager donde estorbaria', () => {
 
   // `loading="lazy"` en algo que se ve al abrir la pagina lo RETRASA: el
   // navegador lo descubre mas tarde. El logo y el hero son lo primero que se
-  // ve. En index.html el hero lleva la foto de Diego desde el 2026-11-03, no
-  // la camioneta.
+  // ve. En index.html el hero lleva la foto de Diego desde el 2026-11-03, y en
+  // landing.html el panel con el DB desde el 2026-11-10: las dos fotos de una
+  // van eran hechas con IA, y Dr. Bike no tiene van.
   it('el hero y el logo cargan de inmediato', () => {
     for (const page of PAGES) {
       for (const tag of imgs(read(page))) {
         const src = srcOf(tag);
-        if (!/logo-db\.png|hero-van\.webp|diego-peredo\.webp/.test(src)) continue;
+        if (!/logo-db\.png|icon-512\.svg|diego-peredo\.webp/.test(src)) continue;
         expect(tag, `${page} ${src}`).toMatch(/loading="eager"/);
       }
     }
@@ -94,7 +94,7 @@ describe('lazy donde ayuda, eager donde estorbaria', () => {
   });
 
   it('las imagenes grandes ya estan en formato moderno', () => {
-    // hero-van y mechanic-working son webp. logo-db.png es un PNG a proposito:
+    // Las fotos son webp. logo-db.png es un PNG a proposito:
     // lleva transparencia y lo usan el manifest y los iconos.
     for (const page of PAGES) {
       for (const tag of imgs(read(page))) {
