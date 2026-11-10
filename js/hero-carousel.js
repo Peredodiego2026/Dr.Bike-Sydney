@@ -1,9 +1,15 @@
 // js/hero-carousel.js
 //
-// Diego's own photos in the landing hero (2026-11-10). They replaced an
-// AI-made van picture: Dr. Bike has no van, and Google rejected the Business
-// Profile appeal as "deceptive content" that week. Never put a generated or
-// AI-edited image back into #hero-carousel.
+// Diego's own photos in the hero of landing.html and index.html (2026-11-10).
+// They replaced an AI-made van picture: Dr. Bike has no van, and Google
+// rejected the Business Profile appeal as "deceptive content" that week.
+// Never put a generated or AI-edited image back into #hero-carousel.
+//
+// The arrows are found INSIDE #hero-carousel, by class, never by id. They
+// used to be #hero-prev / #hero-next, and both pages already had a
+// #hero-next: the "Next available" line. getElementById returns the first
+// one, so the right arrow had no listener and did nothing in production, while
+// clicking "Next available" moved the photos.
 //
 // The first photo is plain HTML, so the hero has a picture without this
 // script. The script fades to the next photo every 5 seconds. It stops while
@@ -22,8 +28,8 @@
 
   const slides = [...root.querySelectorAll('.hero-carousel__slide')];
   const dots = [...root.querySelectorAll('.hero-carousel__dots span')];
-  const prevBtn = document.getElementById('hero-prev');
-  const nextBtn = document.getElementById('hero-next');
+  const prevBtn = root.querySelector('.hero-carousel__btn--prev');
+  const nextBtn = root.querySelector('.hero-carousel__btn--next');
   const n = slides.length;
   if (n < 2 || !prevBtn || !nextBtn) {
     if (prevBtn) prevBtn.hidden = true;

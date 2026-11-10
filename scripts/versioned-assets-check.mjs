@@ -81,6 +81,9 @@ const PAGES = [
       // lista: el pago con tarjeta lo toco y npm run check quedo verde con el
       // ?v= viejo. Las dos paginas lo cargan, asi que se vigila en las dos.
       { path: 'css/shop.css', re: /href="css\/shop\.css\?v=([a-zA-Z0-9]+)"/ },
+      // El carrusel de fotos de la portada, que index.html comparte con
+      // landing.html desde el 2026-11-10.
+      { path: 'js/hero-carousel.js', re: /src="js\/hero-carousel\.js\?v=([a-zA-Z0-9]+)"/ },
     ],
   },
   // css/variables.css se suma el 2026-09-30, y es la que faltaba de verdad:
