@@ -1031,8 +1031,9 @@ input:-webkit-autofill:focus {
    action bar at the bottom. Here they were rendered inline inside a ~9000px
    marketing document, which is what produced four separate reports:
    the action bar floated over the service cards and the quote, the newsletter
-   section (it lives outside [data-screen="home"], so hiding "home" does not
-   hide it) stayed visible above the wizard, and picking a time never brought
+   section (it lived outside [data-screen="home"], after the footer, so hiding
+   "home" did not hide it; moved inside <main> on 2026-11-10) stayed visible
+   above the wizard, and picking a time never brought
    the button into view. Mounting the screens as a real overlay fixes all four.
 
    Gated twice on purpose: this stylesheet is only loaded by landing.html, AND
