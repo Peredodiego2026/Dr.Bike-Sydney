@@ -318,6 +318,31 @@ section[id] {
     transition: none;
   }
 }
+/* The newsletter block's background: Diego's trail photo (IMG_0918) faded
+   into the section's own navy-to-blue gradient, which stays inline on the
+   <section>. The photo sits between that gradient and the text.
+   opacity and brightness together set the text's contrast. Measured
+   2026-11-10 at 1280px, at the worst pixel behind each line: the paragraph is
+   5.3:1 and "No spam" 4.7:1. At opacity 0.3 without the brightness the
+   paragraph fell to 3.1:1, over the sand and rocks. Measure again before
+   raising either. */
+.nl-section {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.nl-section__photo {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 60% 50%;
+  opacity: 0.3;
+  filter: brightness(0.65);
+  pointer-events: none;
+}
 .hero-image-text {
   color: var(--white);
   font-weight: 700;
@@ -1006,8 +1031,9 @@ input:-webkit-autofill:focus {
    action bar at the bottom. Here they were rendered inline inside a ~9000px
    marketing document, which is what produced four separate reports:
    the action bar floated over the service cards and the quote, the newsletter
-   section (it lives outside [data-screen="home"], so hiding "home" does not
-   hide it) stayed visible above the wizard, and picking a time never brought
+   section (it lived outside [data-screen="home"], after the footer, so hiding
+   "home" did not hide it; moved inside <main> on 2026-11-10) stayed visible
+   above the wizard, and picking a time never brought
    the button into view. Mounting the screens as a real overlay fixes all four.
 
    Gated twice on purpose: this stylesheet is only loaded by landing.html, AND
