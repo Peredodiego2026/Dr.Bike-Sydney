@@ -82,7 +82,7 @@
     <meta name="apple-mobile-web-app-title" content="Dr. Bike" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="stylesheet" href="css/variables.css?v=b58e9c267c" />
-    <link rel="stylesheet" href="css/main.css?v=e74f1714a2" />
+    <link rel="stylesheet" href="css/main.css?v=a5ab99586b" />
     <link rel="stylesheet" href="css/home.css?v=5e3b78adea" />
     <link rel="stylesheet" href="css/shop.css?v=f28b164290" />
     <!-- Google Analytics -->
@@ -599,6 +599,39 @@
             <!-- Who comes: Diego, in his own photo. The van picture that sat
                  here was AI-made. The line under his title is his profile's. -->
             <div class="hero-diego">
+              <!-- Diego's own phone photos (2026-11-10), the same 13 and in the
+                   same order as landing.html's hero; js/hero-carousel.js drives
+                   both. Never put a generated or AI-edited image here. On a
+                   phone this sits under the buttons, below the first screen,
+                   so even the first photo is lazy. From the third on they
+                   carry data-src: the script loads each one a slide ahead. -->
+              <div
+                class="hero-carousel hero-carousel--spa"
+                id="hero-carousel"
+                role="group"
+                aria-label="Photos of our work"
+              >
+                <img class="hero-carousel__slide is-active" src="images/hero-trail.webp" alt="An e-mountain bike on a coastal trail" width="1000" height="750" decoding="async" loading="lazy" />
+                <img class="hero-carousel__slide" src="images/hero-workstand.webp" alt="Diego with an e-bike on the workstand" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-brakes.webp" alt="Bleeding a hydraulic brake" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-cards.webp" alt="Dr. Bike Sydney cards on a bike" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-motor.webp" alt="An e-bike motor opened for service" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-diego.webp" alt="Diego, the mechanic, out on a trail ride" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-display.webp" alt="An e-bike display showing a warning code" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-drive.webp" alt="An e-bike drive unit on the workstand" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-muddy.webp" alt="A muddy e-bike after a trail ride" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-pads.webp" alt="Disc brake pads on the bench" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-bay.webp" alt="An e-bike by a bay" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-forest.webp" alt="An e-bike on a forest trail" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-creek.webp" alt="An e-bike by a creek" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <button type="button" class="hero-carousel__btn hero-carousel__btn--prev" aria-label="Previous photo">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
+                </button>
+                <button type="button" class="hero-carousel__btn hero-carousel__btn--next" aria-label="Next photo">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
+                </button>
+                <div class="hero-carousel__dots" aria-hidden="true"><span class="is-active"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+              </div>
               <div class="hero-diego__card">
                 <img
                   decoding="async"
@@ -2948,5 +2981,6 @@
       })();
     </script>
   <script src="js/reviews-carousel.js" defer></script>
+  <script src="js/hero-carousel.js?v=c6471dd9e4" defer></script>
 </body>
 </html>

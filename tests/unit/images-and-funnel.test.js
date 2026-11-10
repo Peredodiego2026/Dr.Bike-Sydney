@@ -82,21 +82,29 @@ describe('lazy donde ayuda, eager donde estorbaria', () => {
     for (const page of PAGES) {
       for (const tag of imgs(read(page))) {
         const src = srcOf(tag);
-        if (!/logo-db\.png|hero-trail\.webp|diego-peredo\.webp/.test(src)) continue;
+        // La primera del carrusel es eager solo en landing.html, donde esta al
+        // lado del titulo. En el celular queda debajo de los botones.
+        const heroPhoto = page === 'landing.html' && /hero-trail\.webp/.test(src);
+        if (!/logo-db\.png|diego-peredo\.webp/.test(src) && !heroPhoto) continue;
         expect(tag, `${page} ${src}`).toMatch(/loading="eager"/);
       }
     }
   });
 
-  // Del carrusel de la portada solo la primera se ve al abrir: las otras no
-  // pueden competir con ella por la red. Desde la tercera ni siquiera llevan
-  // src - una <img> lazy transparente cuenta como visible y bajaria igual, y
-  // las 13 pesan 1,3 MB. js/hero-carousel.js las carga una antes de mostrarlas.
-  it('del carrusel de la portada, solo la primera es eager y desde la tercera esperan', () => {
-    const slides = imgs(read('landing.html')).filter((t) => /hero-carousel__slide/.test(t));
+  // Del carrusel de la portada, en landing.html solo la primera se ve al
+  // abrir: las otras no pueden competir con ella por la red. En index.html el
+  // carrusel queda debajo de los botones, fuera de la primera pantalla del
+  // celular, asi que ni la primera es eager. En las dos, desde la tercera ni
+  // siquiera llevan src: una <img> lazy transparente cuenta como visible y
+  // bajaria igual, y las 13 pesan 1,3 MB. js/hero-carousel.js las carga una
+  // antes de mostrarlas.
+  const slidesOf = (page) => imgs(read(page)).filter((t) => /hero-carousel__slide/.test(t));
+  it.each(['landing.html', 'index.html'])('%s: el carrusel de la portada carga solo lo que muestra', (page) => {
+    const slides = slidesOf(page);
     expect(slides.length).toBe(13);
     expect(srcOf(slides[0])).toBe('images/hero-trail.webp');
-    expect(slides[0]).toMatch(/fetchpriority="high"/);
+    if (page === 'landing.html') expect(slides[0]).toMatch(/fetchpriority="high"/);
+    else expect(slides[0]).toMatch(/loading="lazy"/);
     for (const t of slides.slice(1)) expect(t).toMatch(/loading="lazy"/);
     for (const t of slides.slice(2)) {
       expect(t).toMatch(/\bdata-src="images\/hero-[a-z]+\.webp"/);
@@ -107,8 +115,30 @@ describe('lazy donde ayuda, eager donde estorbaria', () => {
     expect(new Set(files).size).toBe(files.length);
     for (const f of files) expect(fs.existsSync(new URL('../../' + f, import.meta.url)), f).toBe(true);
     // Un punto por foto.
-    const dots = read('landing.html').match(/hero-carousel__dots[^>]*>([\s\S]*?)<\/div>/)[1];
+    const dots = read(page).match(/hero-carousel__dots[^>]*>([\s\S]*?)<\/div>/)[1];
     expect((dots.match(/<span/g) || []).length).toBe(13);
+  });
+
+  it('el celular y el escritorio muestran las mismas fotos en el mismo orden', () => {
+    expect(slidesOf('index.html').map(srcOf)).toEqual(slidesOf('landing.html').map(srcOf));
+  });
+
+  // La flecha derecha del carrusel de landing.html no hizo nada en produccion
+  // el 2026-11-10: era #hero-next, y la linea "Next available" ya era
+  // #hero-next. getElementById devuelve el primero, asi que el listener quedo
+  // en esa linea. El test de entonces hacia click en
+  // getElementById('hero-next') - el mismo elemento equivocado - y pasaba.
+  it.each(PAGES)('%s: ningun id se repite', (page) => {
+    const html = read(page).replace(/<!--[\s\S]*?-->/g, '');
+    const ids = [...html.matchAll(/\sid="([^"$]+)"/g)].map((m) => m[1]);
+    const repeated = ids.filter((id, i) => ids.indexOf(id) !== i);
+    expect(repeated).toEqual([]);
+  });
+
+  it('el carrusel busca sus flechas adentro, no por id', () => {
+    const js = read('js/hero-carousel.js');
+    expect(js).toContain("root.querySelector('.hero-carousel__btn--next')");
+    expect(js).not.toMatch(/getElementById\('hero-(next|prev)'\)/);
   });
 
   // mechanic-working.webp era la de abajo en index.html hasta que se fue con
