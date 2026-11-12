@@ -203,7 +203,9 @@ function clearBookingDraft() {
   const stillAhead = (ds) => {
     if (!ds) return false;
     const [y, m, day] = String(ds).split('-').map(Number);
-    return new Date(y, (m || 1) - 1, day || 1) >= today;
+    const dt = new Date(y, (m || 1) - 1, day || 1);
+    // A draft saved before Sundays closed (12-nov-2026) must not bring one back.
+    return dt >= today && dt.getDay() !== 0;
   };
   window.appState.service = d.service || null;
   window.appState.date = stillAhead(d.date) ? d.date : null;
@@ -1471,7 +1473,8 @@ async function renderBookService() {
         const ds = `${_calYear}-${String(_calMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
         const dt = new Date(_calYear, _calMonth, d);
         const beforeWeReopen = _closedUntil ? ds < _closedUntil : false;
-        const disabled = dt < today || dt > maxDate || beforeWeReopen;
+        // Closed on Sundays (Diego, 12-nov-2026); api/auth.js isClosedDay refuses them too.
+        const disabled = dt < today || dt > maxDate || beforeWeReopen || dt.getDay() === 0;
         const isSel = ds === window.appState.date;
         const isToday = dt.getTime() === today.getTime();
         cells += `<button type="button" class="cal-day${isSel ? ' cal-sel' : ''}${isToday ? ' cal-today' : ''}${disabled ? ' cal-dis' : ''}" ${disabled ? 'disabled' : ''} data-date="${ds}">${d}</button>`;
@@ -2026,7 +2029,7 @@ async function renderServiceSummary() {
           : ''
       }
 
-      ${surcharged ? `<div style="background:var(--amber-lt);border:1px solid var(--amber-lt);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--amber-ink);margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Sunday &amp; public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
+      ${surcharged ? `<div style="background:var(--amber-lt);border:1px solid var(--amber-lt);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--amber-ink);margin-bottom:14px;display:flex;justify-content:space-between;gap:8px"><span>Public holiday rate</span><span style="font-weight:700;white-space:nowrap">+20%</span></div>` : ''}
 
       <!-- Pay online now: this is the ONLY amount Stripe actually charges on
            this screen, so it is the only number that gets to look like a
