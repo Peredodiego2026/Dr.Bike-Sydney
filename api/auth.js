@@ -287,6 +287,18 @@ const NSW_PUBLIC_HOLIDAYS_2026 = [
   '2026-12-28', // Boxing Day additional public holiday
 ];
 
+// Diego, 12-nov-2026: Monday to Saturday, 8am to 5pm - closed on Sundays, the
+// same hours his Google profile states. A client cannot book or move a job to
+// a Sunday. The admin still can: Diego entering one by hand is him choosing to
+// work it, and then the Sunday +20% below still applies.
+export function isClosedDay(dateStr) {
+  const [Y, Mo, D] = String(dateStr || '')
+    .split('-')
+    .map(Number);
+  if (!Y || !Mo || !D) return false;
+  return new Date(Y, Mo - 1, D).getDay() === 0;
+}
+
 // Diego's rule (confirmed): Sundays and NSW public holidays cost 20% more -
 // the standard AU trade "penalty rate" convention. Saturdays are normal price.
 export const SURCHARGE_MULTIPLIER = 1.2;
@@ -1426,6 +1438,11 @@ export async function handleCreateBooking(req, res) {
   // Not for the admin: Diego entering a booking by hand is him deciding to
   // serve it, which is the one case the setting should not override.
   if (!isAdmin) {
+    if (isClosedDay(scheduled_date)) {
+      return res.status(409).json({
+        error: 'We are closed on Sundays - please pick a day from Monday to Saturday.',
+      });
+    }
     const shut = await closedUntil(SERVICE_KEY);
     if (shut && scheduled_date < shut) {
       return res.status(409).json({
@@ -3840,6 +3857,13 @@ async function rescheduleBookingCore(
 ) {
   if (!['pending', 'confirmed'].includes(bk.status))
     return { ok: false, status: 400, error: 'Booking cannot be rescheduled' };
+  if (byClient && isClosedDay(scheduled_date))
+    return {
+      ok: false,
+      status: 409,
+      error: 'We are closed on Sundays - please pick a day from Monday to Saturday.',
+      code: 'closed-day',
+    };
 
   // Re-derive price + callout fee for the NEW date, same lookups
   // handleCreateBooking uses - previously this only updated date/time, so
@@ -6240,7 +6264,7 @@ export async function handleGetAvailability(req, res) {
   // the bookings say. Belt and braces with the gate in handleCreateBooking:
   // this one keeps the hours off the screen, that one refuses the booking.
   const shutUntil = await closedUntil(SUPABASE_KEY);
-  if (shutUntil && date < shutUntil) {
+  if ((shutUntil && date < shutUntil) || isClosedDay(date)) {
     for (const s of slots) s.available = false;
   }
 
@@ -6271,6 +6295,7 @@ export function firstOpenSlot({
   const neededMin = DEFAULT_SERVICE_DURATION_MIN + SLOT_BUFFER_MIN;
   for (const date of dates) {
     if (shutUntil && date < shutUntil) continue;
+    if (isClosedDay(date)) continue;
     const live = occupiedBookings(
       (bookings || []).filter((b) => b.scheduled_date === date),
       nowMs

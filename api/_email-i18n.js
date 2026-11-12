@@ -23,10 +23,10 @@ const dict = {
       'Dr. Bike Sydney · drbikesydney.com.au · Sídney NSW',
     'ABN: 87 654 025 287 · contact@drbikesydney.com.au':
       'ABN: 87 654 025 287 · contact@drbikesydney.com.au',
-    'We come to you &mdash; home, work or park &middot; every day 8am&ndash;5pm':
-      'Vamos a donde estés &mdash; casa, trabajo o parque &middot; todos los días de 8 a 17 h',
-    'We come to you — home, work or park · every day 8am–5pm':
-      'Vamos a donde estés — casa, trabajo o parque · todos los días de 8 a 17 h',
+    'We come to you &mdash; home, work or park &middot; Monday to Saturday, 8am&ndash;5pm':
+      'Vamos a donde estés &mdash; casa, trabajo o parque &middot; de lunes a sábado de 8 a 17 h',
+    'We come to you — home, work or park · Monday to Saturday, 8am–5pm':
+      'Vamos a donde estés — casa, trabajo o parque · de lunes a sábado de 8 a 17 h',
     'We come to you &mdash; home, work or park &middot; 0433 963 250':
       'Vamos a donde estés &mdash; casa, trabajo o parque &middot; 0433 963 250',
     'Questions? Reply to this email or WhatsApp us at +61 433 963 250':
@@ -431,10 +431,10 @@ const dict = {
       'Dr. Bike Sydney · drbikesydney.com.au · 悉尼 NSW',
     'ABN: 87 654 025 287 · contact@drbikesydney.com.au':
       'ABN: 87 654 025 287 · contact@drbikesydney.com.au',
-    'We come to you &mdash; home, work or park &middot; every day 8am&ndash;5pm':
-      '我们上门服务 &mdash; 家里、公司或公园 &middot; 每天 8:00&ndash;17:00',
-    'We come to you — home, work or park · every day 8am–5pm':
-      '我们上门服务 — 家里、公司或公园 · 每天 8:00–17:00',
+    'We come to you &mdash; home, work or park &middot; Monday to Saturday, 8am&ndash;5pm':
+      '我们上门服务 &mdash; 家里、公司或公园 &middot; 周一至周六 8:00&ndash;17:00',
+    'We come to you — home, work or park · Monday to Saturday, 8am–5pm':
+      '我们上门服务 — 家里、公司或公园 · 周一至周六 8:00–17:00',
     'We come to you &mdash; home, work or park &middot; 0433 963 250':
       '我们上门服务 &mdash; 家里、公司或公园 &middot; 0433 963 250',
     'Questions? Reply to this email or WhatsApp us at +61 433 963 250':

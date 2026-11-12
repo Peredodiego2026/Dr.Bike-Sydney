@@ -404,7 +404,7 @@ export default {
     '上门检查费（从$35起，视郊区而定）包含技工的车费。悉尼大部分地区均可提供服务。',
   'Continue to Summary': '继续查看摘要',
   // Service Summary / Quote
-  'Sunday & public holiday rate': '周日及公共假期费率',
+  'Public holiday rate': '公共假期费率',
   'Your Quote': '您的报价',
   Location: '位置',
   "What we'll check": '我们将检查的项目',
@@ -624,8 +624,8 @@ export default {
   'About Us': '关于我们',
   'My Account': '我的账户',
   'Sydney, NSW': '悉尼, NSW',
-  'Mon – Sun: 8:00AM – 5:00PM': '周一至周日：8:00 - 17:00',
-  'Mon - Sun: 8:00AM - 5:00PM': '周一至周日：8:00 - 17:00',
+  'Mon – Sat: 8:00AM – 5:00PM': '周一至周六：8:00 - 17:00',
+  'Mon - Sat: 8:00AM - 5:00PM': '周一至周六：8:00 - 17:00',
   'Healthy bikes, happy riders': '健康的自行车，快乐的骑行者',
 
   // ── landing.html (desktop) — Navbar ──────────────────────────────────
@@ -770,8 +770,8 @@ export default {
   'E-bikes, carbon, vintage, insurance claims': '电动自行车、碳纤维车架、老式车、保险理赔',
   'Plus a visit & diagnosis fee (from $35, depending on your suburb). Parts charged separately unless stated.':
     '另加上门检查费（从$35起，视郊区而定）。除另有说明外，零件费用另计。',
-  'Sunday & NSW public holiday bookings +20%. Saturday is normal price.':
-    '周日及新南威尔士州公共假日预订加收20%。周六按正常价格计算。',
+  'NSW public holiday bookings +20%. Saturday is normal price.':
+    '新南威尔士州公共假日预订加收20%。周六按正常价格计算。',
 
   // ── Testimonials (landing.html specific reviews) ─────────────────────
   "Real reviews from Sydney cyclists who've used Dr. Bike Sydney.":
@@ -1960,7 +1960,7 @@ export default {
   'From $35, depending on your suburb.': '从 $35 起，视区域而定。',
   'Parts are extra': '零件费用另计',
   'Charged separately unless stated.': '除另有说明外，单独收费。',
-  'Sundays & NSW public holidays +20%': '周日及新南威尔士州公共假日 +20%',
+  'NSW public holidays +20%': '新南威尔士州公共假日 +20%',
   'Saturday is normal price.': '周六按正常价格计算。',
   'Talk to Dr. Bike directly': '直接联系 Dr. Bike',
   'Message on WhatsApp': '通过 WhatsApp 留言',

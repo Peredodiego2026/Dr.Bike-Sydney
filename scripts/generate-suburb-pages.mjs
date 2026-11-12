@@ -203,7 +203,7 @@ const COPY = {
     areasLabel: '📍 Areas covered: {areas}',
     servicesH2: 'Our Services &amp; Pricing',
     pricingNote:
-      'The visit & diagnosis fee is added to the prices below, from $35 depending on your suburb. No hidden charges. Sunday &amp; NSW public holiday bookings +20%; Saturday is normal price.',
+      'The visit & diagnosis fee is added to the prices below, from $35 depending on your suburb. No hidden charges. NSW public holiday bookings +20%; Saturday is normal price.',
     serviceNames: ['Tune-Up', 'Standard Service', 'Standard+ Service', 'Ultimate Overhaul'],
     serviceDescs: [
       'Gears, brakes, wheels trued · ~1 hour',
@@ -245,7 +245,7 @@ const COPY = {
     ctaP: 'Your bike deserves the best. Book online in 60 seconds.',
     ctaBtn: 'Book a Service in {name}',
     footer1: 'Dr. Bike Sydney · Mobile Bicycle Mechanic · ABN 87 654 025 287',
-    footer2: 'Serving {name} and all of Sydney · Mon–Sun 8am–5pm',
+    footer2: 'Serving {name} and all of Sydney · Mon–Sat 8am–5pm',
     footerLinks: ['Home', 'Services', 'Terms', 'Privacy'],
     nearbyH2: 'Bike repair near {name}',
     nearbyP: 'We also service these neighbouring areas - same mechanic, same rates:',
@@ -276,7 +276,7 @@ const COPY = {
     areasLabel: '📍 Zonas que cubrimos: {areas}',
     servicesH2: 'Servicios y precios',
     pricingNote:
-      'A los precios de abajo se suma la tarifa de visita a domicilio, desde $35 según tu suburbio. Sin cargos ocultos. Las reservas de domingo y feriados de NSW tienen un 20% de recargo; el sábado tiene precio normal.',
+      'A los precios de abajo se suma la tarifa de visita a domicilio, desde $35 según tu suburbio. Sin cargos ocultos. Las reservas en feriados de NSW tienen un 20% de recargo; el sábado tiene precio normal.',
     serviceNames: ['Ajuste', 'Servicio Estándar', 'Servicio Estándar+', 'Revisión Definitiva'],
     serviceDescs: [
       'Cambios, frenos y ruedas centradas · ~1 hora',
@@ -318,7 +318,7 @@ const COPY = {
     ctaP: 'Tu bici merece lo mejor. Reservá online en 60 segundos.',
     ctaBtn: 'Reservar un servicio en {name}',
     footer1: 'Dr. Bike Sydney · Mecánico de bicicletas a domicilio · ABN 87 654 025 287',
-    footer2: 'Atendemos {name} y todo Sídney · lun–dom 8:00–17:00',
+    footer2: 'Atendemos {name} y todo Sídney · lun–sáb 8:00–17:00',
     footerLinks: ['Inicio', 'Servicios', 'Términos', 'Privacidad'],
     nearbyH2: 'Reparación de bicicletas cerca de {name}',
     nearbyP: 'También atendemos estas zonas vecinas: el mismo mecánico y las mismas tarifas:',
@@ -344,7 +344,7 @@ const COPY = {
     areasLabel: '📍 服务范围：{areas}',
     servicesH2: '服务与价格',
     pricingNote:
-      '以下价格另加上门服务费，从 $35 起，视区域而定。无隐藏费用。周日及新南威尔士州公共假日预订加收 20%，周六按正常价格计算。',
+      '以下价格另加上门服务费，从 $35 起，视区域而定。无隐藏费用。新南威尔士州公共假日预订加收 20%，周六按正常价格计算。',
     serviceNames: ['基础保养', '标准服务', '标准+服务', '全面翻新'],
     serviceDescs: [
       '变速、刹车调整，车轮校正 · 约 1 小时',
@@ -386,7 +386,7 @@ const COPY = {
     ctaP: '您的爱车值得最好的照顾。在线预订只需 60 秒。',
     ctaBtn: '在 {name} 预订服务',
     footer1: 'Dr. Bike Sydney · 上门自行车技师 · ABN 87 654 025 287',
-    footer2: '服务 {name} 及整个悉尼 · 周一至周日 8:00–17:00',
+    footer2: '服务 {name} 及整个悉尼 · 周一至周六 8:00–17:00',
     footerLinks: ['首页', '服务', '条款', '隐私'],
     nearbyH2: '{name} 附近的自行车维修',
     nearbyP: '我们同样服务这些邻近区域：同一位技师、同样的价格：',
@@ -504,7 +504,7 @@ function page(sub, lang) {
     // Cheapest to dearest of the four services the page advertises - the same
     // definition scripts/services-sync-check.mjs holds it to.
     priceRange: `$${Math.min(...PRICE_NUMBERS)}-$${Math.max(...PRICE_NUMBERS)}`,
-    openingHours: 'Mo-Su 08:00-17:00',
+    openingHours: 'Mo-Sa 08:00-17:00',
     areaServed: { '@type': 'City', name: `${sub.name}, Sydney` },
     hasMap: MAPS_URL,
     sameAs: SAME_AS,

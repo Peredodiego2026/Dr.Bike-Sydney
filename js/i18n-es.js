@@ -451,7 +451,7 @@ export default {
     'La visita y diagnóstico (desde $35, según tu suburbio) cubre el viaje del mecánico. Cubrimos la mayoría de las áreas de Sydney.',
   'Continue to Summary': 'Continuar al Resumen',
   // Service Summary / Quote
-  'Sunday & public holiday rate': 'Tarifa de domingo y feriado',
+  'Public holiday rate': 'Tarifa de feriado',
   'Your Quote': 'Tu Cotización',
   Location: 'Ubicación',
   "What we'll check": 'Qué vamos a revisar',
@@ -679,8 +679,8 @@ export default {
   'About Us': 'Sobre Nosotros',
   'My Account': 'Mi Cuenta',
   'Sydney, NSW': 'Sydney, NSW',
-  'Mon – Sun: 8:00AM – 5:00PM': 'Lun - Dom: 8:00 - 17:00',
-  'Mon - Sun: 8:00AM - 5:00PM': 'Lun - Dom: 8:00 - 17:00',
+  'Mon – Sat: 8:00AM – 5:00PM': 'Lun - Sáb: 8:00 - 17:00',
+  'Mon - Sat: 8:00AM - 5:00PM': 'Lun - Sáb: 8:00 - 17:00',
   'Healthy bikes, happy riders': 'Bicis sanas, ciclistas felices',
 
   // ── landing.html (desktop) — Navbar ──────────────────────────────────
@@ -835,8 +835,8 @@ export default {
   'E-bikes, carbon, vintage, insurance claims': 'E-bikes, carbono, vintage, reclamos de seguro',
   'Plus a visit & diagnosis fee (from $35, depending on your suburb). Parts charged separately unless stated.':
     'Más la visita y diagnóstico (desde $35, según tu suburbio). Los repuestos se cobran aparte salvo que se indique lo contrario.',
-  'Sunday & NSW public holiday bookings +20%. Saturday is normal price.':
-    'Reservas de domingo y feriados de NSW +20%. El sábado tiene precio normal.',
+  'NSW public holiday bookings +20%. Saturday is normal price.':
+    'Reservas en feriados de NSW +20%. El sábado tiene precio normal.',
 
   // ── Testimonials (landing.html specific reviews) ─────────────────────
   "Real reviews from Sydney cyclists who've used Dr. Bike Sydney.":
@@ -2139,7 +2139,7 @@ export default {
   'From $35, depending on your suburb.': 'Desde $35, según tu suburbio.',
   'Parts are extra': 'Los repuestos van aparte',
   'Charged separately unless stated.': 'Se cobran aparte salvo que se indique lo contrario.',
-  'Sundays & NSW public holidays +20%': 'Domingos y feriados de NSW +20%',
+  'NSW public holidays +20%': 'Feriados de NSW +20%',
   'Saturday is normal price.': 'El sábado tiene precio normal.',
   'Talk to Dr. Bike directly': 'Habla directo con Dr. Bike',
   'Message on WhatsApp': 'Escribir por WhatsApp',

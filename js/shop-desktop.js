@@ -170,7 +170,7 @@ function viewHome() {
         <h2 class="sd-workshop__title">Our workshop has wheels</h2>
         <p>There is no shop to drive to. The mechanic brings the tools to your door, anywhere in Sydney.</p>
         <p>The parts in this shop are the ones our mechanics reach for. Not sure which one fits your bike? Send us a photo on WhatsApp and we tell you.</p>
-        <div class="sd-workshop__hours">Mon - Sun: 8:00AM - 5:00PM</div>
+        <div class="sd-workshop__hours">Mon - Sat: 8:00AM - 5:00PM</div>
       </div>
       <div class="sd-workshop__img sd-workshop__brand"><img src="icon-512.svg" alt="" width="512" height="512" loading="lazy"></div>
     </section>
