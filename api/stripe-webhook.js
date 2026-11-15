@@ -185,6 +185,15 @@ async function notifyNewBooking(booking, lang) {
           lang: lang || 'en',
         })
       : Promise.resolve(false),
+    // Diego's own email of the booking (fixed recipient: contact@).
+    post('/api/send-email', {
+      type: 'booking_confirmation',
+      clientName: booking.client_name,
+      phone: booking.client_phone || '',
+      clientEmail: booking.client_email || '',
+      ...common,
+      bookingId: booking.id,
+    }),
   ]);
   return results.map((r) => (r.status === 'fulfilled' ? r.value : false));
 }
