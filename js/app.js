@@ -2970,6 +2970,24 @@ async function renderPayment() {
           lang: getLang(),
         }),
       }),
+      // Diego's own email of the booking. The template has a fixed recipient
+      // (contact@), so the server ignores any `to` for it.
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'booking_confirmation',
+          clientName: _clientName,
+          phone: window.appState.guestPhone || '',
+          clientEmail: _clientEmail,
+          service: service.name,
+          date,
+          time,
+          address: location || 'Home',
+          price: _total,
+          bookingId: _bId,
+        }),
+      }),
     ]).then((results) =>
       results.forEach((r, i) => {
         if (r.status === 'rejected') console.error(`[booking-notif ${i}] failed:`, r.reason);

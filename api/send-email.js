@@ -63,6 +63,9 @@ async function handler(req, res) {
   if (friendName) friendName = sanitize(friendName);
   if (clientName) clientName = sanitize(clientName);
   if (phone) phone = sanitize(phone);
+  // The client's address for the owner's new-booking email. Not `to`: that
+  // template has a fixed recipient, so `to` is never the client there.
+  const clientEmail = sanitize(req.body.clientEmail || '');
   if (date) date = sanitize(date);
   if (time) time = sanitize(time);
   price = Number(price) || 0;
@@ -625,6 +628,10 @@ async function handler(req, res) {
           <p style="font-size:12px;color:${MUTED};text-align:center;margin:0">Questions? Call us on 0433 963 250.</p>
         </div>${footer()}`,
     },
+    // The owner's copy of every new booking. contact@ forwards to Diego's
+    // inbox. Nothing sent this until 2026-11-15: the only email a booking
+    // produced went to the client, so Diego learned of bookings from an SMS
+    // and the nightly backup.
     booking_confirmation: {
       to: 'contact@drbikesydney.com.au',
       subject: `New Booking - ${service} - ${clientName || name}`,
@@ -634,6 +641,7 @@ async function handler(req, res) {
             <table style="width:100%;border-collapse:collapse">
               <tr><td style="padding:8px 0;color:#475569;font-size:13px">Client</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right">${clientName || name}</td></tr>
               <tr><td style="padding:8px 0;color:#475569;font-size:13px;border-top:1px solid #E2E8F0">Phone</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E2E8F0">${phone || '—'}</td></tr>
+              <tr><td style="padding:8px 0;color:${MUTED};font-size:13px;border-top:1px solid ${RULE}">Email</td><td style="padding:8px 0;font-weight:600;color:${INK};font-size:13px;text-align:right;border-top:1px solid ${RULE}">${clientEmail || '—'}</td></tr>
               <tr><td style="padding:8px 0;color:#475569;font-size:13px;border-top:1px solid #E2E8F0">Service</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E2E8F0">${service}</td></tr>
               <tr><td style="padding:8px 0;color:#475569;font-size:13px;border-top:1px solid #E2E8F0">Date</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E2E8F0">${date}${time ? ' at ' + time : ''}</td></tr>
               <tr><td style="padding:8px 0;color:#475569;font-size:13px;border-top:1px solid #E2E8F0">Address</td><td style="padding:8px 0;font-weight:600;color:#0D1F3C;font-size:13px;text-align:right;border-top:1px solid #E2E8F0">${address || '—'}</td></tr>
