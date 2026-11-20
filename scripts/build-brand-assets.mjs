@@ -33,6 +33,11 @@ const WHITE = '#ffffff'; // --white
 const BORDER = '#e2e8f0'; // --border
 const NAVY = '#0d1f3c'; // --navy
 const GREEN = '#16a34a'; // --green
+const AMBER = '#f59e0b'; // --amber-bright, the star colour on reviews.html
+const AMBER_LT = '#fffbeb'; // --amber-lt
+const AMBER_INK = '#92400e'; // --amber-ink
+const PRIMARY = '#2563eb'; // --blue, the page's "Write a review" button
+const GRAY = '#475569'; // --gray
 
 const r2 = n => Math.round(n * 100) / 100;
 
@@ -93,6 +98,68 @@ ${parts.join('\n')}
 const TWO = markTwoTone();
 const KO = markKnockout();
 
+// ── reviews ────────────────────────────────────────────────────────────────
+// reviews.html is saved to home screens and sent to customers as a link, so it
+// gets its own look: amber (the page's star colour) with a row of five stars,
+// so it reads as "reviews" and not as a fourth copy of the client app.
+function starPath(cx, cy, R) {
+  const r = R * 0.48;
+  let d = '';
+  for (let i = 0; i < 10; i++) {
+    const a = (-90 + i * 36) * (Math.PI / 180);
+    const rad = i % 2 ? r : R;
+    d += (i ? 'L' : 'M') + r2(cx + rad * Math.cos(a)) + ' ' + r2(cy + rad * Math.sin(a));
+  }
+  return d + 'Z';
+}
+
+// Rounded joins take the needle points off the stars - friendlier at icon size.
+const stars = (centres, R, fill) =>
+  `  <path fill="${fill}" stroke="${fill}" stroke-width="${r2(R * 0.22)}" stroke-linejoin="round" d="${centres.map(([x, y]) => starPath(x, y, R)).join('')}"/>`;
+
+function starRow(cx, cy, R, gap, fill) {
+  const step = 2 * R + gap;
+  const x0 = cx - (step * 4) / 2;
+  return stars([0, 1, 2, 3, 4].map(i => [x0 + i * step, cy]), R, fill);
+}
+
+function reviewsIcon({ size, shape }) {
+  const rx = r2(size * 0.225);
+  const bg =
+    shape === 'rounded'
+      ? `  <rect width="${size}" height="${size}" rx="${rx}" fill="${AMBER}"/>`
+      : `  <rect width="${size}" height="${size}" fill="${AMBER}"/>`;
+  const markW = size * (shape === 'rounded' ? 0.56 : 0.6);
+  const R = size * 0.062;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+${bg}
+${placed(size / 2, size * 0.41, markW, KO)}
+${starRow(size / 2, size * 0.75, R, size * 0.03, WHITE)}
+</svg>
+`;
+}
+
+// Link preview for drbikesydney.com.au/reviews (iMessage, WhatsApp, Facebook).
+// Text is rendered with the system Inter when rasterised.
+function ogReviews() {
+  const font = 'font-family="Inter,Arial,sans-serif"';
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="${AMBER_LT}"/>
+  <rect x="760" width="440" height="630" fill="${AMBER}"/>
+${placed(980, 255, 250, KO)}
+${starRow(980, 430, 30, 16, WHITE)}
+  <text x="80" y="150" ${font} font-size="22" fill="${AMBER_INK}" font-weight="700" letter-spacing="4">DR. BIKE SYDNEY</text>
+  <text x="80" y="250" ${font} font-size="84" fill="${NAVY}" font-weight="800" letter-spacing="-2.5">How did we do?</text>
+  <text x="80" y="315" ${font} font-size="28" fill="${GRAY}" font-weight="400">Leave a quick review - it only takes a minute</text>
+  <text x="80" y="355" ${font} font-size="28" fill="${GRAY}" font-weight="400">and really helps a small local business.</text>
+  <rect x="80" y="410" width="330" height="76" rx="38" fill="${PRIMARY}"/>
+${stars([[124, 448]], 15, WHITE)}
+  <text x="154" y="458" ${font} font-size="28" fill="${WHITE}" font-weight="700">Write a review</text>
+  <text x="80" y="580" ${font} font-size="22" fill="${GRAY}" font-weight="500">drbikesydney.com.au/reviews</text>
+</svg>
+`;
+}
+
 const files = {
   // brand circles - one solid colour edge to edge, mark in the middle
   'images/brand/db-circle-white.svg': circle({ bg: WHITE, mark: TWO }),
@@ -109,6 +176,10 @@ const files = {
   'icon-admin-192.svg': appIcon({ size: 192, bg: NAVY, mark: KO, logoPct: 0.66, shape: 'rounded' }),
   'icon-mech-512.svg': appIcon({ size: 512, bg: GREEN, mark: KO, logoPct: 0.66, shape: 'rounded' }),
   'icon-mech-192.svg': appIcon({ size: 192, bg: GREEN, mark: KO, logoPct: 0.66, shape: 'rounded' }),
+
+  // reviews page - amber with five stars, and its own link preview
+  'icon-reviews-512.svg': reviewsIcon({ size: 512, shape: 'rounded' }),
+  'og-reviews.svg': ogReviews(),
 };
 
 // The maskable files and the PNG-only sizes are written to a staging folder and
@@ -128,6 +199,11 @@ const raster = [
   { png: 'icon-mech-512.png', svg: files['icon-mech-512.svg'], size: 512 },
   { png: 'icon-mech-192.png', svg: files['icon-mech-192.svg'], size: 192 },
   { png: 'icon-mech-maskable-512.png', svg: appIcon({ size: 512, bg: GREEN, mark: KO, logoPct: 0.6, shape: 'bleed' }), size: 512, opaque: true },
+
+  { png: 'apple-touch-icon-reviews.png', svg: reviewsIcon({ size: 180, shape: 'bleed' }), size: 180, opaque: true },
+  // 32px is too small for the stars to read - the mark alone, on amber.
+  { png: 'favicon-reviews-32.png', svg: appIcon({ size: 32, bg: AMBER, mark: KO, logoPct: 0.8, shape: 'rounded' }), size: 32 },
+  { png: 'og-reviews.png', svg: files['og-reviews.svg'], size: 1200, aspect: 630 / 1200, opaque: true },
 
   { png: 'images/brand/db-mark.png', svg: src, size: 1024, aspect: MARK_H / MARK_W },
   { png: 'images/brand/db-circle-white.png', svg: files['images/brand/db-circle-white.svg'], size: 1024 },
