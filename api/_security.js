@@ -10,7 +10,7 @@ import crypto from 'crypto';
 
 const rateLimitStore = new Map();
 
-function getClientIP(req) {
+export function getClientIP(req) {
   return (
     req.headers['x-vercel-forwarded-for']?.split(',')[0]?.trim() ||
     req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||

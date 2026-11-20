@@ -720,20 +720,42 @@ let _authMode = 'signin';
     );
   }
 
-  _sb.from('public_reviews')
-    .select('display_name,suburb,rating,comment,completed_at')
-    .order('completed_at', { ascending: false })
-    .limit(6)
-    .then(function (res) {
+  // Since 2026-11-20 the reviews go into the carousel, in front of the Google
+  // ones (js/reviews-carousel.js drbikeShowOwnReviews), with their first photo
+  // - including the ones written on drbikesydney.com.au/reviews. #reviews-grid
+  // stays as the fallback for a page whose carousel script did not load.
+  function show(reviews) {
+    if (!reviews.length) return;
+    const put = function () {
+      if (window.drbikeShowOwnReviews) return window.drbikeShowOwnReviews(reviews);
       const grid = document.getElementById('reviews-grid');
-      const reviews = (res && res.data) || [];
-      // No empty state any more: the Google block above this grid is always
-      // visible, so an empty in-app grid is simply nothing extra to show.
-      if (!reviews.length) return;
       if (grid) grid.innerHTML = reviews.map(reviewCardHTML).join('');
+    };
+    // Not DOMContentLoaded or readyState 'interactive': the carousel script is
+    // `defer`, and the page is already 'interactive' while deferred scripts
+    // are still waiting to run - an early answer landed in the fallback grid.
+    if (window.drbikeShowOwnReviews || document.readyState === 'complete') put();
+    else window.addEventListener('load', put);
+  }
+  function query(cols) {
+    return _sb.from('public_reviews')
+      .select(cols)
+      .order('completed_at', { ascending: false })
+      .limit(8);
+  }
+  query('display_name,suburb,rating,comment,completed_at,photos,verified')
+    .then(function (res) {
+      // Before scripts/create-public-reviews-view.sql is re-run the view has
+      // no photos/verified columns and this read errors; the old columns
+      // still work.
+      return res && res.error ? query('display_name,suburb,rating,comment,completed_at') : res;
     })
-    .catch(function () {
-      // Nothing to do: the Google reviews above are static markup and stay put.
+    .then(function (res) {
+      show((res && res.data) || []);
+    })
+    .catch(function (e) {
+      // The Google reviews in the carousel are static markup and stay put.
+      console.warn('[reviews] could not load our reviews:', e && e.message);
     });
 }());
 

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#2563eb">
+<title>Customer Reviews | Dr. Bike Sydney - Mobile Bike Repair</title>
+<meta name="description" content="Read what Sydney riders say about Dr. Bike Sydney's mobile bike repairs, and leave your own review with stars and photos. No account needed.">
+<link rel="canonical" href="https://drbikesydney.com.au/reviews">
+<meta property="og:title" content="Customer Reviews | Dr. Bike Sydney">
+<meta property="og:description" content="Reviews from Sydney riders - and a place to leave yours, with photos.">
+<meta property="og:url" content="https://drbikesydney.com.au/reviews">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://drbikesydney.com.au/og-image.png">
+<link rel="icon" href="/icon-512.svg?v=2" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png?v=2" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
+<link rel="stylesheet" href="css/variables.css?v=b58e9c267c">
+<link href="css/fonts.css" rel="stylesheet">
+<!-- drbikesydney.com.au/reviews - our own review page, since Google took the
+     business profile down (9-nov-2026). Anyone can write one, no account:
+     stars, a comment, up to six photos. Published at once; Admin > Reviews
+     hides spam or abuse. Server: api/_site-reviews.js. Reads: the
+     public_reviews view (scripts/create-public-reviews-view.sql). -->
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--surface);color:var(--navy);min-height:100vh;-webkit-font-smoothing:antialiased}
+a{color:var(--blue-text)}
+.top{position:sticky;top:0;z-index:10;background:var(--white);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand-link{display:flex;align-items:center;gap:8px;text-decoration:none;min-height:44px}
+.brand{font-size:17px;font-weight:700;color:var(--navy);letter-spacing:-0.2px}
+.brand span{color:var(--blue-text)}
+.lang{display:flex;gap:4px}
+.lang button{min-width:44px;min-height:36px;padding:0 8px;border:1px solid var(--border);background:var(--white);color:var(--gray);border-radius:8px;font:600 12px var(--sans);cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--blue-lt);border-color:var(--blue-edge);color:var(--blue-text)}
+.wrap{max-width:720px;margin:0 auto;padding:20px 16px 40px}
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:20px 16px;margin-bottom:16px}
+#write{scroll-margin-top:76px}
+h1{font-size:24px;font-weight:800;letter-spacing:-0.4px;line-height:1.2}
+h2{font-size:17px;font-weight:700;margin-bottom:4px}
+.sub{font-size:13px;color:var(--gray);line-height:1.5;margin-top:4px}
+.sum-row{display:flex;gap:20px;align-items:center;margin-top:18px;flex-wrap:wrap}
+.sum-score{text-align:center;min-width:110px}
+.avg{font-size:44px;font-weight:800;line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.stars{color:var(--amber-bright);font-size:18px;letter-spacing:1px;margin-top:6px}
+.count{font-size:12px;color:var(--gray);margin-top:4px}
+.bars{flex:1;min-width:180px;display:flex;flex-direction:column;gap:5px}
+.bar{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--gray);font-variant-numeric:tabular-nums}
+.bar-track{flex:1;height:8px;border-radius:4px;background:var(--border-lt);overflow:hidden}
+.bar-fill{height:100%;background:var(--amber-bright);border-radius:4px}
+.btn-primary{display:flex;align-items:center;justify-content:center;width:100%;min-height:48px;margin-top:18px;background:var(--blue);color:var(--white);border:none;border-radius:10px;font:700 15px var(--sans);text-decoration:none;cursor:pointer}
+.btn-primary:disabled{opacity:0.5;cursor:not-allowed}
+label,.label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin:16px 0 6px}
+.opt{font-weight:400;color:var(--gray)}
+input[type=text],input[type=email],textarea{width:100%;min-height:44px;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font:15px var(--sans);color:var(--navy);background:var(--white)}
+textarea{resize:vertical;min-height:120px;line-height:1.5}
+input:focus,textarea:focus{border-color:var(--blue)}
+.hint{font-size:12px;color:var(--gray);margin-top:6px;line-height:1.4}
+.counter{font-size:12px;color:var(--gray-lt);text-align:right;margin-top:4px;font-variant-numeric:tabular-nums}
+.star-pick{display:flex;gap:6px;border:none;margin-top:6px}
+.star-pick legend{font-size:13px;font-weight:600;margin-bottom:6px}
+.star-pick button{width:48px;height:48px;border:none;background:none;font-size:36px;line-height:1;color:var(--border);cursor:pointer;padding:0}
+.star-pick button.on{color:var(--amber-bright)}
+.star-word{font-size:13px;color:var(--gray);margin-top:4px;min-height:18px}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.photo-tile{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--border-lt)}
+.photo-tile img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-tile button{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;border:none;background:rgba(13,31,60,0.65);color:var(--white);font-size:16px;line-height:1;cursor:pointer}
+.photo-add{aspect-ratio:1;border:1.5px dashed var(--border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600;color:var(--gray);cursor:pointer;background:var(--surface);margin:0;text-align:center;padding:6px}
+.photo-add[hidden]{display:none}
+.err{background:var(--red-lt);border:1px solid var(--red-edge);color:var(--red-text);border-radius:10px;padding:12px 14px;font-size:13px;margin-top:14px}
+.done{text-align:center;padding:8px 0}
+.done-icon{font-size:36px}
+.list-head{display:flex;align-items:baseline;justify-content:space-between;margin:28px 0 12px}
+.rv{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+.rv-head{display:flex;align-items:center;gap:12px}
+.avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0}
+.rv-name{font-size:15px;font-weight:700}
+.rv-meta{font-size:12px;color:var(--gray);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.badge{padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;background:var(--green-lt);color:var(--green-ink)}
+.rv-stars{color:var(--amber-bright);font-size:15px;letter-spacing:1px;margin-top:10px}
+.rv-text{font-size:15px;line-height:1.6;color:var(--navy);margin-top:6px;white-space:pre-line;overflow-wrap:anywhere}
+.rv-photos{display:flex;gap:8px;margin-top:10px;overflow-x:auto;padding-bottom:2px}
+.rv-photos button{flex:0 0 auto;width:96px;height:96px;border:none;padding:0;border-radius:10px;overflow:hidden;cursor:zoom-in;background:var(--border-lt)}
+.rv-photos img{width:100%;height:100%;object-fit:cover;display:block}
+.empty{text-align:center;padding:28px 16px;color:var(--gray);font-size:14px}
+.empty strong{display:block;color:var(--navy);font-size:15px;margin-bottom:4px}
+.google-note{font-size:12px;color:var(--gray);margin:28px 0 12px}
+.lightbox{position:fixed;inset:0;z-index:50;background:rgba(13,31,60,0.92);display:flex;align-items:center;justify-content:center;padding:16px}
+.lightbox[hidden]{display:none}
+.lightbox img{max-width:100%;max-height:100%;border-radius:8px}
+.lightbox button{position:absolute;top:12px;right:12px;width:44px;height:44px;border-radius:50%;border:none;background:var(--white);color:var(--navy);font-size:22px;cursor:pointer}
+.foot{text-align:center;font-size:12px;color:var(--gray);padding:8px 16px 32px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.foot a{color:var(--gray);min-height:44px;display:inline-flex;align-items:center}
+</style>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+</head>
+<body>
+<header class="top" data-i18n>
+  <a href="/" class="brand-link" aria-label="Dr. Bike Sydney home">
+    <img decoding="async" loading="eager" src="images/logo-db.png" alt="" width="45" height="32" style="width:auto;display:block;height:32px">
+    <span class="brand">Dr. <span>Bike</span> Sydney</span>
+  </a>
+  <div class="lang" role="group" aria-label="Language">
+    <button type="button" data-lang="en" aria-pressed="true">EN</button>
+    <button type="button" data-lang="es" aria-pressed="false">ES</button>
+    <button type="button" data-lang="zh" aria-pressed="false">中文</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card" id="rv-summary" data-i18n>
+    <h1>Customer reviews</h1>
+    <p class="sub">What Sydney riders say about our mobile bike repairs.</p>
+    <div class="sum-row" id="rv-sum-row" hidden>
+      <div class="sum-score">
+        <div class="avg" id="rv-avg"></div>
+        <div class="stars" id="rv-avg-stars" aria-hidden="true"></div>
+        <div class="count" id="rv-count"></div>
+      </div>
+      <div class="bars" id="rv-bars"></div>
+    </div>
+    <a href="#write" class="btn-primary" id="rv-write-link">Write a review</a>
+  </section>
+
+  <section class="card" id="write" data-i18n>
+    <h2>Write a review</h2>
+    <p class="sub">No account needed. Your review shows with your first name and last initial.</p>
+    <form id="rv-form" novalidate>
+      <fieldset class="star-pick" id="rv-stars-pick">
+        <legend>Your rating</legend>
+        <button type="button" data-star="1" aria-label="1 star">&#9733;</button>
+        <button type="button" data-star="2" aria-label="2 stars">&#9733;</button>
+        <button type="button" data-star="3" aria-label="3 stars">&#9733;</button>
+        <button type="button" data-star="4" aria-label="4 stars">&#9733;</button>
+        <button type="button" data-star="5" aria-label="5 stars">&#9733;</button>
+      </fieldset>
+      <div class="star-word" id="rv-star-word" aria-live="polite"></div>
+
+      <label for="rv-name">Your name</label>
+      <input type="text" id="rv-name" maxlength="60" autocomplete="name" placeholder="e.g. Sarah Miller">
+
+      <label for="rv-comment">Your review</label>
+      <textarea id="rv-comment" maxlength="1000" placeholder="How was the service? What did we fix?"></textarea>
+      <div class="counter"><span id="rv-chars">0</span>/1000</div>
+
+      <div class="label">Photos <span class="opt">(optional, up to 6)</span></div>
+      <div class="photo-grid" id="rv-photo-grid">
+        <label class="photo-add" id="rv-photo-add" for="rv-photo-inp">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span>Add photos</span>
+        </label>
+      </div>
+      <input type="file" id="rv-photo-inp" accept="image/*" multiple hidden>
+      <div class="hint">Photos appear with your review.</div>
+
+      <label for="rv-email">Email <span class="opt">(optional)</span></label>
+      <input type="email" id="rv-email" autocomplete="email" placeholder="your@email.com">
+      <div class="hint">Only Dr. Bike sees it, so we can reply. Never shown on the page.</div>
+
+      <!-- Cloudflare Turnstile: the server rejects a review without its token -->
+      <div id="rv-turnstile" class="cf-turnstile" data-sitekey="0x4AAAAAAD46XeEV_Dvk2GA9" style="margin-top:16px"></div>
+      <script>if (innerWidth < 360) document.getElementById('rv-turnstile').dataset.size = 'compact';</script>
+
+      <div class="err" id="rv-error" role="alert" hidden></div>
+      <button type="submit" class="btn-primary" id="rv-submit">Post review</button>
+    </form>
+    <div class="done" id="rv-done" hidden>
+      <div class="done-icon" aria-hidden="true">&#127881;</div>
+      <h2>Thank you!</h2>
+      <p class="sub">Your review is live on this page.</p>
+      <p class="sub" id="rv-done-photos" hidden>Some photos could not be uploaded, so the review went up without them.</p>
+    </div>
+  </section>
+
+  <div class="list-head" data-i18n>
+    <h2>All reviews</h2>
+  </div>
+  <div id="rv-list"><div class="empty" data-i18n>Loading reviews...</div></div>
+
+  <!-- Quoted verbatim, same cards and same rules as landing.html's carousel:
+       real reviews, the reviewer's own words and name, never translated. -->
+  <p class="google-note" data-i18n>Earlier reviews, first posted on our Google profile</p>
+  <div id="rv-google" data-i18n>
+    <div class="rv"><div class="rv-head"><div class="avatar" style="background:var(--blue)">S</div><div><div class="rv-name">Sofia Etchart</div></div></div><div class="rv-stars" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p class="rv-text">The best fixing bikes! I didn’t know what happened but he figured out in 20 minutes! I strongly recommend him</p></div>
+    <div class="rv"><div class="rv-head"><div class="avatar" style="background:var(--purple)">Q</div><div><div class="rv-name">Quentin Darcheville</div></div></div><div class="rv-stars" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p class="rv-text">J’ai contacté Dr Bike Sydney pour un problème de frein sur mon vélo. Le rendez-vous a été facile à organiser et le technicien est venu directement chez moi avec tout le matériel nécessaire. Il a rapidement identifié le problème, fait les réglages et vérifié que tout fonctionnait correctement avant de repartir. Très pratique de ne pas avoir à transporter le vélo jusqu’à un magasin. Service rapide et professionnel, je recommande.</p></div>
+    <div class="rv"><div class="rv-head"><div class="avatar" style="background:var(--purple)">A</div><div><div class="rv-name">Aldana Jacquet</div></div></div><div class="rv-stars" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p class="rv-text">Amazing service! Super friendly, professional and efficient. They fixed my bike brakes perfectly and did a great job with the service. Highly recommend!</p><div class="rv-photos"><button type="button" data-full="images/review-aldana.webp" aria-label="Open photo"><img src="images/review-aldana.webp" alt="" width="96" height="96" loading="lazy" decoding="async"></button></div></div>
+    <div class="rv"><div class="rv-head"><div class="avatar" style="background:var(--green)">S</div><div><div class="rv-name">Shaun Murphy</div></div></div><div class="rv-stars" aria-label="5 out of 5 stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div><p class="rv-text">Our electric bike has been regularly serviced and highly recommended these guys. Quick and courteous.</p></div>
+  </div>
+</main>
+
+<footer class="foot" data-i18n>
+  <a href="/">Home</a>
+  <a href="/#book-service">Book a service</a>
+  <a href="/terms">Terms</a>
+  <a href="/privacy">Privacy</a>
+</footer>
+
+<div class="lightbox" id="rv-lightbox" hidden data-i18n>
+  <img id="rv-lightbox-img" alt="">
+  <button type="button" id="rv-lightbox-close" aria-label="Close photo">&times;</button>
+</div>
+
+<script type="module" src="js/reviews-page.js?v=20261120"></script>
+</body>
+</html>

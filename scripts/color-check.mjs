@@ -64,6 +64,10 @@ const BUDGET = {
   // budget for that file is set the same placeholder-run way, see below.
   'landing.html': 10,
   'track.html': 2,
+  // drbikesydney.com.au/reviews (2026-11-20): born on tokens, kept at zero.
+  'reviews.html': 0,
+  'js/reviews-page.js': 0,
+  'api/_site-reviews.js': 0,
   'admin.html': 7,
   'mechanic.html': 8,
   'css/variables.css': 0,

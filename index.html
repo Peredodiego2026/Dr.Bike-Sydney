@@ -575,9 +575,7 @@
                 <a
                   id="hero-rating"
                   class="hero-data__cell"
-                  href="https://maps.app.goo.gl/6HcU1P71vR3r2h4q7"
-                  target="_blank"
-                  rel="noopener"
+                  href="/reviews"
                   hidden
                 >
                   <span class="hero-data__value"
@@ -1070,6 +1068,20 @@
             <!-- The "Be the first to leave a review" empty state lived here. The
                  Google block above is always visible now, so an empty in-app
                  grid is simply nothing extra to show. -->
+            <!-- Our own review page (2026-11-20), same two links as landing.html. -->
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px">
+              <a
+                href="/reviews#write"
+                style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; background: var(--blue); padding: 10px 18px; border-radius: 8px; font-size: 15px; font-weight: 700; color: var(--white); text-decoration: none"
+                ><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg
+                ><span>Leave us a review</span></a
+              >
+              <a
+                href="/reviews"
+                style="display: inline-flex; align-items: center; min-height: 44px; background: var(--white); border: 1px solid var(--border); padding: 10px 18px; border-radius: 8px; font-size: 15px; font-weight: 600; color: var(--navy); text-decoration: none"
+                >Read all reviews</a
+              >
+            </div>
           </div>
         </section>
 
@@ -2709,7 +2721,7 @@
      (removed 2026-07-28); router.js and components.js got away with it only
      because they hold no state of their own. app.js pulls in the whole graph -
      router, supabase, components, i18n, rider-tier, stripe. -->
-    <script src="js/app.js?v=f80d8de5a1" type="module"></script>
+    <script src="js/app.js?v=0f0c54238b" type="module"></script>
     <script type="module">
       /* ── Real reviews (public_reviews view) ─────────────────────────────────── */
       import { sb } from './js/supabase.js';
@@ -2754,22 +2766,44 @@
             '</div>'
           );
         }
-        function loadReviews() {
-          sb.from('public_reviews')
-            .select('display_name,suburb,rating,comment,completed_at')
+        // Since 2026-11-20 the reviews go into the carousel, in front of the
+        // Google ones (js/reviews-carousel.js drbikeShowOwnReviews), with their
+        // first photo - including the ones written on /reviews. #reviews-grid
+        // stays as the fallback for a page whose carousel script did not load.
+        function show(reviews) {
+          if (!reviews.length) return;
+          var put = function () {
+            if (window.drbikeShowOwnReviews) return window.drbikeShowOwnReviews(reviews);
+            var grid = document.getElementById('reviews-grid');
+            if (grid) grid.innerHTML = reviews.map(reviewCardHTML).join('');
+          };
+          // 'load', not DOMContentLoaded: the carousel script is `defer`, and
+          // an early answer could beat it into the fallback grid.
+          if (window.drbikeShowOwnReviews || document.readyState === 'complete') put();
+          else window.addEventListener('load', put);
+        }
+        function query(cols) {
+          return sb
+            .from('public_reviews')
+            .select(cols)
             .order('completed_at', { ascending: false })
-            .limit(6)
+            .limit(8);
+        }
+        function loadReviews() {
+          query('display_name,suburb,rating,comment,completed_at,photos,verified')
             .then(function (res) {
-              var grid = document.getElementById('reviews-grid');
-              var reviews = (res && res.data) || [];
-              // No empty state any more: the Google block above this grid is
-              // always visible, so having no in-app reviews yet shows nothing
-              // extra rather than a contradiction.
-              if (!reviews.length) return;
-              if (grid) grid.innerHTML = reviews.map(reviewCardHTML).join('');
+              // Before scripts/create-public-reviews-view.sql is re-run the
+              // view has no photos/verified columns; the old columns still work.
+              return res && res.error
+                ? query('display_name,suburb,rating,comment,completed_at')
+                : res;
             })
-            .catch(function () {
-              // Nothing to do: the Google reviews above are static markup.
+            .then(function (res) {
+              show((res && res.data) || []);
+            })
+            .catch(function (e) {
+              // The Google reviews in the carousel are static markup.
+              console.warn('[reviews] could not load our reviews:', e && e.message);
             });
         }
         loadReviews();
@@ -2980,7 +3014,7 @@
         });
       })();
     </script>
-  <script src="js/reviews-carousel.js" defer></script>
+  <script src="js/reviews-carousel.js?v=20261120" defer></script>
   <script src="js/hero-carousel.js?v=c6471dd9e4" defer></script>
 </body>
 </html>

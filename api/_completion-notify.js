@@ -67,6 +67,11 @@ export function nextServiceMessage(nextServiceDate) {
   return `Your next recommended service is on ${when}`;
 }
 
+// drbikesydney.com.au/reviews (reviews.html). One address for every review
+// link the business sends; api/send-email.js and api/send-invoice.js use the
+// same one.
+export const REVIEW_PAGE = 'https://drbikesydney.com.au/reviews';
+
 // Returns [{ path, body }] - one entry per notification that has somewhere to
 // go. A booking with no email on file yields no email calls rather than a call
 // that will be rejected downstream; the caller logs that case.
@@ -85,26 +90,13 @@ export function buildCompletionCalls({
   const clientName = booking?.client_name || 'Client';
   const service = booking?.service_name || 'Service';
   const t = calcCompletionTotals({ booking, partsCharged, tipAmount });
-  // The review link carries the booking's tracking_token as `t`.
-  //
-  // Without it, a guest client cannot leave a review at all - and a guest is
-  // what a client of a business with no accounts yet IS. api/auth.js:1341 sets
-  // both user_id and client_id to null for a guest booking, and
-  // handleClientReview matched booking.client_id against the id on the
-  // session: no session meant "Please sign in to leave a review", and signing
-  // up afterwards meant 403, because null never equals a new account's uuid.
-  // Every guest got the email, and every guest hit a wall.
-  //
-  // The token is the credential this project already trusts for exactly this
-  // person: it is what /api/auth?role=public-track trades for their address
-  // and arrival PIN. Posting a review with it is strictly less than that.
-  // A booking with no token (an environment where
-  // scripts/add-tracking-token.sql has not run) falls back to the old link,
-  // which still works for a client who has an account.
-  const reviewToken = String(booking?.tracking_token || '');
-  const reviewLink = reviewToken
-    ? `https://drbikesydney.com.au/?review=${id}&t=${reviewToken}`
-    : `https://drbikesydney.com.au/?review=${id}`;
+  // The review link is our own review page, the same for everyone (Diego,
+  // 20-nov-2026). It used to be `/?review=<id>&t=<tracking_token>`, and Diego:
+  // "no me gusta el link parece un hack, la gente no lo vera como confiable".
+  // What the client writes there is a public review like anybody's
+  // (api/_site-reviews.js), shown at once on the page and in the landing's
+  // carousel. js/app.js still opens the old `?review=` links already sent.
+  const reviewLink = REVIEW_PAGE;
   const calls = [];
 
   if (email) {
@@ -142,7 +134,6 @@ export function buildCompletionCalls({
         name: clientName,
         service,
         bookingId: id,
-        reviewToken,
       },
     });
   }

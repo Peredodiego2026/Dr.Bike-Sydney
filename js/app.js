@@ -7384,7 +7384,6 @@ if (window._pendingReview) {
 (async function loadReviewStats() {
   const ratingEl = document.getElementById('google-rating');
   const starsEl = document.getElementById('google-stars');
-  const countLink = document.getElementById('google-count-link');
   const ownEl = document.getElementById('own-stats');
   if (!ratingEl && !ownEl) return;
 
@@ -7416,10 +7415,9 @@ if (window._pendingReview) {
     show(starsEl, starsFor(g.rating));
     if (starsEl) starsEl.setAttribute('aria-label', `${g.rating} out of 5 stars`);
   }
-  // 0 no se muestra: "0 reviews on Google" no es prueba social, es lo contrario.
-  if (countLink && g.count) {
-    countLink.textContent = counted(g.count, '{n} review on Google', '{n} reviews on Google');
-  }
+  // #google-count-link used to get "{n} reviews on Google" here. Gone, like the
+  // count in the hero (Diego, 2026-11-20): "4 reviews on Google" read as weak.
+  // The link keeps its static "Reviews on Google".
 
   // La misma prueba en la portada (#hero-proof, en las dos paginas). Pide el
   // promedio Y la cantidad: un "5.0" sin cuantas resenas lo respaldan no prueba
