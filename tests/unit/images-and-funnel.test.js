@@ -75,9 +75,9 @@ describe('lazy donde ayuda, eager donde estorbaria', () => {
 
   // `loading="lazy"` en algo que se ve al abrir la pagina lo RETRASA: el
   // navegador lo descubre mas tarde. El logo y el hero son lo primero que se
-  // ve. En index.html el hero lleva la foto de Diego desde el 2026-11-03, y en
-  // landing.html sus fotos en carrusel desde el 2026-11-10: las dos fotos de
-  // una van eran hechas con IA, y Dr. Bike no tiene van.
+  // ve. En landing.html el hero lleva las fotos de Diego en carrusel desde el
+  // 2026-11-10: las dos fotos de una van eran hechas con IA, y Dr. Bike no
+  // tiene van.
   it('el hero y el logo cargan de inmediato', () => {
     for (const page of PAGES) {
       for (const tag of imgs(read(page))) {
@@ -85,10 +85,23 @@ describe('lazy donde ayuda, eager donde estorbaria', () => {
         // La primera del carrusel es eager solo en landing.html, donde esta al
         // lado del titulo. En el celular queda debajo de los botones.
         const heroPhoto = page === 'landing.html' && /hero-trail\.webp/.test(src);
-        if (!/logo-db\.png|diego-peredo\.webp/.test(src) && !heroPhoto) continue;
+        if (!/logo-db\.png/.test(src) && !heroPhoto) continue;
         expect(tag, `${page} ${src}`).toMatch(/loading="eager"/);
       }
     }
+  });
+
+  // La tarjeta de Diego estuvo en el hero del celular y se fue al pie, al lado
+  // de Facebook e Instagram (Diego, 2026-11-20): ahi abajo su foto es lazy.
+  it('index.html: la foto de Diego esta en el pie y no se baja al abrir', () => {
+    const html = read('index.html');
+    const footer = html.slice(html.indexOf('<footer class="lp-footer">'));
+    const tag = imgs(footer).find((t) => /diego-peredo\.webp/.test(t));
+    expect(tag, 'la tarjeta de Diego no esta en el pie').toBeTruthy();
+    expect(tag).toMatch(/loading="lazy"/);
+    const hero = html.slice(html.indexOf('<section class="hero">'), html.indexOf('</section>', html.indexOf('<section class="hero">')));
+    expect(hero).not.toContain('diego-peredo.webp');
+    expect(hero).not.toContain('hero-badge');
   });
 
   // Del carrusel de la portada, en landing.html solo la primera se ve al
@@ -96,12 +109,12 @@ describe('lazy donde ayuda, eager donde estorbaria', () => {
   // carrusel queda debajo de los botones, fuera de la primera pantalla del
   // celular, asi que ni la primera es eager. En las dos, desde la tercera ni
   // siquiera llevan src: una <img> lazy transparente cuenta como visible y
-  // bajaria igual, y las 13 pesan 1,3 MB. js/hero-carousel.js las carga una
+  // bajaria igual, y las 33 pesan unos 3 MB. js/hero-carousel.js las carga una
   // antes de mostrarlas.
   const slidesOf = (page) => imgs(read(page)).filter((t) => /hero-carousel__slide/.test(t));
   it.each(['landing.html', 'index.html'])('%s: el carrusel de la portada carga solo lo que muestra', (page) => {
     const slides = slidesOf(page);
-    expect(slides.length).toBe(13);
+    expect(slides.length).toBe(33);
     expect(srcOf(slides[0])).toBe('images/hero-trail.webp');
     if (page === 'landing.html') expect(slides[0]).toMatch(/fetchpriority="high"/);
     else expect(slides[0]).toMatch(/loading="lazy"/);
@@ -114,9 +127,10 @@ describe('lazy donde ayuda, eager donde estorbaria', () => {
     const files = slides.map(srcOf);
     expect(new Set(files).size).toBe(files.length);
     for (const f of files) expect(fs.existsSync(new URL('../../' + f, import.meta.url)), f).toBe(true);
-    // Un punto por foto.
-    const dots = read(page).match(/hero-carousel__dots[^>]*>([\s\S]*?)<\/div>/)[1];
-    expect((dots.match(/<span/g) || []).length).toBe(13);
+    // Un contador y no un punto por foto: 33 puntos no caben en un celular.
+    // Sin JS dice la primera de cuantas hay.
+    expect(read(page)).toContain('<div class="hero-carousel__count" aria-hidden="true">1 / 33</div>');
+    expect(read(page)).not.toContain('hero-carousel__dots');
   });
 
   it('el celular y el escritorio muestran las mismas fotos en el mismo orden', () => {

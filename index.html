@@ -82,8 +82,8 @@
     <meta name="apple-mobile-web-app-title" content="Dr. Bike" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="stylesheet" href="css/variables.css?v=b58e9c267c" />
-    <link rel="stylesheet" href="css/main.css?v=a5ab99586b" />
-    <link rel="stylesheet" href="css/home.css?v=5e3b78adea" />
+    <link rel="stylesheet" href="css/main.css?v=bea26b6a1d" />
+    <link rel="stylesheet" href="css/home.css?v=bf42fb839a" />
     <link rel="stylesheet" href="css/shop.css?v=f28b164290" />
     <!-- Google Analytics -->
     <!-- Meta Pixel removed 2026-07-28. It was initialising with the literal
@@ -509,8 +509,10 @@
         <!-- Hero -->
         <section class="hero">
           <div class="lp-container">
+            <!-- No "Mobile Service · Sydney Wide" badge here (Diego,
+                 2026-11-20): without it the hero starts right under the
+                 header and the photos fit whole on a phone's first screen. -->
             <div class="hero-left">
-              <span class="hero-badge">Mobile Service &middot; Sydney Wide</span>
               <h1 class="hero-h1">Professional Bike Service at Your Doorstep</h1>
               <p
                 class="hero-slogan"
@@ -594,10 +596,10 @@
                 </div>
               </div>
             </div>
-            <!-- Who comes: Diego, in his own photo. The van picture that sat
-                 here was AI-made. The line under his title is his profile's. -->
+            <!-- Diego's own photos. The van picture that sat here was AI-made.
+                 His card moved to the footer, by the socials (2026-11-20). -->
             <div class="hero-diego">
-              <!-- Diego's own phone photos (2026-11-10), the same 13 and in the
+              <!-- Diego's own phone photos (2026-11-10 and 2026-11-20), the same 33 and in the
                    same order as landing.html's hero; js/hero-carousel.js drives
                    both. Never put a generated or AI-edited image here. On a
                    phone this sits under the buttons, below the first screen,
@@ -611,39 +613,44 @@
               >
                 <img class="hero-carousel__slide is-active" src="images/hero-trail.webp" alt="An e-mountain bike on a coastal trail" width="1000" height="750" decoding="async" loading="lazy" />
                 <img class="hero-carousel__slide" src="images/hero-workstand.webp" alt="Diego with an e-bike on the workstand" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-tyres.webp" alt="A worn fat-bike tyre next to its new replacement" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
                 <img class="hero-carousel__slide" data-src="images/hero-brakes.webp" alt="Bleeding a hydraulic brake" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-selfie.webp" alt="Diego with a fat-tyre e-bike at a job" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
                 <img class="hero-carousel__slide" data-src="images/hero-cards.webp" alt="Dr. Bike Sydney cards on a bike" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-ute.webp" alt="Our ute set up as a mobile workshop at the kerb" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
                 <img class="hero-carousel__slide" data-src="images/hero-motor.webp" alt="An e-bike motor opened for service" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-cruiser.webp" alt="A cruiser bike with a basket by our ute" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
                 <img class="hero-carousel__slide" data-src="images/hero-diego.webp" alt="Diego, the mechanic, out on a trail ride" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-steerer.webp" alt="A cutting guide clamped on a fork steerer" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
                 <img class="hero-carousel__slide" data-src="images/hero-display.webp" alt="An e-bike display showing a warning code" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-hybrid.webp" alt="A Specialized bike on the workstand by our ute" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
                 <img class="hero-carousel__slide" data-src="images/hero-drive.webp" alt="An e-bike drive unit on the workstand" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-shifter.webp" alt="Adjusting a Shimano shifter" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
                 <img class="hero-carousel__slide" data-src="images/hero-muddy.webp" alt="A muddy e-bike after a trail ride" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-mtb.webp" alt="A mountain bike on the workstand by our ute" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
                 <img class="hero-carousel__slide" data-src="images/hero-pads.webp" alt="Disc brake pads on the bench" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-handover.webp" alt="Diego with a folding e-bike in a client's driveway" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
                 <img class="hero-carousel__slide" data-src="images/hero-bay.webp" alt="An e-bike by a bay" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-city.webp" alt="A step-through e-bike on the workstand by a brick fence" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
                 <img class="hero-carousel__slide" data-src="images/hero-forest.webp" alt="An e-bike on a forest trail" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-home.webp" alt="Three bikes ready at a client's home" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
                 <img class="hero-carousel__slide" data-src="images/hero-creek.webp" alt="An e-bike by a creek" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-routing.webp" alt="Pulling an internal cable through a carbon frame" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-cable.webp" alt="A new cable fed into a carbon frame" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-chain.webp" alt="Working on the chain of a white bike" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-vbrake.webp" alt="Adjusting a V-brake" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-teal.webp" alt="Adjusting the brake on a cruiser" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-lever.webp" alt="Fitting a reflector to the handlebar" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-fork.webp" alt="Checking the suspension fork on a white bike" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-hub.webp" alt="Servicing a rear wheel" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
+                <img class="hero-carousel__slide" data-src="images/hero-scooter.webp" alt="An electric scooter at a client's home" width="1000" height="750" decoding="async" loading="lazy" aria-hidden="true" />
                 <button type="button" class="hero-carousel__btn hero-carousel__btn--prev" aria-label="Previous photo">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="15 18 9 12 15 6" /></svg>
                 </button>
                 <button type="button" class="hero-carousel__btn hero-carousel__btn--next" aria-label="Next photo">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
                 </button>
-                <div class="hero-carousel__dots" aria-hidden="true"><span class="is-active"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
-              </div>
-              <div class="hero-diego__card">
-                <img
-                  decoding="async"
-                  loading="eager"
-                  src="images/diego-peredo.webp"
-                  alt="Diego Peredo"
-                  width="168"
-                  height="168"
-                />
-                <div style="min-width: 0">
-                  <div class="hero-diego__name">Diego Peredo</div>
-                  <div class="hero-diego__role">Founder &amp; Head Mechanic</div>
-                  <div class="hero-diego__bio">Favourite jobs: truing and building wheels.</div>
-                </div>
+                <div class="hero-carousel__count" aria-hidden="true">1 / 33</div>
               </div>
             </div>
           </div>
@@ -2464,6 +2471,24 @@
                       <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg
                   ></a>
                 </div>
+                <!-- Diego's card, by the socials (Diego, 2026-11-20). It sat
+                     under the hero photos, where it pushed them below the
+                     first screen. The line under his title is his profile's. -->
+                <div class="hero-diego__card footer-diego">
+                  <img
+                    decoding="async"
+                    loading="lazy"
+                    src="images/diego-peredo.webp"
+                    alt="Diego Peredo"
+                    width="168"
+                    height="168"
+                  />
+                  <div style="min-width: 0">
+                    <div class="hero-diego__name">Diego Peredo</div>
+                    <div class="hero-diego__role">Founder &amp; Head Mechanic</div>
+                    <div class="hero-diego__bio">Favourite jobs: truing and building wheels.</div>
+                  </div>
+                </div>
               </div>
               <!-- Services -->
               <div>
@@ -3015,6 +3040,6 @@
       })();
     </script>
   <script src="js/reviews-carousel.js?v=20261120" defer></script>
-  <script src="js/hero-carousel.js?v=c6471dd9e4" defer></script>
+  <script src="js/hero-carousel.js?v=22aaf47167" defer></script>
 </body>
 </html>
