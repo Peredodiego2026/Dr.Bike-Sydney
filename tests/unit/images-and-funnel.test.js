@@ -127,9 +127,9 @@ describe('lazy donde ayuda, eager donde estorbaria', () => {
     const files = slides.map(srcOf);
     expect(new Set(files).size).toBe(files.length);
     for (const f of files) expect(fs.existsSync(new URL('../../' + f, import.meta.url)), f).toBe(true);
-    // Un contador y no un punto por foto: 33 puntos no caben en un celular.
-    // Sin JS dice la primera de cuantas hay.
-    expect(read(page)).toContain('<div class="hero-carousel__count" aria-hidden="true">1 / 33</div>');
+    // Solo la foto: ni un punto por foto (33 no caben en un celular) ni el
+    // contador "3 / 33", que Diego pidio sacar el 2026-11-20.
+    expect(read(page)).not.toContain('hero-carousel__count');
     expect(read(page)).not.toContain('hero-carousel__dots');
   });
 

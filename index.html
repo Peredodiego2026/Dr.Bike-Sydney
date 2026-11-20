@@ -82,7 +82,7 @@
     <meta name="apple-mobile-web-app-title" content="Dr. Bike" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="stylesheet" href="css/variables.css?v=b58e9c267c" />
-    <link rel="stylesheet" href="css/main.css?v=bea26b6a1d" />
+    <link rel="stylesheet" href="css/main.css?v=44dc032099" />
     <link rel="stylesheet" href="css/home.css?v=bf42fb839a" />
     <link rel="stylesheet" href="css/shop.css?v=f28b164290" />
     <!-- Google Analytics -->
@@ -548,27 +548,11 @@
                   Check my diagnosis fee
                 </button>
               </div>
-              <!-- The next bookable slot, same line as landing.html: filled by
-                   loadNextAvailable() in js/app.js, hidden until there is one. -->
-              <p
-                id="hero-next"
-                style="margin: 12px 0 0; font-size: 14px; font-weight: 600; color: var(--white)"
-                hidden
-              >
-                <span
-                  style="
-                    display: inline-block;
-                    width: 8px;
-                    height: 8px;
-                    margin-right: 8px;
-                    border-radius: 50%;
-                    background: var(--green-bright);
-                    vertical-align: middle;
-                  "
-                  aria-hidden="true"
-                ></span
-                ><span class="hero-next__text"></span>
-              </p>
+              <!-- No "Next available" line on the phone (Diego, 2026-11-20): it
+                   was the last thing between the buttons and the photos, which
+                   now fit whole on the first screen. landing.html keeps it;
+                   loadNextAvailable() in js/app.js skips a page without
+                   #hero-next. -->
               <!-- Three numbers where three words were (2026-11-03). The rating
                    is filled by loadReviewStats() in js/app.js and stays hidden
                    until there is a rating AND a count; the Tune-Up price follows
@@ -650,7 +634,6 @@
                 <button type="button" class="hero-carousel__btn hero-carousel__btn--next" aria-label="Next photo">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="9 18 15 12 9 6" /></svg>
                 </button>
-                <div class="hero-carousel__count" aria-hidden="true">1 / 33</div>
               </div>
             </div>
           </div>
@@ -3040,6 +3023,6 @@
       })();
     </script>
   <script src="js/reviews-carousel.js?v=20261120" defer></script>
-  <script src="js/hero-carousel.js?v=22aaf47167" defer></script>
+  <script src="js/hero-carousel.js?v=6d00e71fc7" defer></script>
 </body>
 </html>
