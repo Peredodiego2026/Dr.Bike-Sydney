@@ -2521,30 +2521,25 @@ body {
 .hero-carousel__btn--next {
   right: 12px;
 }
-.hero-carousel__dots {
+/* "3 / 33" instead of a dot per photo: 33 dots are wider than a phone. */
+.hero-carousel__count {
   position: absolute;
   left: 50%;
-  bottom: 14px;
+  bottom: 12px;
   z-index: 1;
   transform: translateX(-50%);
-  display: flex;
-  gap: 8px;
-}
-.hero-carousel__dots span {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 4px rgba(0, 0, 0, 0.35);
-  transition: background 0.2s, transform 0.2s;
-}
-.hero-carousel__dots span.is-active {
-  background: rgba(255, 255, 255, 0.95);
-  transform: scale(1.25);
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 @media (prefers-reduced-motion: reduce) {
-  .hero-carousel__slide,
-  .hero-carousel__dots span {
+  .hero-carousel__slide {
     transition: none;
   }
 }

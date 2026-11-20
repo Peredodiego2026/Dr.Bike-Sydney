@@ -125,17 +125,6 @@
   align-items: center;
   padding-bottom: 48px;
 }
-[data-screen='home'] .hero-badge {
-  background: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  padding: 4px 14px;
-  border-radius: var(--radius-full);
-  font-size: 13px;
-  font-weight: 600;
-  display: inline-block;
-  margin-bottom: 16px;
-}
 [data-screen='home'] .hero-h1 {
   font-size: clamp(1.75rem, 5vw, 2.75rem);
   font-weight: 800;
@@ -346,6 +335,10 @@
   font-size: 13px;
   line-height: 1.45;
   color: rgba(255, 255, 255, 0.75);
+}
+/* The same card in the footer, under the Facebook and Instagram buttons. */
+[data-screen='home'] .footer-diego {
+  margin-top: 16px;
 }
 
 /* ── Services ──────────────────────────────────────────────────────────────── */
@@ -901,8 +894,14 @@
 
 /* ── Responsive (SPA is mobile-first) ─────────────────────────────────────── */
 @media (max-width: 900px) {
+  /* Phone (Diego, 2026-11-20): the hero starts right under the header and
+     its gaps are tighter, so the photo carousel fits whole above the bottom
+     nav on the first screen instead of being cut by it. */
   [data-screen='home'] .hero {
-    padding-top: 36px;
+    padding-top: 10px;
+  }
+  [data-screen='home'] .hero-h1 {
+    line-height: 1.1;
   }
   [data-screen='home'] .hero .lp-container {
     grid-template-columns: 1fr;
@@ -912,6 +911,23 @@
   [data-screen='home'] .hero-left,
   [data-screen='home'] .hero-diego {
     padding: 0 20px 32px;
+  }
+  [data-screen='home'] .hero-left {
+    padding-bottom: 12px;
+  }
+  [data-screen='home'] .hero-p {
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+  [data-screen='home'] .hero-btns {
+    gap: 8px;
+    margin-top: 16px;
+  }
+  [data-screen='home'] .hero-data {
+    margin-top: 14px;
+  }
+  [data-screen='home'] .hero-data__cell {
+    padding: 8px 0;
   }
   [data-screen='home'] .hero-image {
     display: block !important;
