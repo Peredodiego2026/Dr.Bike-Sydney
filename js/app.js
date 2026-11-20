@@ -7428,11 +7428,8 @@ if (window._pendingReview) {
   if (proof && g.rating && g.count) {
     proof.querySelector('.hero-proof__stars').textContent = starsFor(g.rating);
     proof.querySelector('.hero-proof__rating').textContent = g.rating;
-    proof.querySelector('.hero-proof__count').textContent = counted(
-      g.count,
-      '{n} review on Google',
-      '{n} reviews on Google'
-    );
+    // No "4 reviews on Google" next to it any more (Diego, 2026-11-20): a
+    // small count read as weak, not as proof. The count still gates the line.
     proof.hidden = false;
   }
   // index.html carries it as the first cell of the data bar under the hero
@@ -7440,11 +7437,7 @@ if (window._pendingReview) {
   const heroRating = document.getElementById('hero-rating');
   if (heroRating && g.rating && g.count) {
     heroRating.querySelector('.hero-rating__value').textContent = g.rating;
-    heroRating.querySelector('.hero-rating__count').textContent = counted(
-      g.count,
-      '{n} Google review',
-      '{n} Google reviews'
-    );
+    // The label stays the static "Rating" - same reason as the landing above.
     heroRating.hidden = false;
   }
 

@@ -128,9 +128,12 @@ describe('the real rating, on the first screen of both pages', () => {
   it('landing.html carries it inside the hero, hidden until there is data', () => {
     const hero = sectionOf(landing, '<section class="hero">');
     expect(hero).toMatch(/<p id="hero-proof"[^>]*hidden>/);
-    for (const part of ['hero-proof__stars', 'hero-proof__rating', 'hero-proof__count']) {
+    for (const part of ['hero-proof__stars', 'hero-proof__rating']) {
       expect(hero).toContain(`class="${part}"`);
     }
+    // Stars and the average only (Diego, 2026-11-20): "4 reviews on Google"
+    // next to them read as weak.
+    expect(hero).not.toContain('hero-proof__count');
     // Empty in the HTML: a number typed here would go stale the day of the
     // next review, which is exactly what happened to the old "2 reviews".
     expect(hero).toMatch(/class="hero-proof__rating"[^>]*><\/span>/);
@@ -143,7 +146,7 @@ describe('the real rating, on the first screen of both pages', () => {
     expect(hero).not.toContain('id="hero-proof"');
     expect(hero).toMatch(/<a\s+id="hero-rating"[^>]*\shidden\s*>/);
     expect(hero).toMatch(/class="hero-rating__value"><\/span>/);
-    expect(hero).toContain('class="hero-data__label hero-rating__count"');
+    expect(hero).toContain('<span class="hero-data__label hero-rating__count">Rating</span>');
   });
 
   // "5.0" with no count behind it proves nothing, and "0 reviews" proves the
