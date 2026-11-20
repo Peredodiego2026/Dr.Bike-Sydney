@@ -22,15 +22,14 @@
 // (about 3 MB) would download with the page. show() loads the photo it shows
 // and the one after it.
 //
-// Under the photos, a counter ("3 / 33") and not one dot per photo: since
-// 2026-11-20 there are 33, and 33 dots are wider than a phone.
+// Nothing under the photos: no dot per photo and no "3 / 33" counter. 33
+// dots were wider than a phone, and Diego wants only the photo (2026-11-20).
 
 (function () {
   const root = document.getElementById('hero-carousel');
   if (!root) return;
 
   const slides = [...root.querySelectorAll('.hero-carousel__slide')];
-  const count = root.querySelector('.hero-carousel__count');
   const prevBtn = root.querySelector('.hero-carousel__btn--prev');
   const nextBtn = root.querySelector('.hero-carousel__btn--next');
   const n = slides.length;
@@ -60,7 +59,6 @@
       slide.classList.toggle('is-active', on);
       slide.setAttribute('aria-hidden', on ? 'false' : 'true');
     });
-    if (count) count.textContent = `${active + 1} / ${n}`;
   }
 
   function stop() {
