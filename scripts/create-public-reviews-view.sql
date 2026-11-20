@@ -36,9 +36,27 @@
 -- the entire point here - so removing write access is the only protection
 -- this view can have.
 --
+-- 2026-11-20: the reviews written on drbikesydney.com.au/reviews join in
+-- (scripts/add-site-reviews.sql, which has to run first). Same mask on the
+-- name, only the published ones, and two new columns at the end:
+--   photos    public URLs of the reviewer's own photos (empty for a booking)
+--   verified  true when the review comes from a completed booking
+-- A UNION view is not updatable at all, so the write door is shut twice now;
+-- the REVOKE stays anyway, for the reason above.
+--
+-- DROP + CREATE instead of CREATE OR REPLACE: replace cannot change a column's
+-- type, and the two rating columns do not have to share one. Inside one
+-- transaction, so the landing never sees the view missing, and without CASCADE,
+-- so if anything did depend on the view the whole thing stops and nothing
+-- changes.
+--
 -- HOW TO APPLY: Supabase Dashboard -> SQL Editor -> paste -> Run.
 
-create or replace view public.public_reviews as
+begin;
+
+drop view if exists public.public_reviews;
+
+create view public.public_reviews as
 select
   b.id,
   trim(
@@ -48,21 +66,45 @@ select
       else ''
     end
   ) as display_name,
-  b.suburb,
-  b.client_rating as rating,
-  b.client_review as comment,
-  b.completed_at
+  b.suburb::text as suburb,
+  b.client_rating::int as rating,
+  b.client_review::text as comment,
+  b.completed_at::timestamptz as completed_at,
+  '{}'::text[] as photos,
+  true as verified
 from public.bookings b
 where b.client_rating is not null
   and b.client_review is not null
   and b.status = 'completed'
-order by b.completed_at desc;
+union all
+select
+  r.id,
+  trim(
+    split_part(trim(r.name), ' ', 1) || ' ' ||
+    case when split_part(trim(r.name), ' ', 2) <> ''
+      then left(split_part(trim(r.name), ' ', 2), 1) || '.'
+      else ''
+    end
+  ) as display_name,
+  null::text as suburb,
+  r.rating::int as rating,
+  r.comment as comment,
+  r.created_at as completed_at,
+  r.photos as photos,
+  false as verified
+from public.site_reviews r
+where r.status = 'published'
+order by completed_at desc;
 
 revoke insert, update, delete, truncate, references, trigger
   on public.public_reviews from anon, authenticated;
 grant select on public.public_reviews to anon, authenticated;
 
--- Verify: should return 0 rows today (no real review submitted yet) and
--- start returning rows automatically as clients leave reviews after a
--- completed job - no further deploy needed for that.
-select * from public.public_reviews;
+commit;
+
+-- Verify: one row per published review, booking ones marked verified, and
+-- no email or name column beyond display_name.
+select display_name, rating, verified, cardinality(photos) as photos, completed_at
+from public.public_reviews
+order by completed_at desc
+limit 10;

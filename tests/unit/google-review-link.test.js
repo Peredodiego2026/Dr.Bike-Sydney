@@ -53,7 +53,8 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const SURFACES = ['js/app.js', 'js/landing-inline.js', 'landing.html', 'index.html'];
 const sources = SURFACES.map((f) => ({ file: f, src: readFileSync(join(root, f), 'utf8') }));
 
-const LINK_RE = /https:\/\/(?:maps\.app\.goo\.gl|g\.page|search\.google\.com|www\.google\.com\.au\/maps)\/[^\s\"'<)]+/g;
+const LINK_RE =
+  /https:\/\/(?:maps\.app\.goo\.gl|g\.page|search\.google\.com|www\.google\.com\.au\/maps)\/[^\s\"'<)]+/g;
 
 // Which job each occurrence is doing, decided by the label that follows the
 // href rather than by a hand-kept list of file:line - a list like that goes
@@ -80,13 +81,14 @@ function occurrences(src) {
   const out = [];
   for (const m of src.matchAll(LINK_RE)) {
     const after = textAfter(src, m.index);
-    const role = /leave (a|us a) (quick )?google review|leave us a review|also leave a google review/.test(
-      after
-    )
-      ? 'write'
-      : /reviews? on google/.test(after)
-        ? 'read'
-        : 'unknown';
+    const role =
+      /leave (a|us a) (quick )?google review|leave us a review|also leave a google review/.test(
+        after
+      )
+        ? 'write'
+        : /reviews? on google/.test(after)
+          ? 'read'
+          : 'unknown';
     out.push({ url: m[0], role });
   }
   return out;
@@ -99,8 +101,11 @@ describe('the Google review link', () => {
     // Without this, a label edit that defeats the regex would turn every
     // occurrence into 'unknown' and the assertions below would pass over an
     // empty set. A guard that cannot fail proves nothing.
-    expect(all.length).toBeGreaterThanOrEqual(5);
-    expect(all.filter((o) => o.role === 'write').length).toBeGreaterThanOrEqual(3);
+    // 2026-11-20: landing.html's "Leave us a review" and both heroes' stars now
+    // go to our own drbikesydney.com.au/reviews, so 2 write CTAs remain
+    // (js/app.js, js/landing-inline.js) and 2 read links (#google-count-link).
+    expect(all.length).toBeGreaterThanOrEqual(4);
+    expect(all.filter((o) => o.role === 'write').length).toBeGreaterThanOrEqual(2);
     expect(all.filter((o) => o.role === 'read').length).toBeGreaterThanOrEqual(2);
   });
 

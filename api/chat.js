@@ -457,12 +457,16 @@ async function handler(req, res) {
     const sbUrl = process.env.SUPABASE_URL || 'https://tgpipbloisahufaywhqb.supabase.co';
     const supabase = createClient(sbUrl, process.env.SUPABASE_SERVICE_KEY);
 
-    const [ownResp, cfgResp] = await Promise.all([
+    // `own` also counts the reviews written on /reviews (api/_site-reviews.js),
+    // published ones only. Before scripts/add-site-reviews.sql runs the table
+    // does not exist, the query errors, and the count is the bookings' alone.
+    const [ownResp, siteResp, cfgResp] = await Promise.all([
       supabase
         .from('bookings')
         .select('client_rating')
         .not('client_rating', 'is', null)
         .eq('status', 'completed'),
+      supabase.from('site_reviews').select('rating').eq('status', 'published'),
       supabase
         .from('van_zones')
         .select('suburb,postcode')
@@ -476,7 +480,10 @@ async function handler(req, res) {
     });
 
     return res.status(200).json({
-      own: reviewStats((ownResp.data || []).map((r) => r.client_rating)),
+      own: reviewStats([
+        ...(ownResp.data || []).map((r) => r.client_rating),
+        ...(siteResp.data || []).map((r) => r.rating),
+      ]),
       google: googleStats(cfg.__google_rating__, cfg.__google_reviews__),
     });
   }

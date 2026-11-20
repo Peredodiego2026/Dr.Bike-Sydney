@@ -8035,6 +8035,7 @@ async function readPostHog(days) {
 
 import { handleShop } from './_shop.js';
 import { handleShopAdmin } from './_shop-admin.js';
+import { handleSiteReview, handleAdminSiteReviews } from './_site-reviews.js';
 import { withSentry, captureMessage } from './_sentry.js';
 import { emailFrame, emailButton, INK, FAINT } from './_email-frame.js';
 import { translateEmailHtml, translateEmailSubject, emailLocale } from './_email-i18n.js';
@@ -8106,6 +8107,8 @@ async function handler(req, res) {
           role.startsWith('admin-inventory-') ||
           // Admin > Shop Orders re-reads the list after every step it moves.
           role === 'admin-shop' ||
+          // Admin > Reviews re-reads the list after every hide or show.
+          role === 'admin-site-reviews' ||
           role.startsWith('client-')
         ? 20
         : 5;
@@ -8210,6 +8213,23 @@ async function handler(req, res) {
     );
     if (auth.error) return res.status(auth.status).json({ error: auth.error });
     return handleShopAdmin(req, res, auth.sb);
+  }
+  // drbikesydney.com.au/reviews. Anonymous on purpose; the default 5/min per
+  // IP above plus Turnstile and the daily cap inside are its limits.
+  if (role === 'site-review') {
+    return handleSiteReview(req, res, {
+      supabaseUrl: SUPABASE_URL,
+      serviceKey: process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY,
+    });
+  }
+  // Admin > Reviews. Same shape as admin-shop: the admin check is here.
+  if (role === 'admin-site-reviews') {
+    const auth = await verifyAdminSession(
+      req.body?.access_token,
+      process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
+    );
+    if (auth.error) return res.status(auth.status).json({ error: auth.error });
+    return handleAdminSiteReviews(req, res, auth.sb);
   }
   return handleAdmin(req, res);
 }

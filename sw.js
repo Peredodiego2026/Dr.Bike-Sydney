@@ -303,7 +303,9 @@
 // 35 a 45): filas nuevas en 'Areas We Cover', en los dos diccionarios.
 // v175: "Photos of our work" (el carrusel de fotos de Diego en la portada de
 // landing.html), en los dos diccionarios.
-const CACHE_STATIC = 'drbike-static-v176';
+// v177: drbikesydney.com.au/reviews - la pagina de resenas propia (form,
+// fotos, errores del servidor) y "Read all reviews", en los dos diccionarios.
+const CACHE_STATIC = 'drbike-static-v177';
 const CACHE_PAGES  = 'drbike-pages-v78';
 
 // Only URLs the pages actually request. The CSS and JS used to be listed here

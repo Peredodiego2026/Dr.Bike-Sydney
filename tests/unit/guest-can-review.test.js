@@ -133,7 +133,9 @@ describe('el link no vale para siempre', () => {
     // 'limited' apaga direccion y PIN en la pagina de seguimiento, pero la
     // resena tiene que poder dejarse igual: ese es el motivo por el que el
     // token no se apaga al completar el trabajo.
-    expect(reviewGate(guestBooking({ scheduled_date: daysAgo(FULL_DAYS + 5) }), { mode: 'token' }, NOW)).toEqual({
+    expect(
+      reviewGate(guestBooking({ scheduled_date: daysAgo(FULL_DAYS + 5) }), { mode: 'token' }, NOW)
+    ).toEqual({
       ok: true,
     });
   });
@@ -161,7 +163,11 @@ describe('el link no vale para siempre', () => {
   });
 });
 
-describe('el token viaja en el link que se manda', () => {
+// Desde el 2026-11-20 el link que se manda es drbikesydney.com.au/reviews, sin
+// id ni token: Diego pidio un link que el cliente reconozca, y
+// `/?review=bk-1&t=7c9e...` parecia un hackeo. El `?review=&t=` de arriba
+// sigue funcionando para los links que ya estan en bandejas de entrada.
+describe('el link que se manda es /reviews, el mismo para todos', () => {
   const base = {
     booking: {
       id: 'bk-1',
@@ -176,25 +182,24 @@ describe('el token viaja en el link que se manda', () => {
     tipAmount: 0,
   };
 
-  it('el SMS lleva el token', () => {
+  it('el SMS lleva /reviews y nada de la reserva', () => {
     const sms = buildCompletionCalls(base).find((c) => c.path === '/api/send-sms');
-    expect(sms.body.reviewLink).toBe(`https://drbikesydney.com.au/?review=bk-1&t=${TOKEN}`);
+    expect(sms.body.reviewLink).toBe('https://drbikesydney.com.au/reviews');
+    expect(sms.body.reviewLink).not.toContain(TOKEN);
   });
 
-  it('y el email lo recibe aparte, para armar su propio href', () => {
+  it('y el email ya no recibe el token', () => {
     const email = buildCompletionCalls(base).find(
       (c) => c.path === '/api/send-email' && c.body.type === 'review_request'
     );
-    expect(email.body.reviewToken).toBe(TOKEN);
+    expect(email).toBeTruthy();
+    expect(email.body.reviewToken).toBeUndefined();
   });
 
-  // Un entorno donde scripts/add-tracking-token.sql no corrio. Verificado el
-  // 2026-09-03 que en produccion la columna SI existe (public-track con un uuid
-  // al azar contesta 404, cosa que solo puede hacer si la columna resuelve).
-  it('sin token, el link sigue siendo el de antes en vez de decir undefined', () => {
+  it('sin token, el link es el mismo y no dice undefined', () => {
     const sinToken = { ...base, booking: { ...base.booking, tracking_token: null } };
     const sms = buildCompletionCalls(sinToken).find((c) => c.path === '/api/send-sms');
-    expect(sms.body.reviewLink).toBe('https://drbikesydney.com.au/?review=bk-1');
+    expect(sms.body.reviewLink).toBe('https://drbikesydney.com.au/reviews');
     expect(sms.body.reviewLink).not.toMatch(/undefined|null/);
   });
 });
@@ -225,10 +230,12 @@ describe('las dos puntas que no son funciones puras', () => {
     }
   });
 
-  it('el email arma el href con el token, y descarta uno que no sea un uuid', () => {
-    const src = read('api/send-email.js');
-    expect(src).toMatch(/\?review=\$\{bookingId\}\$\{reviewToken \? `&t=\$\{reviewToken\}` : ''\}/);
-    expect(src).toMatch(/\[0-9a-fA-F-\]\{36\}/);
+  it('el email y la factura mandan a /reviews, no a ?review=', () => {
+    for (const f of ['api/send-email.js', 'api/send-invoice.js']) {
+      const src = read(f);
+      expect(src, f).toContain('https://drbikesydney.com.au/reviews');
+      expect(src, f).not.toMatch(/drbikesydney\.com\.au\/\?review=/);
+    }
   });
 
   it('la escritura usa el id de la fila, no el del pedido', () => {

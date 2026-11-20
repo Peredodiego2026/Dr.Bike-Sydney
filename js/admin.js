@@ -534,6 +534,7 @@ const titles = {
   zones: 'Zone Manager',
   claims: 'Claims',
   photos: 'Photos',
+  reviews: 'Reviews',
   orphans: 'Orphan Payments',
   expenses: 'Expenses',
   settings: 'Settings',
@@ -558,6 +559,7 @@ const subs = {
   zones: 'Assign suburbs to each van',
   claims: 'Warranty claims from clients - review evidence and resolve',
   photos: 'Every job photo - by job or all together, and the ones on the website',
+  reviews: 'Written on drbikesydney.com.au/reviews - live at once; hide spam or abuse, never a genuine bad one',
   orphans: 'Money Stripe took with no booking behind it - read-only, refunds stay in Stripe',
   expenses: 'What the business actually spent - this is what the P&L subtracts',
   settings: 'System settings',
@@ -580,6 +582,7 @@ function go(page, btn) {
   if (page === 'zones') loadVanZones();
   if (page === 'claims') loadClaims();
   if (page === 'photos') loadPhotos();
+  if (page === 'reviews') loadSiteReviews();
   if (page === 'expenses') loadExpenses();
   if (page === 'finance') {
     const now = new Date();
@@ -7391,6 +7394,110 @@ async function shopAdmin(body) {
   const data = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(data.error || 'The server answered ' + r.status);
   return data;
+}
+
+// ── Reviews (drbikesydney.com.au/reviews, api/_site-reviews.js) ──
+// Published the moment they are written. This screen hides the ones that are
+// spam, abuse or someone's personal details - the ACCC does not allow hiding a
+// genuine bad review, so the hide button asks for the reason.
+let _siteReviews = [];
+let _siteReviewsWired = false;
+const SITE_REVIEW_REASONS = ['Spam', 'Abusive language', 'Personal details', 'Not about Dr. Bike'];
+
+async function siteReviewsAdmin(body) {
+  const {
+    data: { session },
+  } = await sb.auth.getSession();
+  if (!session) throw new Error('Admin session expired - sign in again.');
+  const r = await fetch('/api/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: 'admin-site-reviews', access_token: session.access_token, ...body }),
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || 'The server answered ' + r.status);
+  return data;
+}
+
+async function loadSiteReviews() {
+  const list = document.getElementById('site-reviews-list');
+  if (!list) return;
+  wireSiteReviews();
+  list.innerHTML =
+    '<div style="text-align:center;color:var(--mgray);padding:40px;font-size:13px">Loading the reviews...</div>';
+  try {
+    _siteReviews = (await siteReviewsAdmin({ action: 'list' })).reviews || [];
+    renderSiteReviews();
+  } catch (e) {
+    list.innerHTML = `<div style="background:var(--red-lt);color:var(--red-text);border-radius:12px;padding:14px 16px;font-size:13px">${esc(e.message)}</div>`;
+  }
+}
+
+function renderSiteReviews() {
+  const list = document.getElementById('site-reviews-list');
+  if (!list) return;
+  if (!_siteReviews.length) {
+    list.innerHTML = `<div style="background:var(--white);border:1px solid var(--border);border-radius:12px;padding:32px 20px;text-align:center">
+        <div style="font-size:15px;font-weight:700;color:var(--navy)">No reviews yet</div>
+        <div style="font-size:13px;color:var(--mgray);margin-top:6px">They appear here the moment someone posts one on <a href="/reviews" target="_blank" rel="noopener" style="color:var(--blue-text)">drbikesydney.com.au/reviews</a>.</div>
+      </div>`;
+    return;
+  }
+  list.innerHTML = _siteReviews
+    .map((r) => {
+      const hidden = r.status === 'hidden';
+      const n = Math.max(1, Math.min(5, Number(r.rating) || 0));
+      const photos = (r.photos || [])
+        .map(
+          (u) =>
+            `<a href="${esc(u)}" target="_blank" rel="noopener"><img src="${esc(String(u).replace(/\.jpg$/, '_t.jpg'))}" alt="Review photo" loading="lazy" style="width:64px;height:64px;object-fit:cover;border-radius:8px;display:block"></a>`
+        )
+        .join('');
+      const reasons = SITE_REVIEW_REASONS.map(
+        (x) => `<option value="${esc(x)}">${esc(x)}</option>`
+      ).join('');
+      const action = hidden
+        ? `<button type="button" class="btn-sec" data-rv-show="${esc(r.id)}" style="min-height:40px;padding:8px 14px;border:1.5px solid var(--border);background:var(--white);color:var(--navy);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Show it again</button>`
+        : `<select class="inp" data-rv-reason="${esc(r.id)}" aria-label="Why hide it" style="width:auto;min-height:40px;padding:6px 10px;font-size:13px;cursor:pointer">${reasons}</select>
+           <button type="button" data-rv-hide="${esc(r.id)}" style="min-height:40px;padding:8px 14px;border:1.5px solid var(--red-lt);background:var(--white);color:var(--red-text);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans)">Hide</button>`;
+      return `<div style="background:var(--white);border:1px solid var(--border);border-left:3px solid ${hidden ? 'var(--slate)' : 'var(--green)'};border-radius:12px;padding:14px 16px;${hidden ? 'opacity:0.75' : ''}">
+          <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start">
+            <div style="min-width:0">
+              <div style="font-size:15px;font-weight:700;color:var(--navy)">${esc(r.name)} <span style="color:var(--amber-bright);font-weight:400;letter-spacing:1px">${'&#9733;'.repeat(n)}${'&#9734;'.repeat(5 - n)}</span></div>
+              <div style="font-size:12px;color:var(--mgray);margin-top:2px">${esc(soWhen(r.created_at))}${r.email ? ' · ' + esc(r.email) : ''}</div>
+            </div>
+            <span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;${hidden ? 'background:var(--border-lt);color:var(--slate)' : 'background:var(--green-lt);color:var(--green-ink)'}">${hidden ? 'Hidden' + (r.hidden_reason ? ' - ' + esc(r.hidden_reason) : '') : 'On the website'}</span>
+          </div>
+          <div style="font-size:14px;color:var(--navy);line-height:1.55;margin-top:10px;white-space:pre-line">${esc(r.comment)}</div>
+          ${photos ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${photos}</div>` : ''}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-top:12px">${action}</div>
+        </div>`;
+    })
+    .join('');
+}
+
+function wireSiteReviews() {
+  if (_siteReviewsWired) return;
+  _siteReviewsWired = true;
+  document.getElementById('site-reviews-list')?.addEventListener('click', async (e) => {
+    const hide = e.target.closest('[data-rv-hide]');
+    const show = e.target.closest('[data-rv-show]');
+    const btn = hide || show;
+    if (!btn) return;
+    const id = hide ? hide.dataset.rvHide : show.dataset.rvShow;
+    const reason = hide
+      ? [...document.querySelectorAll('[data-rv-reason]')].find((s) => s.dataset.rvReason === id)
+          ?.value || 'Spam'
+      : null;
+    btn.disabled = true;
+    try {
+      await siteReviewsAdmin({ action: 'set', id, status: hide ? 'hidden' : 'published', reason });
+      await loadSiteReviews();
+    } catch (err) {
+      btn.disabled = false;
+      alert(err.message);
+    }
+  });
 }
 
 async function loadShopOrders() {

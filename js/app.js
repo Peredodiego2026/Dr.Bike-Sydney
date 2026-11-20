@@ -7384,7 +7384,6 @@ if (window._pendingReview) {
 (async function loadReviewStats() {
   const ratingEl = document.getElementById('google-rating');
   const starsEl = document.getElementById('google-stars');
-  const countLink = document.getElementById('google-count-link');
   const ownEl = document.getElementById('own-stats');
   if (!ratingEl && !ownEl) return;
 
@@ -7416,10 +7415,9 @@ if (window._pendingReview) {
     show(starsEl, starsFor(g.rating));
     if (starsEl) starsEl.setAttribute('aria-label', `${g.rating} out of 5 stars`);
   }
-  // 0 no se muestra: "0 reviews on Google" no es prueba social, es lo contrario.
-  if (countLink && g.count) {
-    countLink.textContent = counted(g.count, '{n} review on Google', '{n} reviews on Google');
-  }
+  // #google-count-link used to get "{n} reviews on Google" here. Gone, like the
+  // count in the hero (Diego, 2026-11-20): "4 reviews on Google" read as weak.
+  // The link keeps its static "Reviews on Google".
 
   // La misma prueba en la portada (#hero-proof, en las dos paginas). Pide el
   // promedio Y la cantidad: un "5.0" sin cuantas resenas lo respaldan no prueba
@@ -7428,11 +7426,8 @@ if (window._pendingReview) {
   if (proof && g.rating && g.count) {
     proof.querySelector('.hero-proof__stars').textContent = starsFor(g.rating);
     proof.querySelector('.hero-proof__rating').textContent = g.rating;
-    proof.querySelector('.hero-proof__count').textContent = counted(
-      g.count,
-      '{n} review on Google',
-      '{n} reviews on Google'
-    );
+    // No "4 reviews on Google" next to it any more (Diego, 2026-11-20): a
+    // small count read as weak, not as proof. The count still gates the line.
     proof.hidden = false;
   }
   // index.html carries it as the first cell of the data bar under the hero
@@ -7440,11 +7435,7 @@ if (window._pendingReview) {
   const heroRating = document.getElementById('hero-rating');
   if (heroRating && g.rating && g.count) {
     heroRating.querySelector('.hero-rating__value').textContent = g.rating;
-    heroRating.querySelector('.hero-rating__count').textContent = counted(
-      g.count,
-      '{n} Google review',
-      '{n} Google reviews'
-    );
+    // The label stays the static "Rating" - same reason as the landing above.
     heroRating.hidden = false;
   }
 

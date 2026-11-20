@@ -383,9 +383,6 @@ async function handler(req, res) {
     }
   }
 
-  // bookingId is embedded in a review link URL below — whitelist only alphanumeric and dashes
-  const safeBookingId = String(bookingId).replace(/[^a-zA-Z0-9-]/g, '');
-
   clientName = sanitize(clientName || 'Client');
   service = sanitize(service || '—');
   address = sanitize(address || '—');
@@ -714,7 +711,7 @@ async function handler(req, res) {
     <div style="background:#FFFBEB;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center">
       <p style="font-size:13px;color:#B45309;font-weight:600;margin:0 0 10px">How was your service?</p>
       <div style="font-size:24px;letter-spacing:4px;margin-bottom:12px">⭐⭐⭐⭐⭐</div>
-      <a href="https://drbikesydney.com.au/?review=${safeBookingId}" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:12px;border-radius:8px;font-weight:700;font-size:13px">Rate your mechanic →</a>
+      <a href="https://drbikesydney.com.au/reviews" style="display:block;background:#F59E0B;color:#fff;text-decoration:none;text-align:center;padding:12px;border-radius:8px;font-weight:700;font-size:13px">Rate your mechanic →</a>
     </div>
 
     <div style="text-align:center;padding:24px 0;border-top:1px solid #F1F5F9">

@@ -15,17 +15,29 @@
   const nextBtn = document.getElementById('rv-next');
   if (!track || !viewport) return;
 
-  const cards = [...track.querySelectorAll(':scope > .review-card')];
-  const n = cards.length;
-  if (n < 2) {
-    if (prevBtn) prevBtn.hidden = true;
-    if (nextBtn) nextBtn.hidden = true;
-    return;
-  }
-
+  // `let`, and read again by drbikeShowOwnReviews below: the reviews written
+  // on /reviews arrive after this runs, so the set of cards can grow.
+  let cards = [];
+  let n = 0;
   let active = 0;
 
+  function collect() {
+    cards = [...track.querySelectorAll(':scope > .review-card')];
+    n = cards.length;
+    if (prevBtn) prevBtn.hidden = n < 2;
+    if (nextBtn) nextBtn.hidden = n < 2;
+  }
+
   function layout() {
+    if (n < 2) {
+      // One card, or none: no 3D stage, just the card in the middle.
+      cards.forEach((card) => {
+        card.style.transform = 'translate(-50%,-50%)';
+        card.style.opacity = '1';
+        card.classList.add('is-active');
+      });
+      return;
+    }
     cards.forEach((card, i) => {
       let offset = i - active;
       if (offset > n / 2) offset -= n;
@@ -47,17 +59,20 @@
   }
 
   function go(step) {
+    if (n < 2) return;
     active = (active + step + n) % n;
     layout();
   }
 
-  cards.forEach((card, i) => {
-    card.addEventListener('click', () => {
-      if (i !== active) {
-        active = i;
-        layout();
-      }
-    });
+  // One listener on the track instead of one per card, so a card added later
+  // is clickable too.
+  track.addEventListener('click', (e) => {
+    const card = e.target.closest('.review-card');
+    const i = cards.indexOf(card);
+    if (i > -1 && i !== active) {
+      active = i;
+      layout();
+    }
   });
 
   prevBtn?.addEventListener('click', () => go(-1));
@@ -114,5 +129,51 @@
   `;
   document.head.appendChild(style);
 
+  // ── The reviews written on /reviews, in front of the Google ones ──────────
+  // Diego, 20-nov-2026: everything a customer posts on our own review page has
+  // to show here, where people look. Both pages read public_reviews themselves
+  // (js/landing-inline.js, index.html) and hand the rows to this, so the card
+  // looks the same on both and matches the Google cards next to it. Calling it
+  // again replaces the cards it added before - index.html reloads the list
+  // after a client posts a review in the app.
+  const AVATARS = [
+    'var(--blue-deep)',
+    'var(--green)',
+    'var(--purple)',
+    'var(--amber)',
+    'var(--cyan)',
+  ];
+  const esc = (s) =>
+    String(s ?? '').replace(
+      /[&<>"']/g,
+      (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
+    );
+  function ownCard(r, i) {
+    const n = Math.max(1, Math.min(5, Number(r.rating) || 5));
+    const name = r.display_name || 'Dr. Bike client';
+    const photo = (r.photos || [])[0];
+    return `<div class="review-card" data-own-review>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <div style="width:44px;height:44px;border-radius:50%;background:${AVATARS[i % AVATARS.length]};display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:15px;flex-shrink:0">${esc(name.charAt(0).toUpperCase())}</div>
+        <div style="min-width:0">
+          <div style="font-weight:700;font-size:15px;color:var(--navy)">${esc(name)}</div>
+          ${r.verified ? '<div style="font-size:12px;font-weight:600;color:var(--green-ink)">Verified booking</div>' : ''}
+        </div>
+      </div>
+      <div style="color:var(--amber-bright);font-size:15px;margin-bottom:8px" aria-label="${n} out of 5 stars">${'&#9733;'.repeat(n)}${'&#9734;'.repeat(5 - n)}</div>
+      <p style="font-size:15px;color:var(--gray);line-height:1.6;display:-webkit-box;-webkit-line-clamp:7;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-line">${esc(r.comment)}</p>
+      ${photo ? `<img src="${esc(String(photo).replace(/\.jpg$/, '_t.jpg'))}" alt="" loading="lazy" decoding="async" style="display:block;width:100%;max-width:100%;height:200px;object-fit:cover;border-radius:10px;margin-top:12px">` : ''}
+    </div>`;
+  }
+  window.drbikeShowOwnReviews = (rows) => {
+    track.querySelectorAll(':scope > [data-own-review]').forEach((c) => c.remove());
+    const list = (rows || []).filter((r) => r && r.comment);
+    if (list.length) track.insertAdjacentHTML('afterbegin', list.map(ownCard).join(''));
+    collect();
+    active = 0;
+    layout();
+  };
+
+  collect();
   layout();
 })();
