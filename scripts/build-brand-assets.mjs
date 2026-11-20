@@ -141,21 +141,39 @@ ${starRow(size / 2, size * 0.75, R, size * 0.03, WHITE)}
 
 // Link preview for drbikesydney.com.au/reviews (iMessage, WhatsApp, Facebook).
 // Text is rendered with the system Inter when rasterised.
+//
+// Diego chose this one on 2026-11-20, out of five: the question on the left,
+// and a review card like the one the client is about to write - stars, two
+// lines of text, a photo and an empty photo slot - tilted on the right. No
+// URL: Messages already prints the domain under the image.
 function ogReviews() {
   const font = 'font-family="Inter,Arial,sans-serif"';
+  const GRAY_LT = '#94a3b8'; // --gray-lt
+  const AMBER_EDGE = '#fcd34d'; // --amber-edge, the photo in the card
+  // The card, drawn at the origin and then placed and tilted as one group.
+  const W = 440;
+  const H = 386;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs><filter id="soft" x="-20%" y="-20%" width="140%" height="150%"><feGaussianBlur stdDeviation="22"/></filter></defs>
   <rect width="1200" height="630" fill="${AMBER_LT}"/>
-  <rect x="760" width="440" height="630" fill="${AMBER}"/>
-${placed(980, 255, 250, KO)}
-${starRow(980, 430, 30, 16, WHITE)}
-  <text x="80" y="150" ${font} font-size="22" fill="${AMBER_INK}" font-weight="700" letter-spacing="4">DR. BIKE SYDNEY</text>
-  <text x="80" y="250" ${font} font-size="84" fill="${NAVY}" font-weight="800" letter-spacing="-2.5">How did we do?</text>
-  <text x="80" y="315" ${font} font-size="28" fill="${GRAY}" font-weight="400">Leave a quick review - it only takes a minute</text>
-  <text x="80" y="355" ${font} font-size="28" fill="${GRAY}" font-weight="400">and really helps a small local business.</text>
-  <rect x="80" y="410" width="330" height="76" rx="38" fill="${PRIMARY}"/>
-${stars([[124, 448]], 15, WHITE)}
-  <text x="154" y="458" ${font} font-size="28" fill="${WHITE}" font-weight="700">Write a review</text>
-  <text x="80" y="580" ${font} font-size="22" fill="${GRAY}" font-weight="500">drbikesydney.com.au/reviews</text>
+  <text ${font} font-size="78" fill="${NAVY}" font-weight="800" letter-spacing="-2"><tspan x="84" y="210">Happy with</tspan><tspan x="84" y="291">your new bike?</tspan></text>
+  <text ${font} font-size="31" fill="${GRAY}" font-weight="500"><tspan x="84" y="360">Tell other riders. It takes a minute.</tspan><tspan x="84" y="403">No account needed.</tspan></text>
+${placed(119, 470, 70, TWO)}
+  <text x="170" y="481" ${font} font-size="30" fill="${NAVY}" font-weight="700">Dr. Bike Sydney</text>
+  <g transform="translate(696 122) rotate(-3 ${W / 2} ${H / 2})">
+    <rect x="10" y="30" width="${W - 20}" height="${H - 10}" rx="28" fill="${NAVY}" opacity="0.16" filter="url(#soft)"/>
+    <rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="28" fill="${WHITE}" stroke="${BORDER}" stroke-width="2"/>
+    <circle cx="66" cy="66" r="32" fill="${PRIMARY}"/>
+    <text x="66" y="77" text-anchor="middle" ${font} font-size="30" fill="${WHITE}" font-weight="700">Y</text>
+    <text x="114" y="62" ${font} font-size="28" fill="${NAVY}" font-weight="700">You</text>
+    <text x="114" y="91" ${font} font-size="20" fill="${GRAY}" font-weight="500">just now</text>
+${stars([0, 1, 2, 3, 4].map(i => [62 + i * 62, 150]), 24, AMBER)}
+    <rect x="34" y="196" width="${W - 68}" height="18" rx="9" fill="${BORDER}"/>
+    <rect x="34" y="226" width="290" height="18" rx="9" fill="${BORDER}"/>
+    <rect x="34" y="268" width="110" height="84" rx="14" fill="${AMBER_EDGE}"/>
+    <rect x="159.5" y="269.5" width="107" height="81" rx="13" fill="none" stroke="${GRAY_LT}" stroke-width="3" stroke-dasharray="9 7"/>
+    <text x="213" y="324" text-anchor="middle" ${font} font-size="40" fill="${GRAY_LT}" font-weight="500">+</text>
+  </g>
 </svg>
 `;
 }
