@@ -3,7 +3,7 @@
 -- Google took the business profile down on 9-nov-2026 and rejected the appeal.
 -- Diego: "si google nos baja haremos nuestra propia". So drbikesydney.com.au/reviews
 -- is a review page of our own: anyone can write one - no account - with stars,
--- a comment and up to three photos, and it shows on the page and in the
+-- a comment and up to six photos, and it shows on the page and in the
 -- "What Our Customers Say" section at once.
 --
 -- Until now the only reviews were the ones tied to a completed booking
