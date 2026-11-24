@@ -93,7 +93,7 @@ const BUDGET = {
   // send-cron.js and auth.js were outside the budget until 2026-08-09, which is
   // how auth.js kept 3 occurrences of the retired blue while everything else
   // was cleaned.
-  'api/send-email.js': 197,
+  'api/send-email.js': 189,
   'api/send-invoice.js': 107,
   // 49 -> 10 and 39 -> 31 on 2026-11-01: the emails these two send straight to
   // Resend now share api/_email-frame.js, whose 7 constants are the palette
