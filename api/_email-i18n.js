@@ -126,7 +126,11 @@ const dict = {
     '. Your bike misses the open road!': '. ¡Tu bici extraña la calle!',
     '🔧 Your bike may need some love after': '🔧 Tu bici puede necesitar cariño después de',
     '$15 OFF': '$15 DE DESCUENTO',
-    '$20 OFF': '$20 DE DESCUENTO',
+    // The birthday ticket sets "OFF" smaller than the amount, so the key carries
+    // the span: a plain '$20 OFF' would no longer match and the line would go
+    // out in English.
+    '$20 <span style="font-size:28px;letter-spacing:0.02em">OFF</span>':
+      '$20 <span style="font-size:28px;letter-spacing:0.02em">DE DESCUENTO</span>',
     " but didn't complete it. Your bike is waiting!": ' pero no la terminaste. ¡Tu bici te espera!',
 
     // ── rescheduled ─────────────────────────────────────────────────────────
@@ -229,6 +233,7 @@ const dict = {
     ', wishing you an amazing birthday from the whole Dr. Bike team! 🚲':
       ', ¡todo el equipo de Dr. Bike te desea un feliz cumpleaños! 🚲',
     'Your birthday gift': 'Tu regalo de cumpleaños',
+    'Code': 'Código',
     '&bull; Valid for 7 days from your birthday': '&bull; Válido por 7 días desde tu cumpleaños',
     '&bull; Applies to any service $119+': '&bull; Aplica a cualquier servicio de $119 o más',
     '&bull; Enter code at checkout': '&bull; Ingresa el código al pagar',
@@ -514,7 +519,8 @@ const dict = {
     '. Your bike misses the open road!': '。您的自行车想念骑行了！',
     '🔧 Your bike may need some love after': '🔧 您的自行车可能需要保养了，已过去',
     '$15 OFF': '立减 $15',
-    '$20 OFF': '立减 $20',
+    '$20 <span style="font-size:28px;letter-spacing:0.02em">OFF</span>':
+      '<span style="font-size:28px;letter-spacing:0.02em">立减</span> $20',
     " but didn't complete it. Your bike is waiting!": '，但还没有完成。您的自行车在等您！',
 
     'Rescheduled and confirmed': '已改期并确认',
@@ -598,6 +604,7 @@ const dict = {
     ', wishing you an amazing birthday from the whole Dr. Bike team! 🚲':
       '，Dr. Bike 全体团队祝您生日快乐！🚲',
     'Your birthday gift': '您的生日礼物',
+    'Code': '代码',
     '&bull; Valid for 7 days from your birthday': '&bull; 自生日起 7 天内有效',
     '&bull; Applies to any service $119+': '&bull; 适用于 $119 及以上的任意服务',
     '&bull; Enter code at checkout': '&bull; 结算时输入优惠码',

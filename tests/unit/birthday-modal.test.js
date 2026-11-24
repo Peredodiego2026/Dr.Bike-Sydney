@@ -250,3 +250,100 @@ describe('the exit is animated too', () => {
     expect(block).toMatch(/backdrop-filter: none/);
   });
 });
+
+// White on #F59E0B is 2.15:1 - it failed on both headers that used it AND on
+// their call-to-action buttons, which is the element that matters most. The
+// invoice carried the same button. #B45309 is the same orange family at 5.02:1.
+//
+// This fix was first written on 2026-08-25 and committed minutes after its PR
+// had merged, so it never shipped: the amber stayed live until 2026-11.
+describe('the birthday email is readable', () => {
+  const mail = read('api/send-email.js');
+  const invoice = read('api/send-invoice.js');
+  const dict = read('api/_email-i18n.js');
+
+  // send-email.js names some colours (`const INK = '#0D1F3C'`): a template
+  // that writes ${BLUE} paints the same fill as one that writes the hex.
+  const named = Object.fromEntries(
+    [...mail.matchAll(/^const ([A-Z_]+) = '(#[0-9A-Fa-f]{3,6})';/gm)].map((m) => [m[1], m[2]])
+  );
+  const rgb = (h) => {
+    const x = h.length === 4 ? [...h.slice(1)].map((c) => c + c).join('') : h.slice(1);
+    return [0, 2, 4].map((i) => parseInt(x.substr(i, 2), 16));
+  };
+  const lum = (c) => {
+    const v = c.map((x) => x / 255).map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
+    return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2];
+  };
+  // White at `alpha` over `bg`, measured against `bg` - what the eye gets.
+  const whiteOn = (bg, alpha = 1) => {
+    const b = rgb(bg);
+    const ink = b.map((x) => alpha * 255 + (1 - alpha) * x);
+    return (lum(ink) + 0.05) / (lum(b) + 0.05);
+  };
+  const failing = (fills) => fills.filter(({ hex }) => whiteOn(hex) < 4.5);
+
+  it('no header colour fails white text', () => {
+    const fills = [...mail.matchAll(/header\((?:'(#[0-9A-Fa-f]{6})'|([A-Z_]+)),/g)].map((m) => ({
+      at: m[0],
+      hex: m[1] || named[m[2]],
+    }));
+    expect(fills.length).toBeGreaterThan(5);
+    expect(fills.every((f) => f.hex)).toBe(true);
+    expect(failing(fills)).toEqual([]);
+  });
+
+  it('no button with white text fails it either, in any email', () => {
+    const fills = [mail, invoice].flatMap((src) =>
+      [...src.matchAll(/background:(?:(#[0-9A-Fa-f]{3,6})|\$\{([A-Z_]+)\});color:(?:#fff\b|\$\{WHITE\})/gi)].map(
+        (m) => ({ at: m[0], hex: m[1] || named[m[2]] })
+      )
+    );
+    expect(fills.length).toBeGreaterThan(5);
+    expect(fills.every((f) => f.hex)).toBe(true);
+    expect(failing(fills)).toEqual([]);
+  });
+
+  it('the pale amber is gone from every email', () => {
+    expect(mail).not.toMatch(/#F59E0B/i);
+    expect(invoice).not.toMatch(/#F59E0B/i);
+  });
+
+  // 11px uppercase is normal text to WCAG, and it was at 0.6 alpha: 1.4:1 on
+  // the amber. Measured as painted, on the weakest header colour in use.
+  it('the brand line in the header is not a ghost', () => {
+    const header = mail.slice(mail.indexOf('const header = '), mail.indexOf('const footer = '));
+    const line = header.split('\n').find((l) => l.includes('>Dr. Bike Sydney<'));
+    expect(line).toMatch(/color:\$\{WHITE\}/);
+    const alpha = Number((line.match(/opacity:([\d.]+)/) || [])[1] || 1);
+    const weakest = [...mail.matchAll(/header\((?:'(#[0-9A-Fa-f]{6})'|([A-Z_]+)),/g)]
+      .map((m) => whiteOn(m[1] || named[m[2]], alpha))
+      .sort((a, b) => a - b)[0];
+    expect(weakest).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it('the coupon leads with the value, not with the terms', () => {
+    const start = mail.indexOf("'Happy Birthday!'");
+    const body = mail.slice(start, mail.indexOf('${footer()}', start));
+    expect(body).toMatch(/font-size:52px;font-weight:900/);
+    expect(body.indexOf('$20')).toBeLessThan(body.indexOf('Valid for 7 days'));
+  });
+
+  it('every string it shows is still translated', () => {
+    const start = mail.indexOf("'Happy Birthday!'");
+    const body = mail.slice(start, mail.indexOf('${footer()}', start));
+    for (const k of [
+      'any service booked this week',
+      'Your birthday gift',
+      '&bull; Valid for 7 days from your birthday',
+      '&bull; One use per customer',
+      'Redeem my birthday gift &rarr;',
+      'Code',
+      // The amount and the smaller "OFF" are one key, span included.
+      '$20 <span style="font-size:28px;letter-spacing:0.02em">OFF</span>',
+    ]) {
+      expect(body).toContain(k);
+      expect(dict).toContain(`'${k}':`);
+    }
+  });
+});
